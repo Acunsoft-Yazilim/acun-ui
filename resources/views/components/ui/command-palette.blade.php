@@ -79,13 +79,13 @@
     <button
         type="button"
         x-on:click="show()"
-        class="flex h-9 w-full cursor-pointer items-center gap-2 rounded-sm bg-gray-50 px-3 text-sm text-gray-500 ring-1 ring-gray-200 transition-colors ring-inset hover:bg-white hover:text-gray-500 hover:ring-gray-300 dark:bg-zinc-800/60 dark:text-zinc-400 dark:ring-zinc-700 dark:hover:bg-zinc-800"
+        class="flex h-9 w-full cursor-pointer items-center gap-2 rounded-sm bg-sunken/60 px-3 text-sm text-muted ring-1 ring-line transition-colors ring-inset hover:bg-field hover:ring-line-strong"
         aria-haspopup="dialog"
     >
         <acun:icon name="magnifying-glass" size="4" />
         <span class="flex-1 truncate text-left">{{ $placeholder }}</span>
         @if ($shortcut)
-            <kbd class="hidden rounded-sm border border-gray-200 bg-white px-1.5 font-mono text-2xs text-gray-500 sm:inline dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">⌘K</kbd>
+            <kbd class="hidden rounded-sm border border-line bg-surface px-1.5 font-mono text-2xs text-muted sm:inline">⌘K</kbd>
         @endif
     </button>
 
@@ -101,10 +101,10 @@
                 role="dialog"
                 aria-modal="true"
                 aria-label="{{ $placeholder }}"
-                class="relative w-full max-w-xl overflow-hidden rounded-sm bg-white shadow-xl dark:bg-zinc-900"
+                class="relative w-full max-w-xl overflow-hidden rounded-sm bg-surface shadow-xl"
             >
-                <div class="flex items-center gap-3 border-b border-gray-200 px-4 dark:border-zinc-800">
-                    <acun:icon name="magnifying-glass" size="5" class="text-gray-400" />
+                <div class="flex items-center gap-3 border-b border-line px-4">
+                    <acun:icon name="magnifying-glass" size="5" class="text-faint" />
                     <input
                         :id="listId + '-input'"
                         x-model="query"
@@ -122,9 +122,9 @@
                         {{-- Its own Escape: the overlay manager leaves Escape to an expanded combobox. --}}
                         x-on:keydown.escape.prevent.stop="close()"
                         :aria-controls="listId"
-                        class="h-14 flex-1 border-0 bg-transparent p-0 text-base text-gray-900 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100"
+                        class="h-14 flex-1 border-0 bg-transparent p-0 text-base text-ink placeholder:text-muted focus:ring-0"
                     />
-                    <kbd class="rounded-sm border border-gray-200 px-1.5 font-mono text-2xs text-gray-500 dark:border-zinc-700 dark:text-zinc-400">Esc</kbd>
+                    <kbd class="rounded-sm border border-line px-1.5 font-mono text-2xs text-muted">Esc</kbd>
                 </div>
 
                 <ul :id="listId" role="listbox" class="max-h-[50vh] overflow-y-auto p-2">
@@ -132,7 +132,7 @@
                          first option of a group says the group's name to screen readers. --}}
                     <template x-for="(item, i) in results" :key="item.id">
                         <li role="none">
-                            <p x-show="item.groupStart" aria-hidden="true" class="px-2.5 pt-3 pb-1.5 font-mono text-2xs font-medium tracking-[0.08em] text-gray-500 uppercase dark:text-zinc-400" x-text="item.group"></p>
+                            <p x-show="item.groupStart" aria-hidden="true" class="px-2.5 pt-3 pb-1.5 font-mono text-2xs font-medium tracking-[0.08em] text-muted uppercase" x-text="item.group"></p>
                             <a
                                 :id="optionId(item)"
                                 :href="item.href"
@@ -141,22 +141,22 @@
                                 :data-highlighted="highlighted === i ? '' : null"
                                 role="option"
                                 :aria-selected="(highlighted === i).toString()"
-                                :class="highlighted === i ? 'bg-gray-100 text-gray-900 dark:bg-zinc-800 dark:text-zinc-100' : 'text-gray-600 dark:text-zinc-300'"
+                                :class="highlighted === i ? 'bg-sunken text-ink' : 'text-dim'"
                                 class="flex items-center gap-3 rounded-sm px-2.5 py-2 text-sm"
                             >
                                 <span class="min-w-0 flex-1">
                                     <span x-show="item.groupStart" class="sr-only" x-text="item.group + ': '"></span>
                                     <span class="block truncate font-medium" x-text="item.label"></span>
-                                    <span x-show="item.hint" class="block truncate text-xs text-gray-500 dark:text-zinc-400" x-text="item.hint"></span>
+                                    <span x-show="item.hint" class="block truncate text-xs text-muted" x-text="item.hint"></span>
                                 </span>
-                                <acun:icon name="arrow-turn-down-left" size="4" class="text-gray-400" x-show="highlighted === i" />
+                                <acun:icon name="arrow-turn-down-left" size="4" class="text-faint" x-show="highlighted === i" />
                             </a>
                         </li>
                     </template>
-                    <li x-show="results.length === 0" role="none" class="px-3 py-8 text-center text-sm text-gray-500 dark:text-zinc-400"><span role="status">{{ $empty }}</span></li>
+                    <li x-show="results.length === 0" role="none" class="px-3 py-8 text-center text-sm text-muted"><span role="status">{{ $empty }}</span></li>
                 </ul>
 
-                <div class="flex items-center gap-4 border-t border-gray-200 px-4 py-2.5 text-2xs text-gray-500 dark:border-zinc-800 dark:text-zinc-400">
+                <div class="flex items-center gap-4 border-t border-line px-4 py-2.5 text-2xs text-muted">
                     <span><kbd class="font-mono">↑↓</kbd> {{ __('to navigate') }}</span>
                     <span><kbd class="font-mono">↵</kbd> {{ __('to open') }}</span>
                     <span><kbd class="font-mono">Esc</kbd> {{ __('to close') }}</span>

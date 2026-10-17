@@ -150,6 +150,6 @@ final class SearchComponentTest extends TestCase
         $html = Blade::render('<x-ui.search name="q" size="lg" />');
 
         self::assertStringContainsString('h-12', $html);
-        self::assertStringContainsString('focus-within:border-brand-600 focus-within:shadow-(--ui-focus-shadow)', $html);
+        self::assertStringContainsString('focus-within:border-focus focus-within:shadow-(--ac-focus-shadow)', $html);
     }
 }

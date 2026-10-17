@@ -30,14 +30,14 @@
 <div
     role="radiogroup"
     @if ($label) aria-label="{{ $label }}" @endif
-    {{ $attributes->whereDoesntStartWith(['wire:model', 'x-model'])->class(['gap-0.5 rounded-sm bg-gray-100 p-0.5 dark:bg-zinc-800', 'flex w-full' => $fullWidth, 'inline-flex' => ! $fullWidth]) }}
+    {{ $attributes->whereDoesntStartWith(['wire:model', 'x-model'])->class(['gap-0.5 rounded-sm bg-sunken p-0.5', 'flex w-full' => $fullWidth, 'inline-flex' => ! $fullWidth]) }}
 >
     @foreach ($options as $key => $text)
         <label @class(['relative', 'flex-1' => $fullWidth])>
             <input type="radio" name="{{ $fieldName }}" value="{{ $key }}" class="peer sr-only" @checked($current !== null && $current === (string) $key) {{ $binding }}>
             <span @class([
-                'flex cursor-pointer items-center justify-center rounded-sm font-medium whitespace-nowrap text-gray-600 transition-colors select-none hover:text-gray-900 dark:text-zinc-400 dark:hover:text-zinc-100',
-                'peer-checked:bg-white peer-checked:text-gray-900 peer-checked:shadow-sm dark:peer-checked:bg-zinc-900 dark:peer-checked:text-zinc-100',
+                'flex cursor-pointer items-center justify-center rounded-sm font-medium whitespace-nowrap text-dim transition-colors select-none hover:text-ink',
+                'peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm',
                 'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-focus peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
                 $sizeClass,
             ])>{{ $text }}</span>

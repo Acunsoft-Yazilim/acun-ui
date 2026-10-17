@@ -17,15 +17,16 @@
     $color = $variant ?? $color;
     $percent = max(0, min(100, (int) ($value ?? 0)));
     $heightClass = ['sm' => 'h-1.5', 'md' => 'h-2.5', 'lg' => 'h-4'][$size] ?? 'h-2.5';
-    // [track, bar]; the primary bar is the primary button's fill.
+    // [track, bar]: the track is the colour's soft tint; the primary bar is the primary fill, the
+    // others the colour's line (its 500 shade; 400 in the dark theme), the dark one its line too.
     [$trackClass, $barClass] = [
-        'primary' => ['bg-brand-100 dark:bg-brand-500/15', 'bg-(--btn-primary-bg)'],
-        'secondary' => ['bg-secondary-100 dark:bg-secondary-500/15', 'bg-secondary-500'],
-        'success' => ['bg-emerald-100 dark:bg-emerald-500/15', 'bg-emerald-500'],
-        'danger' => ['bg-red-100 dark:bg-red-500/15', 'bg-red-500'],
-        'warning' => ['bg-amber-100 dark:bg-amber-500/15', 'bg-amber-500'],
-        'info' => ['bg-sky-100 dark:bg-sky-500/15', 'bg-sky-500'],
-        'dark' => ['bg-dark/10 dark:bg-zinc-700', 'bg-dark dark:bg-zinc-300'],
+        'primary' => ['bg-primary-soft', 'bg-primary'],
+        'secondary' => ['bg-secondary-soft', 'bg-secondary'],
+        'success' => ['bg-success-soft', 'bg-success-line'],
+        'danger' => ['bg-danger-soft', 'bg-danger-line'],
+        'warning' => ['bg-warning-soft', 'bg-warning-line'],
+        'info' => ['bg-info-soft', 'bg-info-line'],
+        'dark' => ['bg-dark-soft', 'bg-dark-line'],
     ][\Acun\Ui\Support\Tone::name($color)];
 @endphp
 

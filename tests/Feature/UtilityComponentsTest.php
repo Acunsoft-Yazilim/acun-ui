@@ -46,10 +46,11 @@ final class UtilityComponentsTest extends TestCase
         $html = Blade::render('<x-ui.scroll-area>A</x-ui.scroll-area>');
 
         self::assertStringContainsString('[scrollbar-width:thin]', $html);
-        self::assertStringContainsString('[scrollbar-color:var(--color-gray-300)_transparent]', $html);
-        self::assertStringContainsString('dark:[scrollbar-color:var(--color-zinc-700)_transparent]', $html);
-        self::assertStringContainsString('[&amp;::-webkit-scrollbar-thumb]:bg-gray-300', $html);
-        self::assertStringContainsString('dark:[&amp;::-webkit-scrollbar-thumb]:bg-zinc-700', $html);
+        // One token for both modes: the strong line, the line-hover colour under the pointer.
+        self::assertStringContainsString('[scrollbar-color:var(--ac-line-strong)_transparent]', $html);
+        self::assertStringContainsString('hover:[scrollbar-color:var(--ac-line-hover)_transparent]', $html);
+        self::assertStringContainsString('[&amp;::-webkit-scrollbar-thumb]:bg-line-strong', $html);
+        self::assertStringNotContainsString('dark:', $html);
     }
 
     public function test_scroll_area_sizes_and_attributes_merge_onto_the_root(): void
@@ -115,7 +116,7 @@ final class UtilityComponentsTest extends TestCase
     {
         $html = Blade::render('<x-ui.copy-button text="a" variant="ghost" size="sm" class="w-full" disabled x-on:click="sayac++" wire:click="kaydet" />');
 
-        self::assertMatchesRegularExpression('/<button type="button" disabled\s+class="[^"]*px-2\.5 py-\[5px\] text-xs[^"]*text-gray-600 hover:not-disabled:text-gray-900[^"]* w-full"/', $html);
+        self::assertMatchesRegularExpression('/<button type="button" disabled\s+class="[^"]*px-2\.5 py-\[5px\] text-xs[^"]*text-dim hover:not-disabled:text-ink[^"]* w-full"/', $html);
         self::assertStringContainsString('x-on:click="sayac++"', $html);
         self::assertStringContainsString('wire:click="kaydet"', $html);
     }
@@ -134,7 +135,7 @@ final class UtilityComponentsTest extends TestCase
     {
         $html = Blade::render('<x-ui.kbd class="ms-1">Esc</x-ui.kbd>');
 
-        self::assertMatchesRegularExpression('/^<kbd class="[^"]*rounded-sm border border-gray-200[^"]*dark:bg-zinc-800[^"]* ms-1">Esc<\/kbd>$/', trim($html));
+        self::assertMatchesRegularExpression('/^<kbd class="[^"]*rounded-sm border border-line[^"]*bg-field[^"]* ms-1">Esc<\/kbd>$/', trim($html));
     }
 
     public function test_kbd_combination_nests_one_kbd_per_key(): void
@@ -162,9 +163,9 @@ final class UtilityComponentsTest extends TestCase
     /** Avatar takes the palette colour names; the older names keep working. */
     public function test_avatar_takes_the_palette_names(): void
     {
-        self::assertStringContainsString("bg-secondary-100 text-secondary-700", Blade::render("<x-ui.avatar name=\"Ayşe Demir\" color=\"secondary\" />"));
-        self::assertStringContainsString("bg-secondary-100 text-secondary-700", Blade::render("<x-ui.avatar name=\"Ayşe Demir\" color=\"neutral\" />"));
-        self::assertStringContainsString("bg-brand-100 text-brand-700", Blade::render("<x-ui.avatar name=\"Ayşe Demir\" />"));
+        self::assertStringContainsString("bg-secondary-soft text-secondary-tint-ink", Blade::render("<x-ui.avatar name=\"Ayşe Demir\" color=\"secondary\" />"));
+        self::assertStringContainsString("bg-secondary-soft text-secondary-tint-ink", Blade::render("<x-ui.avatar name=\"Ayşe Demir\" color=\"neutral\" />"));
+        self::assertStringContainsString("bg-primary-soft text-primary-tint-ink", Blade::render("<x-ui.avatar name=\"Ayşe Demir\" />"));
 
         // The "+3" bubble of an avatar group follows the avatars' size.
         self::assertStringContainsString("flex size-8 text-xs items-center", Blade::render("<x-ui.avatar-group :more=\"3\" size=\"sm\"><x-ui.avatar name=\"Ayşe Demir\" size=\"sm\" /></x-ui.avatar-group>"));

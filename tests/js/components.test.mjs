@@ -140,9 +140,9 @@ test('a danger toast is an error toast; an unknown type is shown as info', async
     assert.deepEqual(data.toasts.map((toast) => toast.type), ['error', 'info', 'info']);
     const [danger, unknown] = container.querySelectorAll('[role]');
     assert.equal(danger.getAttribute('role'), 'alert');
-    assert.ok(danger.classList.contains('bg-red-600'));
+    assert.ok(danger.classList.contains('bg-danger'));
     assert.equal(unknown.getAttribute('role'), 'status');
-    assert.ok(unknown.classList.contains('bg-gray-900'));
+    assert.ok(unknown.classList.contains('bg-inverse'));
 
     data.toasts.map((toast) => toast.id).forEach((toastId) => data.dismiss(toastId));
 });

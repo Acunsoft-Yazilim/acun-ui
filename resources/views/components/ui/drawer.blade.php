@@ -102,7 +102,7 @@
             {{-- On desktop closing also animates the width (not a slide) - so the close button can follow the edge in both directions; once fully closed (rendered=false) the panel is invisible so the border line left at 0 width does not show. --}}
             :class="[entered ? 'translate-x-0 lg:w-(--menu-width)' : '-translate-x-full lg:translate-x-0 lg:w-0', rendered ? '' : 'invisible']"
             :data-filter-open="entered ? 'true' : 'false'"
-            class="filter-panel fixed inset-y-0 left-0 z-50 flex h-full w-[85vw] max-w-xs flex-col overflow-hidden bg-white shadow-xl transition-transform duration-200 ease-out dark:bg-zinc-900 lg:max-w-none lg:border lg:border-gray-200 lg:shadow-lg lg:transition-[width] dark:lg:border-zinc-800"
+            class="filter-panel fixed inset-y-0 left-0 z-50 flex h-full w-[85vw] max-w-xs flex-col overflow-hidden bg-surface shadow-xl transition-transform duration-200 ease-out lg:max-w-none lg:border lg:border-line lg:shadow-lg lg:transition-[width]"
             tabindex="-1"
             role="dialog"
             {{-- Modal only as the mobile overlay; on desktop the page beside it stays in use. --}}
@@ -123,7 +123,7 @@
 @endif
 
                 @isset($footer)
-                    <div class="flex items-center {{ $compact ? 'gap-1.5 px-3 py-2.5' : 'justify-end gap-2 px-5 py-4' }} bg-gray-50 dark:bg-zinc-800/50">
+                    <div class="flex items-center {{ $compact ? 'gap-1.5 px-3 py-2.5' : 'justify-end gap-2 px-5 py-4' }} bg-sunken/50">
                         {{ $footer }}
                     </div>
                 @endisset
@@ -145,7 +145,7 @@
             type="button"
             x-cloak
             x-on:click="close()"
-            class="menu-toggle menu-toggle-close filter-close-button fixed z-50 hidden -translate-y-1/2 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 lg:flex"
+            class="menu-toggle menu-toggle-close filter-close-button fixed z-50 hidden -translate-y-1/2 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger-ink lg:flex"
             aria-label="{{ __('Close filters') }}"
             title="{{ __('Close filters') }}"
         >
@@ -212,19 +212,19 @@
                 x-ref="panel"
                 :class="entered ? 'translate-x-0' : '{{ $side === 'left' ? '-translate-x-full' : 'translate-x-full' }}'"
                 {{-- Written in parts, a nested Livewire component that starts with a part (body and footer after the header) is layout-neutral, so its parts are the panel's rows. --}}
-                class="flex h-full w-[85vw] {{ $widthClass }} flex-col bg-white shadow-xl outline-none transition-transform duration-200 ease-out dark:bg-zinc-900 {{ $floating ? 'rounded-sm' : '' }}{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=drawer-header],[data-slot=drawer-body],[data-slot=drawer-footer]))]:contents' : '' }}"
+                class="flex h-full w-[85vw] {{ $widthClass }} flex-col bg-surface shadow-xl outline-none transition-transform duration-200 ease-out {{ $floating ? 'rounded-sm' : '' }}{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=drawer-header],[data-slot=drawer-body],[data-slot=drawer-footer]))]:contents' : '' }}"
                 tabindex="-1"
                 {{-- A followed link closes the panel (a menu; see followLink() for the exceptions); the click still bubbles, so popups inside close on click outside. --}}
                 x-on:click="followLink($event)"
             >
                 @if (isset($header) && ! $headerPart)
-                    <div class="px-5 pt-4 border-b border-gray-200 dark:border-zinc-700">
+                    <div class="px-5 pt-4 border-b border-line">
                         {{ $header }}
                     </div>
                 @elseif ($title && ! $headerPart)
-                    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-zinc-700">
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-zinc-100">{{ $title }}</h3>
-                        <button type="button" x-on:click="close()" aria-label="{{ __('Close') }}" title="{{ __('Close') }}" class="cursor-pointer rounded-sm text-gray-500 hover:text-gray-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:hover:text-zinc-200">
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-line">
+                        <h3 class="text-base font-semibold text-ink">{{ $title }}</h3>
+                        <button type="button" x-on:click="close()" aria-label="{{ __('Close') }}" title="{{ __('Close') }}" class="cursor-pointer rounded-sm text-muted hover:text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
                             <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>
@@ -244,7 +244,7 @@
 @endif
 
                 @isset($footer)
-                    <div class="flex items-center {{ $compact ? 'gap-1.5 px-3 py-2.5' : 'justify-end gap-2 px-5 py-4' }} bg-gray-50 border-t border-gray-200 dark:bg-zinc-800/50 dark:border-zinc-700">
+                    <div class="flex items-center {{ $compact ? 'gap-1.5 px-3 py-2.5' : 'justify-end gap-2 px-5 py-4' }} bg-sunken/50 border-t border-line">
                         {{ $footer }}
                     </div>
                 @endisset

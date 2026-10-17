@@ -32,7 +32,7 @@
     }"
     {{ $attributes->class('space-y-3') }}
 >
-    <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-1.5 rounded-sm bg-gray-50 p-4 font-mono text-sm tracking-wider text-gray-900 sm:grid-cols-2 dark:bg-zinc-800/60 dark:text-zinc-100">
+    <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-1.5 rounded-sm bg-sunken/60 p-4 font-mono text-sm tracking-wider text-ink sm:grid-cols-2">
         @foreach ($codes as $code)
             <li class="select-all">{{ $code }}</li>
         @endforeach

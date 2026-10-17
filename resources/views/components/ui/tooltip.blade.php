@@ -76,7 +76,7 @@
             x-transition:leave="ease-in duration-75"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            class="fixed z-[90] -translate-x-1/2 {{ $position === 'top' ? '-translate-y-full' : '' }} whitespace-nowrap rounded-sm bg-gray-900 px-2 py-1 text-xs font-medium text-white shadow-lg dark:bg-zinc-700"
+            class="fixed z-[90] -translate-x-1/2 {{ $position === 'top' ? '-translate-y-full' : '' }} whitespace-nowrap rounded-sm bg-inverse px-2 py-1 text-xs font-medium text-on-inverse shadow-lg"
             @if ($position === 'top')
                 :style="`top: ${top - 6}px; left: ${left}px;`"
             @else

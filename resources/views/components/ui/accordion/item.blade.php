@@ -15,12 +15,12 @@
     the parts take their own.
 --}}
 @if ($title !== null)
-    <div {{ $attributes->except('class')->merge(['class' => 'border-b border-gray-200 dark:border-zinc-800']) }}>
+    <div {{ $attributes->except('class')->merge(['class' => 'border-b border-line']) }}>
         <acun:accordion.heading>{{ $title }}</acun:accordion.heading>
         <acun:accordion.content {{ $attributes->only('class') }}>{{ $slot }}</acun:accordion.content>
     </div>
 @else
-    <div {{ $attributes->merge(['class' => 'border-b border-gray-200 dark:border-zinc-800']) }}>
+    <div {{ $attributes->merge(['class' => 'border-b border-line']) }}>
         {{ $slot }}
     </div>
 @endif

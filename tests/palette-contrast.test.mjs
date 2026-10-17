@@ -17,6 +17,8 @@ const declarations = new Map();
 // panel.css first; then the tokens (--color-dark is the dark tone of tokens.css, --ac-dark, whose
 // first value in themes.css is the light theme's).
 const tokens = ['tokens.css', 'themes.css'].map((file) => fs.readFileSync(path.join(cssDirectory, file), 'utf8')).join('\n');
+// acun:button paints with the tokens (bg-success text-on-success…); its variant map is checked against them.
+const buttonView = fs.readFileSync(path.join(cssDirectory, '../resources/views/components/ui/button.blade.php'), 'utf8');
 for (const [, name, value] of `${rootBlock}\n${tokens}`.matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
     if (!declarations.has(name)) declarations.set(name, value.trim());
 }
@@ -94,15 +96,20 @@ for (const [what, fill, text, minimum] of pairs) {
     });
 }
 
-test('the solid buttons use the same readable pairs', () => {
-    for (const [variant, fill] of [['success', '--color-emerald-solid'], ['warning', '--color-amber-solid'], ['info', '--color-sky-solid']]) {
-        assert.match(css, new RegExp(`--btn-${variant}-bg: var\\(${fill}\\);`));
-        assert.match(css, new RegExp(`--btn-${variant}-hover: color-mix\\(in srgb, var\\(${fill}\\) 88%, black\\);`));
-        assert.match(css, new RegExp(`--btn-${variant}-color: #fff;`));
-        assert.match(css, new RegExp(`\\.ui-btn-${variant} \\{[^}]*--btn-color: var\\(--btn-${variant}-color\\)`));
+test('the solid buttons fill with the tokens\' readable pairs', () => {
+    // themes.css: each solid fill is the palette's solid shade, hovered with 12% black, with white text.
+    for (const [tone, fill] of [['success', 'emerald-solid'], ['warning', 'amber-solid'], ['info', 'sky-solid'], ['danger', 'red-600'], ['secondary', 'secondary-500']]) {
+        assert.equal(toHex(resolve(`var(--ac-${tone})`)), toHex(resolve(`var(--color-${fill})`)), tone);
+        assert.equal(toHex(resolve(`var(--ac-${tone}-hover)`)), toHex(resolve(`color-mix(in srgb, var(--color-${fill}) 88%, black)`)), `${tone} hover`);
+        assert.equal(declarations.get(`--ac-on-${tone}`), '#fff', `on-${tone}`);
     }
-    assert.match(css, /--btn-danger-bg: var\(--color-red-600\);/);
-    assert.match(css, /--btn-danger-hover: color-mix\(in srgb, var\(--color-red-600\) 88%, black\);/);
+    // acun:button: every solid variant is its tone's fill, hover and text colour (the border is the fill).
+    for (const tone of ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark']) {
+        assert.match(buttonView, new RegExp(`'${tone}' => 'border-${tone} bg-${tone} text-on-${tone} hover:not-disabled:border-${tone}-hover hover:not-disabled:bg-${tone}-hover `), tone);
+    }
+    // The .ui-btn classes and the per-variant --btn-* variables are gone; only the runtime's primary fill is left.
+    const rules = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.doesNotMatch(rules, /\.ui-btn|--btn-(?!primary-(?:bg|hover):)/);
 });
 
 test('the preset primary colours: white text on the button and on its hover, brand-600 text on white', () => {
@@ -120,26 +127,28 @@ test('the preset primary colours: white text on the button and on its hover, bra
 });
 
 /**
- * The primary button derives its border, hover and shadow from --color-brand-600, so a theme's
- * own @theme value changes them all; no rule keeps the default purple for them.
+ * The primary fill (the runtime's input of the tokens) derives its hover from --color-brand-600, so a
+ * theme's own @theme value changes them all; no rule keeps the default purple for them. The border is
+ * the fill (border-primary) and the shadow prop the fill at 90% (shadow-primary/90).
  */
 test('the default primary button derives every shade from --color-brand-600', () => {
     const button = block(':root', '--btn-primary-bg');
-    for (const name of ['--btn-primary-bg', '--btn-primary-border', '--btn-primary-hover', '--btn-primary-hover-border', '--btn-primary-shadow']) {
-        assert.doesNotMatch(button.get(name), /#[0-9a-f]{3,8}\b|rgb\(/i, `${name} derives from --color-brand-600: ${button.get(name)}`);
+    assert.deepEqual([...button.keys()], ['--btn-primary-bg', '--btn-primary-hover']);
+    for (const [name, value] of button) {
+        assert.doesNotMatch(value, /#[0-9a-f]{3,8}\b|rgb\(/i, `${name} derives from --color-brand-600: ${value}`);
     }
     assert.doesNotMatch(css, /:root:not\(\[data-brand-color\]\)|:root\[data-brand-color='default'\]/, 'No rule pins the default purple on the button.');
 
-    // Today's look for the default purple: border #794dff, hover #6a44e0, shadow rgb(121 77 255 / 90%).
+    // Today's look for the default purple: fill and border #794dff, hover #6a44e0.
     const purple = new Map([['--color-brand-600', '#794dff'], ...button]);
-    assert.equal(toHex(resolve('var(--btn-primary-border)', 0, purple)), '#794dff');
+    assert.equal(toHex(resolve('var(--btn-primary-bg)', 0, purple)), '#794dff');
     assert.equal(toHex(resolve('var(--btn-primary-hover)', 0, purple)), '#6a44e0');
-    assert.equal(toHex(resolve('var(--btn-primary-hover-border)', 0, purple)), '#6a44e0');
-    assert.equal(button.get('--btn-primary-shadow'), 'color-mix(in srgb, var(--color-brand-600) 90%, transparent)');
+    assert.match(buttonView, /'primary' => 'border-primary bg-primary /);
+    assert.match(buttonView, /'primary' => 'shadow-primary\/90'/);
 
-    // The theming guide's example colour: a teal border and hover, not purple ones.
+    // The theming guide's example colour: a teal fill and hover, not purple ones.
     const teal = new Map([['--color-brand-600', '#0f766e'], ...button]);
-    assert.equal(toHex(resolve('var(--btn-primary-border)', 0, teal)), '#0f766e');
+    assert.equal(toHex(resolve('var(--btn-primary-bg)', 0, teal)), '#0f766e');
     assert.equal(toHex(resolve('var(--btn-primary-hover)', 0, teal)), '#0d6861');
 });
 
@@ -153,9 +162,12 @@ test('a custom colour takes its measured shades for the light and the dark theme
     assert.equal(block(custom).get('--color-brand-600'), 'var(--brand-custom-600)');
     assert.equal(block(custom.replace(':root', ':root.dark')).get('--color-brand-600'), 'var(--brand-custom-600-dark, var(--brand-custom-600))');
     assert.doesNotMatch(css, /:root(?:\.dark)?\[data-brand-color='custom'\] \{/, 'No custom rule without the shades.');
-    // The text on the primary button's hover is measured on its own.
-    assert.match(css, /\.ui-btn-primary \{[^}]*--btn-hover-color: var\(--btn-primary-hover-color, var\(--btn-primary-color, #fff\)\);/);
-    assert.match(css, /\.ui-btn:not\(:disabled, \[aria-disabled='true'\]\):is\(:hover, :active\) \{[^}]*color: var\(--btn-hover-color, var\(--btn-color, #fff\)\);/);
+    // The measured text on the fill (theme.js: --btn-primary-color) is the token's on-primary, and the
+    // primary button keeps it on the hover (the measured text reads on the hover too).
+    assert.match(tokens, /--ac-on-primary: var\(--btn-primary-color, #fff\);/);
+    const primary = buttonView.match(/'primary' => '([^']*)'/)[1];
+    assert.match(primary, /(?:^| )text-on-primary(?: |$)/);
+    assert.doesNotMatch(primary, /hover:[\w:-]*text-/);
 });
 
 /**
@@ -233,32 +245,31 @@ test('a preset fills its button and its brand-600 with one colour', () => {
 test('the solid buttons and the presets derive from the palette tokens', () => {
     // White text (#fff) and black shadows stay as they are.
     const literal = /#(?!fff\b)[0-9a-f]{3,8}\b|rgb\((?!0 0 0 \/)/i;
-    const buttons = block(':root', '--btn-secondary-bg');
-    for (const [name, value] of buttons) assert.doesNotMatch(value, literal, `${name}: ${value}`);
     for (const preset of ['green', 'red', 'yellow', 'blue', 'gray', 'dark']) {
         for (const [name, value] of block(`:root[data-brand-color='${preset}']`)) assert.doesNotMatch(value, literal, `${preset} ${name}: ${value}`);
     }
     for (const [name, value] of block(":root.dark[data-brand-color='dark']")) assert.doesNotMatch(value, literal, `dark preset, dark theme ${name}: ${value}`);
 
-    const look = { '--btn-secondary-bg': '#6b7280', '--btn-secondary-hover': '#5e6471', '--btn-dark-bg': '#3f404d', '--btn-dark-hover': '#373844', '--btn-light-bg': '#f4f4f5', '--btn-light-border': '#e4e4e7', '--btn-light-hover': '#e4e4e7', '--btn-light-hover-border': '#d4d4d8', '--btn-light-color': '#52525c' };
-    for (const [name, hex] of Object.entries(look)) assert.equal(toHex(resolve(`var(${name})`, 0, buttons)), hex, name);
-    // The shadows: the colour at the same opacity.
-    for (const [name, colour, share] of [['--btn-secondary-shadow', '#6b7280', 90], ['--btn-dark-shadow', '#3f404d', 75], ['--btn-danger-shadow', '#fb4141', 90]]) {
-        const [, value, percent] = buttons.get(name).match(/^color-mix\(in srgb, (.+) (\d+)%, transparent\)$/);
-        assert.deepEqual([toHex(resolve(value)), Number(percent)], [colour, share], name);
-    }
+    // Today's look of the secondary, dark and light buttons, now from the tokens (light theme).
+    const look = { '--ac-secondary': '#6b7280', '--ac-secondary-hover': '#5e6471', '--ac-dark': '#3f404d', '--ac-dark-hover': '#373844', '--ac-sunken': '#f4f4f5', '--ac-line': '#e4e4e7', '--ac-track': '#e4e4e7', '--ac-line-strong': '#d4d4d8', '--ac-dim': '#52525c' };
+    for (const [name, hex] of Object.entries(look)) assert.equal(toHex(resolve(`var(${name})`)), hex, name);
+    assert.match(buttonView, /'light' => 'border-line bg-sunken text-dim hover:not-disabled:border-line-strong hover:not-disabled:bg-track /);
+    // The shadow prop: the fill at the same opacity as before.
+    for (const [tone, share] of [['secondary', 90], ['dark', 75], ['danger', 90]]) assert.match(buttonView, new RegExp(`'${tone}' => 'shadow-${tone}/${share}'`), tone);
     assert.equal(toHex(resolve('var(--color-brand-600)', 0, block(":root[data-brand-color='gray']"))), '#6b7280');
     assert.equal(toHex(resolve('var(--color-brand-600)', 0, block(":root[data-brand-color='dark']"))), '#3f404d');
 });
 
 /**
  * TEMA-15: the dark theme values of the checkbox frame and the dark button are set on .dark, so
- * the semi-dark menu (.panel-sidebar.dark) takes them too. The --ac-* tokens the PRO dialogs read
- * (themes.css) are checked in tokens.test.mjs, TEMA-7 (their primary fill carries its text) too.
+ * the semi-dark menu (.panel-sidebar.dark) takes them too: --ui-control-border in panel.css, the
+ * dark tone's grey (--ac-dark, --ac-dark-hover) in the dark block of themes.css, which matches .dark
+ * while the bridge is on. The --ac-* tokens the PRO dialogs read are checked in tokens.test.mjs,
+ * TEMA-7 (their primary fill carries its text) too.
  */
 test('the dark theme tokens are set on every .dark element, the semi-dark menu too', () => {
-    for (const name of ['--ui-control-border', '--btn-dark-bg', '--btn-dark-hover', '--btn-dark-shadow']) {
-        assert.ok(block('.dark', name).has(name), name);
-    }
-    assert.doesNotMatch(css, /\n:root\.dark \{\n[^}]*--(?:ui-control-border|btn-dark-bg):/, 'Not on :root.dark alone.');
+    assert.ok(block('.dark', '--ui-control-border').has('--ui-control-border'));
+    const dark = tokens.slice(tokens.indexOf("[data-theme$='dark'],\n    .dark {"));
+    assert.match(dark, /^\[data-theme\$='dark'\],\n {4}\.dark \{[^}]*--ac-dark: #2e2e2e;[^}]*--ac-dark-hover: #474747;/);
+    assert.doesNotMatch(css, /\n:root\.dark \{\n[^}]*--ui-control-border:/, 'Not on :root.dark alone.');
 });

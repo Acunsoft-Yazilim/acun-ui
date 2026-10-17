@@ -22,7 +22,7 @@
     $passkeys = collect($passkeys);
 @endphp
 
-<ul role="list" {{ $attributes->class('divide-y divide-gray-200 rounded-sm border border-gray-200 bg-white dark:divide-zinc-800 dark:border-zinc-700 dark:bg-zinc-900') }}>
+<ul role="list" {{ $attributes->class('divide-y divide-line rounded-sm border border-line bg-surface') }}>
     @forelse ($passkeys as $passkey)
         @php
             $id = data_get($passkey, 'id');
@@ -30,12 +30,12 @@
             $used = $day(data_get($passkey, 'last_used_at'));
         @endphp
         <li class="flex items-center gap-3 px-4 py-3" wire:key="passkey-{{ $id }}">
-            <span class="flex size-9 flex-none items-center justify-center rounded-full bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300" aria-hidden="true">
+            <span class="flex size-9 flex-none items-center justify-center rounded-full bg-sunken text-dim" aria-hidden="true">
                 <acun:icon name="finger-print" size="4.5" />
             </span>
             <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-medium text-gray-900 dark:text-zinc-100">{{ data_get($passkey, 'name') ?: __('Passkey') }}</p>
-                <p class="text-xs text-gray-500 dark:text-zinc-400">
+                <p class="truncate text-sm font-medium text-ink">{{ data_get($passkey, 'name') ?: __('Passkey') }}</p>
+                <p class="text-xs text-muted">
                     @if ($added){{ __('Added :date', ['date' => $added]) }} · @endif{{ $used ? __('Last used :date', ['date' => $used]) : __('Never used') }}
                 </p>
             </div>
@@ -49,7 +49,7 @@
             @endif
         </li>
     @empty
-        <li class="px-4 py-6 text-center text-sm text-gray-500 dark:text-zinc-400">
+        <li class="px-4 py-6 text-center text-sm text-muted">
             {{ $slot->isNotEmpty() ? $slot : __('No passkeys yet.') }}
         </li>
     @endforelse

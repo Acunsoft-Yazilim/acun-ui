@@ -12,7 +12,7 @@
     When the list itself is narrow (under 24rem: a phone, or a side card on a wide screen)
     the label sits above its value; the width of the list decides, not the screen's.
 --}}
-<dl {{ $attributes->class('@container divide-y divide-gray-100 text-sm dark:divide-zinc-800') }}>
+<dl {{ $attributes->class('@container divide-y divide-line-soft text-sm') }}>
     @foreach ($items as $label => $value)
         <acun:description-list.item :label="$label">{{ $value }}</acun:description-list.item>
     @endforeach

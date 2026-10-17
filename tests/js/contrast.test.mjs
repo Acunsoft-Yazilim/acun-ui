@@ -33,7 +33,7 @@ const { menu: menuButton = '', ...parts } = html;
 const markup = Object.values(parts).join('\n');
 
 // The command palette's dialog is teleported to <body> by Alpine; the page puts it there itself.
-const page = `<div id="card" class="m-4 rounded-sm bg-white p-4 dark:bg-zinc-900">${markup}</div>`;
+const page = `<div id="card" class="m-4 rounded-sm bg-surface p-4">${markup}</div>`;
 const teleport = `document.querySelectorAll('template').forEach((template) => document.body.append(template.content.cloneNode(true)));`;
 
 const measureText = `

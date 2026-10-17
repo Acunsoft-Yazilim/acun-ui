@@ -33,13 +33,13 @@
     @if ($describedBy !== '') aria-describedby="{{ $describedBy }}" @endif
 >
     @if ($label)
-        <legend class="text-sm font-medium text-gray-900 dark:text-zinc-100">
-            {{ $label }}@if ($required)<span class="ms-0.5 text-red-600 dark:text-red-400" aria-hidden="true">*</span><span class="sr-only"> {{ __('(required)') }}</span>@endif
+        <legend class="text-sm font-medium text-ink">
+            {{ $label }}@if ($required)<span class="ms-0.5 text-danger-ink" aria-hidden="true">*</span><span class="sr-only"> {{ __('(required)') }}</span>@endif
         </legend>
     @endif
 
     @if ($description)
-        <p id="{{ $groupId }}-description" class="text-xs text-gray-500 dark:text-zinc-400">{{ $description }}</p>
+        <p id="{{ $groupId }}-description" class="text-xs text-muted">{{ $description }}</p>
     @endif
 
     <div @class(['flex', 'flex-wrap gap-x-6 gap-y-2' => $inline, 'flex-col gap-2' => ! $inline])>
@@ -47,6 +47,6 @@
     </div>
 
     @if ($error)
-        <p id="{{ $groupId }}-message" class="text-sm text-red-600 dark:text-red-400">{{ $error }}</p>
+        <p id="{{ $groupId }}-message" class="text-sm text-danger-ink">{{ $error }}</p>
     @endif
 </fieldset>

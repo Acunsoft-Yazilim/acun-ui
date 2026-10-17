@@ -22,7 +22,7 @@
         'sm' => 'h-5 min-w-5 px-1 text-2xs',
         'md' => 'h-6 min-w-6 px-1.5 text-xs',
     ][$size] ?? 'h-6 min-w-6 px-1.5 text-xs')
-        .' inline-flex items-center justify-center rounded-sm border border-gray-200 border-b-gray-300 bg-white font-mono font-medium text-gray-600 shadow-xs dark:border-zinc-700 dark:border-b-zinc-600 dark:bg-zinc-800 dark:text-zinc-300';
+        .' inline-flex items-center justify-center rounded-sm border border-line border-b-line-strong bg-field font-mono font-medium text-dim shadow-xs';
 
     $names = [
         '⌘' => __('Command'),
@@ -49,7 +49,7 @@
     <kbd {{ $attributes->merge(['class' => 'inline-flex items-center gap-1 font-sans']) }}>
         @foreach ((array) $keys as $key)
             @if (! $loop->first && $separator !== '')
-                <span class="text-xs text-gray-500 dark:text-zinc-400">{{ $separator }}</span>
+                <span class="text-xs text-muted">{{ $separator }}</span>
             @endif
             <kbd class="{{ $keyClass }}">@isset($names[$key])<span class="sr-only">{{ $names[$key] }}</span><span aria-hidden="true" class="font-sans">{{ $key }}</span>@else{{ $key }}@endisset</kbd>
         @endforeach

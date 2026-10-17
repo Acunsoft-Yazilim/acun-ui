@@ -16,12 +16,12 @@
     <button
         type="button"
         wire:click="{{ $method }}(@js($field))"
-        class="inline-flex cursor-pointer items-center gap-1 rounded-sm [text-transform:inherit] hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus dark:hover:text-zinc-200"
+        class="inline-flex cursor-pointer items-center gap-1 rounded-sm [text-transform:inherit] hover:text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
     >
         {{ $slot }}
         <span class="flex flex-col justify-center leading-none" aria-hidden="true">
-            <svg class="size-3 {{ $active && $sortDirection === 'asc' ? 'text-brand-600 dark:text-brand-400' : 'text-gray-300 dark:text-zinc-600' }}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l7 8H5l7-8z"/></svg>
-            <svg class="-mt-1 size-3 {{ $active && $sortDirection === 'desc' ? 'text-brand-600 dark:text-brand-400' : 'text-gray-300 dark:text-zinc-600' }}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 19l-7-8h14l-7 8z"/></svg>
+            <svg class="size-3 {{ $active && $sortDirection === 'asc' ? 'text-primary-ink' : 'text-line-strong' }}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l7 8H5l7-8z"/></svg>
+            <svg class="-mt-1 size-3 {{ $active && $sortDirection === 'desc' ? 'text-primary-ink' : 'text-line-strong' }}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 19l-7-8h14l-7 8z"/></svg>
         </span>
     </button>
 </th>

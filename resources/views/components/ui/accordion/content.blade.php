@@ -26,12 +26,12 @@
 <div :id="$id('accordion', @js($key))" role="region" :aria-labelledby="$id('accordion', @js($key)) + '-heading'" x-show="isOpen(@js($name))" x-collapse.duration.200ms x-cloak>
     @if ($lazy)
         <template x-if="wasOpened(@js($name))">
-            <div {{ $attributes->merge(['class' => 'px-5 pb-5 text-sm leading-6 text-gray-600 dark:text-zinc-400']) }}>
+            <div {{ $attributes->merge(['class' => 'px-5 pb-5 text-sm leading-6 text-dim']) }}>
                 {{ $slot }}
             </div>
         </template>
     @else
-        <div {{ $attributes->merge(['class' => 'px-5 pb-5 text-sm leading-6 text-gray-600 dark:text-zinc-400']) }}>
+        <div {{ $attributes->merge(['class' => 'px-5 pb-5 text-sm leading-6 text-dim']) }}>
             {{ $slot }}
         </div>
     @endif

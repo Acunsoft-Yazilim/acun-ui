@@ -19,10 +19,11 @@
     $error = \Acun\Ui\Support\Field::error($fieldName, $errors ?? null);
     // Layout attributes (class, style, x-show, wire:key…) place the whole field: they go on the
     // label. The rest (name, wire:model, aria-*, data-*, events…) belong to the radio;
-    // input-class styles it (Acun\Ui\Support\Field).
+    // input-class styles it (Acun\Ui\Support\Field). Checked, it is filled with the primary colour and
+    // its dot is that fill's own text colour (a light custom colour takes a dark dot).
 @endphp
 
-<label for="{{ $radioId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex items-center gap-2 text-sm text-gray-700 select-none has-disabled:cursor-not-allowed has-disabled:text-gray-400 dark:text-zinc-300 dark:has-disabled:text-zinc-500') }}>
+<label for="{{ $radioId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex items-center gap-2 text-sm text-body select-none has-disabled:cursor-not-allowed has-disabled:text-faint') }}>
     <input
         id="{{ $radioId }}"
         type="radio"
@@ -31,7 +32,7 @@
         @checked($checked)
         @if ($error) aria-invalid="true" @endif
         {{ \Acun\Ui\Support\Field::controlAttributes($attributes)->except(['id', 'label', 'checked', 'value'])->merge([
-            'class' => \Acun\Ui\Support\Field::controlClass('size-4 border-(--ui-control-border) text-brand-600 focus:ring-2 focus:ring-brand-600 aria-invalid:border-red-500 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-800', $inputClass),
+            'class' => \Acun\Ui\Support\Field::controlClass('size-4 border-control text-primary not-checked:bg-field checked:bg-[radial-gradient(circle_closest-side,var(--ac-on-primary)_33%,transparent_42%)] focus:ring-2 focus:ring-focus aria-invalid:border-danger-line disabled:cursor-not-allowed disabled:opacity-40', $inputClass),
         ]) }}
     />
     {{ $label ?? $slot }}

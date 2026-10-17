@@ -18,10 +18,10 @@
     $describedBy = trim($attributes->get('aria-describedby').' '.($error || $hint ? $messageId : '')) ?: null;
     // The add-on sits on the field's own background; a line (::after) separates them and,
     // while the field has focus, takes the frame's colour.
-    $addonClass = 'relative flex flex-none items-center px-3 text-sm text-gray-700 dark:text-zinc-300 after:pointer-events-none after:absolute after:inset-y-0 after:w-px '
+    $addonClass = 'relative flex flex-none items-center px-3 text-sm text-body after:pointer-events-none after:absolute after:inset-y-0 after:w-px '
         .($error
-            ? 'after:bg-red-400 group-focus-within/input-group:after:bg-red-500'
-            : 'after:bg-gray-300 dark:after:bg-zinc-600 group-focus-within/input-group:after:bg-brand-600');
+            ? 'after:bg-danger-line group-focus-within/input-group:after:bg-danger-line'
+            : 'after:bg-line-strong group-focus-within/input-group:after:bg-focus');
     // Layout attributes (class, style, x-show, wire:key…) place the whole field: they go on the
     // wrapper, so the label, the add-ons and the message follow them. The rest (name, wire:model,
     // type, required, aria-*, data-*, events…) belong to the <input>; input-class styles it
@@ -30,9 +30,9 @@
 
 <div {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex flex-col gap-1.5') }}>
     @if ($label)
-        <label for="{{ $inputId }}" class="text-sm font-medium text-gray-700 dark:text-zinc-300">
+        <label for="{{ $inputId }}" class="text-sm font-medium text-body">
             {{ $label }}
-            @if ($attributes->get('required'))<span class="text-red-500" aria-hidden="true">*</span>@endif
+            @if ($attributes->get('required'))<span class="text-danger-line" aria-hidden="true">*</span>@endif
         </label>
     @endif
 
@@ -43,10 +43,10 @@
         the inactive look of acun:input.
     --}}
     <div @class([
-        'group/input-group flex h-10 overflow-hidden rounded-sm border bg-white transition-[border-color,box-shadow] duration-150 dark:bg-zinc-800',
-        'has-[input:disabled]:cursor-not-allowed has-[input:disabled]:bg-gray-50 has-[input[readonly]]:bg-gray-50 dark:has-[input:disabled]:bg-zinc-900 dark:has-[input[readonly]]:bg-zinc-900',
-        'border-red-400 focus-within:border-red-500 focus-within:shadow-(--ui-focus-shadow-error)' => $error,
-        'border-gray-300 dark:border-zinc-600 focus-within:border-brand-600 focus-within:shadow-(--ui-focus-shadow)' => ! $error,
+        'group/input-group flex h-10 overflow-hidden rounded-sm border bg-field transition-[border-color,box-shadow] duration-150',
+        'has-[input:disabled]:cursor-not-allowed has-[input:disabled]:bg-field-disabled has-[input[readonly]]:bg-field-disabled',
+        'border-danger-line focus-within:border-danger-line focus-within:shadow-(--ac-focus-shadow-danger)' => $error,
+        'border-line-strong focus-within:border-focus focus-within:shadow-(--ac-focus-shadow)' => ! $error,
     ])>
         @if ($prefix || isset($before))
             <span class="{{ $addonClass }} after:end-0">{{ $before ?? $prefix }}</span>
@@ -60,7 +60,7 @@
             @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
             {{ \Acun\Ui\Support\Field::controlAttributes($attributes)->except(['id', 'label', 'hint', 'prefix', 'suffix', 'aria-describedby'])->merge([
                 'type' => 'text',
-                'class' => \Acun\Ui\Support\Field::controlClass('w-full min-w-0 flex-1 border-0 bg-transparent px-3 text-gray-900 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:ring-0 focus:outline-none sm:text-sm dark:text-zinc-100 disabled:cursor-not-allowed disabled:text-gray-500 dark:disabled:text-zinc-500', $inputClass),
+                'class' => \Acun\Ui\Support\Field::controlClass('w-full min-w-0 flex-1 border-0 bg-transparent px-3 text-ink placeholder:text-muted focus:ring-0 focus:outline-none sm:text-sm disabled:cursor-not-allowed disabled:text-muted', $inputClass),
             ]) }}
         />
 
@@ -70,8 +70,8 @@
     </div>
 
     @if ($error)
-        <p id="{{ $messageId }}" class="text-sm text-red-600 dark:text-red-400">{{ $error }}</p>
+        <p id="{{ $messageId }}" class="text-sm text-danger-ink">{{ $error }}</p>
     @elseif ($hint)
-        <p id="{{ $messageId }}" class="text-sm text-gray-500 dark:text-zinc-400">{{ $hint }}</p>
+        <p id="{{ $messageId }}" class="text-sm text-muted">{{ $hint }}</p>
     @endif
 </div>

@@ -17,7 +17,7 @@
 {{-- An alertdialog: a screen reader reads the question (the description) with the title. --}}
 <acun:modal :name="$name" :title="$title" :close-action="$closeAction" max-width="sm" alert {{ $attributes }}>
     @if ($description)
-        <p id="{{ $name }}-description" class="text-sm text-gray-600 dark:text-zinc-400">{{ $description }}</p>
+        <p id="{{ $name }}-description" class="text-sm text-dim">{{ $description }}</p>
     @endif
 
     <acun:slot:footer>

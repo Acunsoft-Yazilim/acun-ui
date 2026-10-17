@@ -34,15 +34,15 @@
     // wrapper. The rest (name, wire:model, required, aria-*, data-*, events…) belong to the
     // <select>; input-class styles it, never over the error frame (Acun\Ui\Support\Field).
     $controlAttributes = \Acun\Ui\Support\Field::controlAttributes($attributes);
-    $errorRing = 'ring-red-400 focus:ring-red-500 focus:shadow-(--ui-focus-shadow-error)';
+    $errorRing = 'ring-danger-line focus:ring-danger-line focus:shadow-(--ac-focus-shadow-danger)';
 @endphp
 
 <div {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex flex-col gap-1.5') }}>
     @if (! $floating && $label)
-        <label for="{{ $selectId }}" class="text-sm font-medium text-gray-700 dark:text-zinc-300">
+        <label for="{{ $selectId }}" class="text-sm font-medium text-body">
             {{ $label }}
             @if ($attributes->get('required'))
-                <span class="text-red-500" aria-hidden="true">*</span>
+                <span class="text-danger-line" aria-hidden="true">*</span>
             @endif
         </label>
     @endif
@@ -63,11 +63,11 @@
             @if ($error) aria-invalid="true" @endif
                 @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
                 {{ $controlAttributes->except(['id', 'label', 'hint', 'options', 'placeholder', 'value', 'aria-describedby'])->merge([
-                'class' => \Acun\Ui\Support\Field::controlClass('block w-full appearance-none rounded-sm border-0 text-gray-900 ring-1 ring-inset transition-colors '
+                'class' => \Acun\Ui\Support\Field::controlClass('block w-full appearance-none rounded-sm border-0 bg-field text-ink ring-1 ring-inset transition-colors '
                     . ($floating ? 'peer flex h-[45px] items-center pl-3 pr-9' : 'flex h-10 items-center pl-3 pr-9')
                     . ' '
-                    . ($error ? $errorRing : 'ring-gray-300 hover:ring-gray-400 focus:ring-brand-600 focus:shadow-(--ui-focus-shadow) dark:ring-zinc-600 dark:hover:ring-zinc-500')
-                    . ' focus:outline-none sm:text-sm dark:bg-zinc-800 dark:text-zinc-100 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-500'
+                    . ($error ? $errorRing : 'ring-line-strong hover:ring-line-hover focus:ring-focus focus:shadow-(--ac-focus-shadow)')
+                    . ' focus:outline-none sm:text-sm disabled:cursor-not-allowed disabled:bg-field-disabled disabled:text-muted'
                     . ($floating ? ' rounded-sm' : ''), $inputClass, $error ? $errorRing : ''),
             ]) }}
         >
@@ -91,26 +91,26 @@
             @endforeach
         </select>
 
-        <svg class="pointer-events-none absolute inset-y-0 right-3 my-auto size-4 text-gray-400 dark:text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="pointer-events-none absolute inset-y-0 right-3 my-auto size-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
         </svg>
 
         @if ($floating && $label)
             <label
                 for="{{ $selectId }}"
-                class="pointer-events-none absolute start-3 top-0 z-10 -translate-y-1/2 bg-white px-1 text-xs font-medium text-gray-600 transition-colors peer-focus:text-brand-600 dark:bg-zinc-900 dark:text-zinc-300 dark:peer-focus:text-brand-400"
+                class="pointer-events-none absolute start-3 top-0 z-10 -translate-y-1/2 bg-surface px-1 text-xs font-medium text-dim transition-colors peer-focus:text-primary-ink"
             >
                 {{ $label }}
                 @if ($attributes->get('required'))
-                    <span class="text-red-500" aria-hidden="true">*</span>
+                    <span class="text-danger-line" aria-hidden="true">*</span>
                 @endif
             </label>
         @endif
     </div>
 
     @if ($error)
-        <p id="{{ $messageId }}" class="text-sm text-red-600 dark:text-red-400">{{ $error }}</p>
+        <p id="{{ $messageId }}" class="text-sm text-danger-ink">{{ $error }}</p>
     @elseif ($hint)
-        <p id="{{ $messageId }}" class="text-sm text-gray-500 dark:text-zinc-400">{{ $hint }}</p>
+        <p id="{{ $messageId }}" class="text-sm text-muted">{{ $hint }}</p>
     @endif
 </div>

@@ -38,7 +38,7 @@
     }"
     {{-- Ids of the parts are unique on the page: two accordions may both have a "genel" item. --}}
     x-id="['accordion']"
-    {{ $attributes->merge(['class' => 'overflow-hidden rounded-sm bg-white shadow-sm dark:bg-zinc-900']) }}
+    {{ $attributes->merge(['class' => 'overflow-hidden rounded-sm bg-surface shadow-sm']) }}
 >
     <div class="-mb-px">{{ $slot }}</div>
 </div>

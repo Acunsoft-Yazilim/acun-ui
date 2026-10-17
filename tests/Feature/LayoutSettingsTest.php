@@ -71,19 +71,22 @@ final class LayoutSettingsTest extends TestCase
         );
 
         $picker = Blade::render('<x-ui.brand-color-picker />');
-        self::assertMatchesRegularExpression('/title="Sarı"[^>]*style="background: #fcaa1e"\s*>\s*<svg[^>]*text-gray-900/', $picker);
-        self::assertMatchesRegularExpression('/title="Koyu"[^>]*style="background: #3f404d"\s*>\s*<svg[^>]*text-white/', $picker);
+        self::assertMatchesRegularExpression('/title="Sarı"[^>]*style="background: #fcaa1e"\s*>\s*<svg[^>]*text-ink/', $picker);
+        self::assertMatchesRegularExpression('/title="Koyu"[^>]*style="background: #3f404d"\s*>\s*<svg[^>]*text-surface/', $picker);
 
         // A name that is no longer a preset (saved before the palette changed) falls back to the default.
         self::assertSame(['default', 'green', 'red', 'yellow', 'blue', 'gray', 'dark'], $this->runtimeConfig(Blade::render('<x-ui.layout.head />'))['brandPresets']);
     }
 
-    /** The tick is white while it stands out 3:1 on the swatch, else dark (cyan gave a white tick at 2.43:1). */
+    /**
+     * The tick is white while it stands out 3:1 on the swatch, else dark (cyan gave a white tick at 2.43:1):
+     * the light theme's surface or ink (data-theme="light" on it), so it stays so in the dark theme.
+     */
     public function test_the_picker_tick_takes_the_more_readable_colour_by_contrast(): void
     {
         $picker = Blade::render('<x-ui.brand-color-picker />');
 
-        foreach (['Varsayılan' => 'text-white', 'Yeşil' => 'text-gray-900', 'Kırmızı' => 'text-white', 'Sarı' => 'text-gray-900', 'Turkuaz' => 'text-gray-900', 'Gri' => 'text-white', 'Koyu' => 'text-white'] as $name => $tick) {
+        foreach (['Varsayılan' => 'text-surface', 'Yeşil' => 'text-ink', 'Kırmızı' => 'text-surface', 'Sarı' => 'text-ink', 'Turkuaz' => 'text-ink', 'Gri' => 'text-surface', 'Koyu' => 'text-surface'] as $name => $tick) {
             self::assertMatchesRegularExpression('/title="'.$name.'"[^>]*>\s*<svg[^>]*\b'.$tick.'\b/', $picker, $name);
         }
     }

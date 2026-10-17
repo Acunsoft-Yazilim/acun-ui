@@ -14,7 +14,7 @@ final class SingleFileComponentTest extends TestCase
 
         Livewire::test('cart-line')
             ->assertSeeHtml('id="quantity"')
-            ->assertSeeHtml('ui-btn-success')
+            ->assertSeeHtml('border-success bg-success text-on-success')
             ->assertSee('1 adet')
             ->call('increase')
             ->assertSet('quantity', 2)

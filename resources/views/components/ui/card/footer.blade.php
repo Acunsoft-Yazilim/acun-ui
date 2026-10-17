@@ -3,4 +3,4 @@
     classic <acun:slot:footer>. Works anywhere, it needs nothing from the card.
     Attributes (class, id…) go on the footer box.
 --}}
-<div data-slot="card-footer" {{ $attributes->merge(['class' => 'flex items-center gap-2 border-t border-gray-100 px-5 py-3 dark:border-zinc-800']) }}>{{ $slot }}</div>
+<div data-slot="card-footer" {{ $attributes->merge(['class' => 'flex items-center gap-2 border-t border-line-soft px-5 py-3']) }}>{{ $slot }}</div>

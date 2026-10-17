@@ -55,30 +55,30 @@
     role="region"
     aria-roledescription="carousel"
     aria-label="{{ $label ?? __('Images') }}"
-    {{ $attributes->merge(['class' => 'relative overflow-hidden rounded-sm bg-gray-900']) }}
+    {{ $attributes->merge(['class' => 'relative overflow-hidden rounded-sm bg-inverse']) }}
 >
     {{-- Announced when the user changes the slide, not on every automatic turn. --}}
     <div x-ref="track" :aria-live="timer ? 'off' : 'polite'" class="flex transition-transform duration-500 ease-out motion-reduce:transition-none [&>*]:w-full [&>*]:flex-none" :style="`transform: translateX(-${index * 100}%)`">
         {{ $slot }}
     </div>
 
-    <button type="button" x-on:click="go(index - 1)" aria-label="{{ __('Previous') }}" class="absolute top-1/2 left-3 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/80 text-gray-800 shadow hover:bg-white focus-visible:outline-2 focus-visible:outline-white">
+    <button type="button" x-on:click="go(index - 1)" aria-label="{{ __('Previous') }}" data-theme="light" class="absolute top-1/2 left-3 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-ink shadow hover:bg-surface focus-visible:outline-2 focus-visible:outline-surface">
         <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
     </button>
-    <button type="button" x-on:click="go(index + 1)" aria-label="{{ __('Next') }}" class="absolute top-1/2 right-3 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/80 text-gray-800 shadow hover:bg-white focus-visible:outline-2 focus-visible:outline-white">
+    <button type="button" x-on:click="go(index + 1)" aria-label="{{ __('Next') }}" data-theme="light" class="absolute top-1/2 right-3 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-ink shadow hover:bg-surface focus-visible:outline-2 focus-visible:outline-surface">
         <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
     </button>
 
     @if ($interval)
-        <button type="button" x-on:click="togglePause()" :aria-label="paused ? @js(__('Play')) : @js(__('Pause'))" :aria-pressed="paused.toString()" class="absolute top-3 right-3 flex size-8 cursor-pointer items-center justify-center rounded-full bg-white/80 text-gray-800 shadow hover:bg-white focus-visible:outline-2 focus-visible:outline-white">
+        <button type="button" x-on:click="togglePause()" :aria-label="paused ? @js(__('Play')) : @js(__('Pause'))" :aria-pressed="paused.toString()" data-theme="light" class="absolute top-3 right-3 flex size-8 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-ink shadow hover:bg-surface focus-visible:outline-2 focus-visible:outline-surface">
             <svg x-show="! paused" class="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>
             <svg x-show="paused" x-cloak class="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
         </button>
     @endif
 
-    <div class="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+    <div data-theme="light" class="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
         <template x-for="i in count" :key="i">
-            <button type="button" x-on:click="go(i - 1)" :aria-label="@js(__('Slide :number')).replace(':number', i)" :aria-current="(index === i - 1).toString()" class="h-1.5 cursor-pointer rounded-full bg-white/60 transition-all aria-[current=true]:w-5 aria-[current=true]:bg-white" :class="index === i - 1 ? 'w-5' : 'w-1.5'"></button>
+            <button type="button" x-on:click="go(i - 1)" :aria-label="@js(__('Slide :number')).replace(':number', i)" :aria-current="(index === i - 1).toString()" class="h-1.5 cursor-pointer rounded-full bg-surface/60 transition-all aria-[current=true]:w-5 aria-[current=true]:bg-surface" :class="index === i - 1 ? 'w-5' : 'w-1.5'"></button>
         </template>
     </div>
 </div>

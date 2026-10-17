@@ -71,15 +71,15 @@
     @endif
 
     @if ($label)
-        <label for="{{ $inputId }}" class="text-sm font-medium text-gray-700 dark:text-zinc-300">{{ $label }}</label>
+        <label for="{{ $inputId }}" class="text-sm font-medium text-body">{{ $label }}</label>
     @endif
 
     <div @class([
-        'flex items-stretch rounded-sm border border-gray-300 bg-white transition-[border-color,box-shadow] duration-150 focus-within:border-brand-600 focus-within:shadow-(--ui-focus-shadow) dark:border-zinc-600 dark:bg-zinc-800',
-        'has-[input:disabled]:cursor-not-allowed has-[input:disabled]:bg-gray-50 dark:has-[input:disabled]:bg-zinc-900',
+        'flex items-stretch rounded-sm border border-line-strong bg-field transition-[border-color,box-shadow] duration-150 focus-within:border-focus focus-within:shadow-(--ac-focus-shadow)',
+        'has-[input:disabled]:cursor-not-allowed has-[input:disabled]:bg-field-disabled',
         $large ? 'h-12' : 'h-10',
     ])>
-        <span @class(['pointer-events-none flex flex-none items-center text-gray-400 dark:text-zinc-500', $large ? 'ps-4' : 'ps-3'])>
+        <span @class(['pointer-events-none flex flex-none items-center text-faint', $large ? 'ps-4' : 'ps-3'])>
             <svg @if ($model) wire:loading.remove wire:target="{{ $model }}" @endif class="{{ $large ? 'size-5' : 'size-4' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
             </svg>
@@ -101,7 +101,7 @@
                 'placeholder' => $placeholder,
                 'autocomplete' => 'off',
                 'enterkeyhint' => 'search',
-                'class' => \Acun\Ui\Support\Field::controlClass('peer w-full min-w-0 flex-1 border-0 bg-transparent px-2.5 text-gray-900 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:ring-0 focus:outline-none dark:text-zinc-100 disabled:cursor-not-allowed disabled:text-gray-500 dark:disabled:text-zinc-500 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none '
+                'class' => \Acun\Ui\Support\Field::controlClass('peer w-full min-w-0 flex-1 border-0 bg-transparent px-2.5 text-ink placeholder:text-muted focus:ring-0 focus:outline-none disabled:cursor-not-allowed disabled:text-muted [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none '
                     .($large ? 'text-base' : 'text-base sm:text-sm'), $inputClass),
             ]) }}
         />
@@ -110,7 +110,7 @@
             <button
                 type="button"
                 x-on:click="clear()"
-                class="hidden flex-none items-center px-2 text-gray-500 hover:text-gray-600 focus-visible:text-gray-600 focus-visible:outline-none peer-[:not(:placeholder-shown)]:flex dark:text-zinc-400 dark:hover:text-zinc-300"
+                class="hidden flex-none items-center px-2 text-muted hover:text-body focus-visible:text-body focus-visible:outline-none peer-[:not(:placeholder-shown)]:flex"
                 aria-label="{{ __('Clear search') }}"
                 title="{{ __('Clear search') }}"
             >
@@ -120,7 +120,7 @@
 
         @if ($shortcut)
             <span class="pointer-events-none hidden flex-none items-center pe-2.5 peer-[:placeholder-shown:not(:focus)]:flex" aria-hidden="true">
-                <kbd class="rounded-sm border border-gray-200 px-1.5 font-mono text-xs text-gray-500 dark:border-zinc-700 dark:text-zinc-400">{{ $shortcut }}</kbd>
+                <kbd class="rounded-sm border border-line px-1.5 font-mono text-xs text-muted">{{ $shortcut }}</kbd>
             </span>
         @endif
 
@@ -130,7 +130,7 @@
                 type="submit"
                 @disabled($disabled)
                 @class([
-                    'ui-btn ui-btn-primary relative -my-px -me-px flex-none rounded-e-sm font-semibold transition-colors duration-180 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80 focus-visible:shadow-(--ui-focus-shadow) disabled:cursor-not-allowed disabled:opacity-60',
+                    'relative -my-px -me-px flex-none rounded-e-sm border border-primary bg-primary font-semibold text-on-primary transition-colors duration-180 hover:not-disabled:border-primary-hover hover:not-disabled:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-on-primary/80 focus-visible:shadow-(--ac-focus-shadow) disabled:cursor-not-allowed disabled:opacity-60',
                     $large ? 'px-6 text-base' : 'px-4 text-sm',
                 ])
             >{{ $button }}</button>

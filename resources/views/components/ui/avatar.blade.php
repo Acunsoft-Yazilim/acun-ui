@@ -14,15 +14,15 @@
     $sizeClass = ['xs' => 'size-6 text-[10px]', 'sm' => 'size-8 text-xs', 'md' => 'size-10 text-sm', 'lg' => 'size-12 text-base', 'xl' => 'size-16 text-lg'][$size] ?? 'size-10 text-sm';
     $radiusClass = $shape === 'rounded-sm' ? 'rounded-sm' : 'rounded-full';
     $colorClass = [
-        'primary' => 'bg-brand-100 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300',
-        'secondary' => 'bg-secondary-100 text-secondary-700 dark:bg-secondary-500/15 dark:text-secondary-300',
-        'success' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-        'danger' => 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',
-        'warning' => 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-        'info' => 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
-        'dark' => 'bg-dark text-white dark:bg-zinc-700 dark:text-zinc-100',
+        'primary' => 'bg-primary-soft text-primary-tint-ink',
+        'secondary' => 'bg-secondary-soft text-secondary-tint-ink',
+        'success' => 'bg-success-soft text-success-tint-ink',
+        'danger' => 'bg-danger-soft text-danger-tint-ink',
+        'warning' => 'bg-warning-soft text-warning-tint-ink',
+        'info' => 'bg-info-soft text-info-tint-ink',
+        'dark' => 'bg-dark text-on-dark',
     ][\Acun\Ui\Support\Tone::name($color)];
-    $statusClass = ['online' => 'bg-emerald-500', 'offline' => 'bg-gray-400', 'away' => 'bg-amber-500', 'busy' => 'bg-red-500'][$status] ?? null;
+    $statusClass = ['online' => 'bg-success-line', 'offline' => 'bg-faint', 'away' => 'bg-warning-line', 'busy' => 'bg-danger-line'][$status] ?? null;
     $initials = $name ? \Illuminate\Support\Str::of($name)->explode(' ')->filter()->take(2)->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->implode('') : null;
 @endphp
 
@@ -36,6 +36,6 @@
     @endif
 
     @if ($statusClass)
-        <span class="absolute right-0 bottom-0 block size-2.5 rounded-full ring-2 ring-white dark:ring-zinc-900 {{ $statusClass }}" role="img" aria-label="{{ $status }}"></span>
+        <span class="absolute right-0 bottom-0 block size-2.5 rounded-full ring-2 ring-surface {{ $statusClass }}" role="img" aria-label="{{ $status }}"></span>
     @endif
 </span>

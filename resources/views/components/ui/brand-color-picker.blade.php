@@ -60,7 +60,7 @@
     {{ $attributes->merge(['class' => 'space-y-3']) }}
 >
     @if ($label)
-        <p class="text-sm font-medium text-gray-900 dark:text-zinc-100">{{ $label }}</p>
+        <p class="text-sm font-medium text-ink">{{ $label }}</p>
     @endif
 
     <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="{{ $label ?? __('Primary color') }}">
@@ -72,24 +72,24 @@
                 :aria-checked="(selected === @js($key)).toString()"
                 title="{{ $name }}"
                 aria-label="{{ $name }}"
-                class="relative size-9 cursor-pointer rounded-sm ring-offset-2 ring-offset-white transition-shadow aria-checked:ring-2 aria-checked:ring-gray-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gray-900 dark:ring-offset-zinc-900 dark:aria-checked:ring-zinc-100"
+                class="relative size-9 cursor-pointer rounded-sm ring-offset-2 ring-offset-surface transition-shadow aria-checked:ring-2 aria-checked:ring-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
                 style="background: {{ $hex }}"
                 {{-- The default is the page's own colour; it carries white text (theming guide), so the tick stays white. --}}
                 @if ($key === 'default') x-bind:style="themeColor ? { background: themeColor } : {}" @endif
             >
-                <svg x-show="selected === @js($key)" x-cloak class="absolute inset-0 m-auto size-4 {{ $whiteTick($hex) ? 'text-white' : 'text-gray-900' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                <svg x-show="selected === @js($key)" x-cloak data-theme="light" class="absolute inset-0 m-auto size-4 {{ $whiteTick($hex) ? 'text-surface' : 'text-ink' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
             </button>
         @endforeach
 
         @if ($custom)
             <label
-                class="relative flex h-9 cursor-pointer items-center gap-2 rounded-sm px-3 text-sm ring-1 ring-gray-200 ring-inset hover:ring-gray-300 dark:ring-zinc-700"
-                :class="isCustom && 'ring-2 ring-gray-900 dark:ring-zinc-100'"
+                class="relative flex h-9 cursor-pointer items-center gap-2 rounded-sm px-3 text-sm ring-1 ring-line ring-inset hover:ring-line-strong"
+                :class="isCustom && 'ring-2 ring-ink'"
                 title="{{ __('Pick your own color') }}"
             >
-                <span class="size-5 rounded-sm ring-1 ring-black/10" :style="`background: ${customColor}`"></span>
-                <span class="font-medium text-gray-700 dark:text-zinc-300">{{ __('Custom') }}</span>
-                <span x-show="isCustom" x-cloak class="font-mono text-xs text-gray-500 uppercase dark:text-zinc-400" x-text="selected"></span>
+                <span class="size-5 rounded-sm ring-1 ring-ink/10" :style="`background: ${customColor}`"></span>
+                <span class="font-medium text-body">{{ __('Custom') }}</span>
+                <span x-show="isCustom" x-cloak class="font-mono text-xs text-muted uppercase" x-text="selected"></span>
                 <input
                     type="color"
                     :value="customColor"

@@ -46,7 +46,7 @@ final class PartsModalDrawerTest extends TestCase
     {
         $html = Blade::render(<<<'BLADE'
             <acun:modal name="musteri-ekle" max-width="lg">
-                <acun:modal.header title="Yeni müşteri" description="Müşteri grubunu ve sorumlu temsilciyi seçin." class="bg-white" />
+                <acun:modal.header title="Yeni müşteri" description="Müşteri grubunu ve sorumlu temsilciyi seçin." class="bg-sunken" />
                 <acun:modal.body class="space-y-4" wire:key="govde"><p>Form</p></acun:modal.body>
                 <acun:modal.footer id="alt">
                     <acun:modal.close><acun:button variant="white">Vazgeç</acun:button></acun:modal.close>
@@ -77,14 +77,14 @@ final class PartsModalDrawerTest extends TestCase
 
         // Attributes go on each part's own root.
         $header = $xpath->query('//*[@data-slot="modal-header"]')->item(0);
-        self::assertStringContainsString('bg-white', $header->getAttribute('class'));
+        self::assertStringContainsString('bg-sunken', $header->getAttribute('class'));
         self::assertStringContainsString('px-5 py-4', $header->getAttribute('class'));
         $body = $xpath->query('//*[@data-slot="modal-body"]')->item(0);
         self::assertSame('flex-1 overflow-y-auto p-5 space-y-4', $body->getAttribute('class'));
         self::assertSame('govde', $body->getAttribute('wire:key'));
         $footer = $xpath->query('//*[@data-slot="modal-footer"]')->item(0);
         self::assertSame('alt', $footer->getAttribute('id'));
-        self::assertSame('flex flex-none items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-4 dark:border-zinc-700 dark:bg-zinc-800/50', $footer->getAttribute('class'));
+        self::assertSame('flex flex-none items-center justify-end gap-2 border-t border-line bg-sunken/50 px-5 py-4', $footer->getAttribute('class'));
 
         // The header's X goes through requestClose() as the classic one does.
         $x = $xpath->query('.//button', $header)->item(0);
@@ -175,7 +175,7 @@ final class PartsModalDrawerTest extends TestCase
         $html = Blade::render('<acun:modal name="siparis" title="Sipariş"><p>Gövde</p><acun:slot:footer><button>Tamam</button></acun:slot:footer></acun:modal>');
 
         self::assertStringContainsString('aria-labelledby="siparis-title"', $html);
-        self::assertStringContainsString('<h3 id="siparis-title" class="text-base font-semibold text-gray-900 dark:text-zinc-100">Sipariş</h3>', $html);
+        self::assertStringContainsString('<h3 id="siparis-title" class="text-base font-semibold text-ink">Sipariş</h3>', $html);
         self::assertStringContainsString('aria-label="Kapat"', $html);
         self::assertMatchesRegularExpression('#<div class="flex-1 overflow-y-auto p-5">\s*<p>Gövde</p>\s*</div>#', $html);
         self::assertStringNotContainsString('data-slot', $html);
@@ -459,7 +459,7 @@ final class PartsModalDrawerTest extends TestCase
     {
         $html = Blade::render(<<<'BLADE'
             <acun:drawer name="siparis-detay" title="Yok sayılır" body-class="p-0" aria-label="Yok sayılır">
-                <acun:drawer.header title="Sipariş #4821" description="Ayşe Yılmaz, 3 ürün" class="bg-white" />
+                <acun:drawer.header title="Sipariş #4821" description="Ayşe Yılmaz, 3 ürün" class="bg-sunken" />
                 <acun:drawer.body class="space-y-4">Müşteri bilgileri</acun:drawer.body>
                 <acun:drawer.footer>
                     <acun:drawer.close><acun:button variant="white">Kapat</acun:button></acun:drawer.close>
@@ -485,7 +485,7 @@ final class PartsModalDrawerTest extends TestCase
         self::assertStringNotContainsString('class="p-0"', $html);
 
         $header = $xpath->query('//*[@data-slot="drawer-header"]')->item(0);
-        self::assertStringContainsString('bg-white', $header->getAttribute('class'));
+        self::assertStringContainsString('bg-sunken', $header->getAttribute('class'));
         self::assertStringContainsString('items-start', $header->getAttribute('class'));
         self::assertSame('Sipariş #4821', trim($xpath->query('.//h3[@id="siparis-detay-title"]', $header)->item(0)->textContent));
         $x = $xpath->query('.//button', $header)->item(0);
@@ -493,17 +493,17 @@ final class PartsModalDrawerTest extends TestCase
         self::assertSame('Kapat', $x->getAttribute('aria-label'));
 
         self::assertSame('flex-1 overflow-y-auto p-5 space-y-4', $xpath->query('//*[@data-slot="drawer-body"]')->item(0)->getAttribute('class'));
-        self::assertSame('flex items-center justify-end gap-2 px-5 py-4 bg-gray-50 border-t border-gray-200 dark:bg-zinc-800/50 dark:border-zinc-700', $xpath->query('//*[@data-slot="drawer-footer"]')->item(0)->getAttribute('class'));
+        self::assertSame('flex items-center justify-end gap-2 px-5 py-4 bg-sunken/50 border-t border-line', $xpath->query('//*[@data-slot="drawer-footer"]')->item(0)->getAttribute('class'));
         self::assertSame(self::CLOSE['drawer'], $xpath->query('//*[@data-slot="drawer-close"]')->item(0)->getAttribute('x-on:click'));
     }
 
     public function test_drawer_footer_follows_compact_and_docked(): void
     {
         $compact = $this->xpath(Blade::render('<acun:drawer name="d" compact><acun:drawer.body>x</acun:drawer.body><acun:drawer.footer>F</acun:drawer.footer></acun:drawer>'));
-        self::assertSame('flex items-center gap-1.5 px-3 py-2.5 bg-gray-50 border-t border-gray-200 dark:bg-zinc-800/50 dark:border-zinc-700', $compact->query('//*[@data-slot="drawer-footer"]')->item(0)->getAttribute('class'));
+        self::assertSame('flex items-center gap-1.5 px-3 py-2.5 bg-sunken/50 border-t border-line', $compact->query('//*[@data-slot="drawer-footer"]')->item(0)->getAttribute('class'));
 
         $docked = $this->xpath(Blade::render('<acun:drawer name="filtre" docked><acun:drawer.body>x</acun:drawer.body><acun:drawer.footer>F</acun:drawer.footer></acun:drawer>'));
-        self::assertSame('flex items-center justify-end gap-2 px-5 py-4 bg-gray-50 dark:bg-zinc-800/50', $docked->query('//*[@data-slot="drawer-footer"]')->item(0)->getAttribute('class'));
+        self::assertSame('flex items-center justify-end gap-2 px-5 py-4 bg-sunken/50', $docked->query('//*[@data-slot="drawer-footer"]')->item(0)->getAttribute('class'));
     }
 
     public function test_docked_drawer_takes_parts(): void
@@ -550,7 +550,7 @@ final class PartsModalDrawerTest extends TestCase
         $html = Blade::render('<acun:drawer name="yan" title="Yan panel" body-class="p-2"><acun:drawer.close><button>Geri</button></acun:drawer.close><p>İçerik</p></acun:drawer>');
 
         self::assertStringContainsString('aria-label="Yan panel"', $html);
-        self::assertStringContainsString('<h3 class="text-base font-semibold text-gray-900 dark:text-zinc-100">Yan panel</h3>', $html);
+        self::assertStringContainsString('<h3 class="text-base font-semibold text-ink">Yan panel</h3>', $html);
         // A body that starts with drawer.close is still a classic body.
         self::assertMatchesRegularExpression('#<div class="p-2">\s*<span data-slot="drawer-close"#', $html);
         self::assertStringNotContainsString('aria-labelledby', $html);

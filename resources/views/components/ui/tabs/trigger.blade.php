@@ -36,18 +36,18 @@
     // cards: the open tab is a card tab joined to its panel below.
     $cards = $variant === 'cards';
     $selectedClass = match (true) {
-        $pills => 'bg-brand-600 text-white',
-        $cards => 'border-gray-200 bg-white text-gray-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100',
-        default => 'border-brand-600 text-brand-700 dark:text-brand-400',
+        $pills => 'bg-primary text-on-primary',
+        $cards => 'border-line bg-surface text-ink',
+        default => 'border-primary-ink text-primary-tint-ink',
     };
     $idleClass = $pills
-        ? 'text-gray-600 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
-        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200';
+        ? 'text-dim hover:bg-hover'
+        : 'border-transparent text-muted hover:text-body';
 
-    $badgeSelectedClass = $pills ? 'bg-white/20 text-white' : 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300';
+    $badgeSelectedClass = $pills ? 'bg-on-primary/20 text-on-primary' : 'bg-primary-tint text-primary-tint-ink';
     $badgeIdleClass = $pills
-        ? 'bg-gray-200/70 text-gray-700 dark:bg-zinc-700/70 dark:text-zinc-300'
-        : 'bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300';
+        ? 'bg-track/70 text-body'
+        : 'bg-sunken text-dim';
 @endphp
 
 <button

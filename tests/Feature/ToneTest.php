@@ -31,16 +31,16 @@ final class ToneTest extends TestCase
     public static function badges(): array
     {
         return [
-            'primary' => ['primary', 'bg-brand-50 text-brand-700'],
-            'secondary' => ['secondary', 'bg-secondary-100 text-secondary-700'],
-            'success' => ['success', 'bg-emerald-50 text-emerald-700'],
-            'danger' => ['danger', 'bg-red-50 text-red-700'],
-            'warning' => ['warning', 'bg-amber-50 text-amber-700'],
-            'info' => ['info', 'bg-sky-50 text-sky-700'],
-            'dark' => ['dark', 'bg-dark/10 text-dark'],
-            'brand (old name)' => ['brand', 'bg-brand-50 text-brand-700'],
-            'neutral (old name)' => ['neutral', 'bg-secondary-100 text-secondary-700'],
-            'unknown' => ['mor', 'bg-secondary-100 text-secondary-700'],
+            'primary' => ['primary', 'bg-primary-tint text-primary-tint-ink'],
+            'secondary' => ['secondary', 'bg-secondary-tint text-secondary-tint-ink'],
+            'success' => ['success', 'bg-success-tint text-success-tint-ink'],
+            'danger' => ['danger', 'bg-danger-tint text-danger-tint-ink'],
+            'warning' => ['warning', 'bg-warning-tint text-warning-tint-ink'],
+            'info' => ['info', 'bg-info-tint text-info-tint-ink'],
+            'dark' => ['dark', 'bg-dark-soft text-dark-tint-ink'],
+            'brand (old name)' => ['brand', 'bg-primary-tint text-primary-tint-ink'],
+            'neutral (old name)' => ['neutral', 'bg-secondary-tint text-secondary-tint-ink'],
+            'unknown' => ['mor', 'bg-secondary-tint text-secondary-tint-ink'],
         ];
     }
 
@@ -52,40 +52,41 @@ final class ToneTest extends TestCase
 
     public function test_solid_badge_is_filled_with_the_colour(): void
     {
-        // White text on every solid fill: success, warning and info use the darker -solid shade,
-        // danger the 600 shade.
-        self::assertStringContainsString('bg-emerald-solid text-white', Blade::render('<x-ui.badge variant="success" solid>Aktif</x-ui.badge>'));
-        self::assertStringContainsString('bg-amber-solid text-white', Blade::render('<x-ui.badge variant="warning" solid>Bekliyor</x-ui.badge>'));
-        self::assertStringContainsString('bg-red-600 text-white', Blade::render('<x-ui.badge variant="danger" solid>İptal</x-ui.badge>'));
-        // The solid primary badge has the primary button's fill and text (a light brand preset uses dark text).
-        self::assertStringContainsString('bg-(--btn-primary-bg) text-(--btn-primary-color,white)', Blade::render('<x-ui.badge variant="primary" solid>Yeni</x-ui.badge>'));
-        self::assertStringContainsString('bg-secondary-100', Blade::render('<x-ui.badge>Taslak</x-ui.badge>'));
+        // The tone's solid fill with its own text colour (white on success, warning, info and danger,
+        // whose fills are the darker shades that carry it).
+        self::assertStringContainsString('bg-success text-on-success', Blade::render('<x-ui.badge variant="success" solid>Aktif</x-ui.badge>'));
+        self::assertStringContainsString('bg-warning text-on-warning', Blade::render('<x-ui.badge variant="warning" solid>Bekliyor</x-ui.badge>'));
+        self::assertStringContainsString('bg-danger text-on-danger', Blade::render('<x-ui.badge variant="danger" solid>İptal</x-ui.badge>'));
+        // The solid primary badge has the primary button's fill and text (a light custom colour uses dark text).
+        self::assertStringContainsString('bg-primary text-on-primary', Blade::render('<x-ui.badge variant="primary" solid>Yeni</x-ui.badge>'));
+        self::assertStringContainsString('bg-secondary-tint', Blade::render('<x-ui.badge>Taslak</x-ui.badge>'));
     }
 
     public function test_alert_takes_every_palette_colour(): void
     {
-        self::assertStringContainsString('bg-brand-50 text-brand-800', Blade::render('<x-ui.alert variant="primary">A</x-ui.alert>'));
-        self::assertStringContainsString('bg-secondary-100 text-secondary-800', Blade::render('<x-ui.alert variant="secondary">A</x-ui.alert>'));
-        self::assertStringContainsString('bg-dark/10 text-dark', Blade::render('<x-ui.alert variant="dark">A</x-ui.alert>'));
-        self::assertStringContainsString('bg-sky-50 text-sky-800', Blade::render('<x-ui.alert>A</x-ui.alert>'));
-        self::assertStringContainsString('bg-red-50 text-red-800', Blade::render('<x-ui.alert variant="error">A</x-ui.alert>'));
+        self::assertStringContainsString('bg-primary-tint text-primary-tint-ink', Blade::render('<x-ui.alert variant="primary">A</x-ui.alert>'));
+        self::assertStringContainsString('bg-secondary-tint text-secondary-tint-ink', Blade::render('<x-ui.alert variant="secondary">A</x-ui.alert>'));
+        self::assertStringContainsString('bg-dark-tint text-dark-tint-ink', Blade::render('<x-ui.alert variant="dark">A</x-ui.alert>'));
+        self::assertStringContainsString('bg-info-tint text-info-tint-ink', Blade::render('<x-ui.alert>A</x-ui.alert>'));
+        self::assertStringContainsString('bg-danger-tint text-danger-tint-ink', Blade::render('<x-ui.alert variant="error">A</x-ui.alert>'));
+        self::assertStringContainsString('text-danger-line', Blade::render('<x-ui.alert variant="error">A</x-ui.alert>'));
     }
 
     public function test_spinner_takes_a_colour(): void
     {
-        self::assertStringContainsString('inline-flex items-center gap-2 text-emerald-500', Blade::render('<x-ui.spinner color="success" />'));
-        self::assertStringContainsString('text-brand-600 dark:text-brand-400', Blade::render('<x-ui.spinner />'));
+        self::assertStringContainsString('inline-flex items-center gap-2 text-success-line', Blade::render('<x-ui.spinner color="success" />'));
+        self::assertStringContainsString('text-primary-ink', Blade::render('<x-ui.spinner />'));
     }
 
     public function test_progress_and_stat_card_take_a_colour(): void
     {
         $progress = Blade::render('<x-ui.progress :value="40" color="success" />');
-        self::assertStringContainsString('bg-emerald-100 dark:bg-emerald-500/15', $progress);
-        self::assertMatchesRegularExpression('/class="h-full rounded-full [^"]*bg-emerald-500"\s+style="width: 40%"/', $progress);
-        self::assertStringContainsString('bg-(--btn-primary-bg)', Blade::render('<x-ui.progress :value="40" />'));
+        self::assertStringContainsString('bg-success-soft', $progress);
+        self::assertMatchesRegularExpression('/class="h-full rounded-full [^"]*bg-success-line"\s+style="width: 40%"/', $progress);
+        self::assertMatchesRegularExpression('/class="h-full rounded-full [^"]*bg-primary"\s+style="width: 40%"/', Blade::render('<x-ui.progress :value="40" />'));
 
-        self::assertStringContainsString('bg-secondary-100 text-secondary-600', Blade::render('<x-ui.stat-card label="Taslak" value="3" icon="document" color="secondary" />'));
-        self::assertStringContainsString('bg-brand-100 text-brand-600', Blade::render('<x-ui.stat-card label="Toplam" value="3" icon="users" color="brand" />'));
+        self::assertStringContainsString('bg-secondary-soft text-secondary-ink', Blade::render('<x-ui.stat-card label="Taslak" value="3" icon="document" color="secondary" />'));
+        self::assertStringContainsString('bg-primary-soft text-primary-ink', Blade::render('<x-ui.stat-card label="Toplam" value="3" icon="users" color="brand" />'));
     }
     public function test_the_button_takes_the_palette_aliases_alone_and_after_outline_or_soft(): void
     {
@@ -98,8 +99,8 @@ final class ToneTest extends TestCase
         $same('soft-yellow', 'soft-warning');
         $same('outline-brand', 'outline');
         $same('gray', 'secondary');
-        self::assertStringContainsString('ui-btn-danger', Blade::render('<x-ui.button variant="error">Sil</x-ui.button>'));
+        self::assertStringContainsString('border-danger bg-danger text-on-danger', Blade::render('<x-ui.button variant="error">Sil</x-ui.button>'));
         // Names that are not colours keep their own variant.
-        self::assertStringContainsString('border-gray-300 bg-white', Blade::render('<x-ui.button variant="white">Vazgeç</x-ui.button>'));
+        self::assertStringContainsString('border-line-strong bg-field', Blade::render('<x-ui.button variant="white">Vazgeç</x-ui.button>'));
     }
 }

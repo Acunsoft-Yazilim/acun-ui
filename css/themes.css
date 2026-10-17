@@ -296,9 +296,11 @@
     /*
      * Bridge: the kit's current runtime drives the tokens. The primary colour is
      * --color-brand-600 (the presets, a custom colour and the semi-dark menu set it), its fill
-     * the primary button's (--btn-primary-*, which also carry a custom colour's measured text);
-     * the focus ring keeps --ui-focus-ring; the backdrop, the corner and the sans font are the
-     * kit's current values. Read on every themed element, so the semi-dark menu takes its own.
+     * the runtime's --btn-primary-bg and --btn-primary-hover (presets in panel.css, a custom
+     * colour from theme.js, which also writes its measured text, --btn-primary-color); the focus
+     * ring and the fields' focus shadow keep --ui-focus-ring and --ui-focus-shadow(-error), which
+     * a theme may set; the backdrop, the corner and the sans font are the kit's current values.
+     * Read on every themed element, so the semi-dark menu takes its own.
      */
     :root,
     [data-theme],
@@ -308,6 +310,8 @@
         --ac-primary-hover: var(--btn-primary-hover);
         --ac-on-primary: var(--btn-primary-color, #fff);
         --ac-focus: var(--ui-focus-ring, var(--ac-p));
+        --ac-focus-shadow: var(--ui-focus-shadow, 0 0 #0000);
+        --ac-focus-shadow-danger: var(--ui-focus-shadow-error, 0 0 #0000);
         --ac-backdrop: var(--ui-backdrop);
         --ac-backdrop-blur: var(--ui-backdrop-blur);
         --ac-radius: var(--radius-sm);

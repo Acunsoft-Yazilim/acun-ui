@@ -182,7 +182,7 @@ final class PartsListsTest extends TestCase
             </acun:breadcrumb>
         BLADE);
 
-        self::assertStringContainsString('<span data-slot="breadcrumb-separator" aria-hidden="true" class="flex-none text-gray-300 dark:text-zinc-600 px-1">/</span>', $html);
+        self::assertStringContainsString('<span data-slot="breadcrumb-separator" aria-hidden="true" class="flex-none text-line-strong px-1">/</span>', $html);
         self::assertSame(1, substr_count($html, 'data-slot="breadcrumb-separator"'));
         self::assertStringNotContainsString('<svg data-slot', $html);
     }

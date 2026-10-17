@@ -8,7 +8,7 @@
 <div data-slot="drawer-footer" {{ $attributes->class([
     'flex items-center',
     $compact ? 'gap-1.5 px-3 py-2.5' : 'justify-end gap-2 px-5 py-4',
-    $docked ? 'bg-gray-50 dark:bg-zinc-800/50' : 'bg-gray-50 border-t border-gray-200 dark:bg-zinc-800/50 dark:border-zinc-700',
+    $docked ? 'bg-sunken/50' : 'bg-sunken/50 border-t border-line',
 ]) }}>
     {{ $slot }}
 </div>

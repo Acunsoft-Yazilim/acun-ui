@@ -51,7 +51,7 @@ final class NewComponentsTest extends TestCase
         self::assertMatchesRegularExpression('/x-ref="confirm"[^>]*wire:click="delete\(7\)"/', $html);
         self::assertStringContainsString('Silinsin mi?', $html);
         self::assertStringContainsString('x-on:keydown.escape=', $html);
-        self::assertStringContainsString('border-red-500 text-red-600', $html, 'The first button is the outline of the variant.');
+        self::assertStringContainsString('border-danger-line text-danger-ink', $html, 'The first button is the outline of the variant.');
     }
     public function test_logo_shows_the_dark_version_where_dark_applies(): void
     {
@@ -68,7 +68,7 @@ final class NewComponentsTest extends TestCase
     {
         $qr = Blade::render('<acun:two-factor-qr secret="JBSWY3DPEHPK3PXP"><svg viewBox="0 0 10 10"></svg></acun:two-factor-qr>');
         self::assertStringContainsString('role="img" aria-label="Doğrulama uygulaması için QR kodu"', $qr);
-        self::assertStringContainsString('bg-white p-3', $qr, 'White in the dark theme too, for the camera.');
+        self::assertStringContainsString('data-theme="light" class="flex-none rounded-sm bg-surface p-3', $qr, 'White in the dark theme too (a light section), for the camera.');
         self::assertStringContainsString('JBSW Y3DP EHPK 3PXP', $qr);
 
         $codes = Blade::render('<acun:recovery-codes :codes="[\'a1b2-c3d4\', \'e5f6-g7h8\']" filename="acme-kodlar.txt" />');

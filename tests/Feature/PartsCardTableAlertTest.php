@@ -27,9 +27,9 @@ final class PartsCardTableAlertTest extends TestCase
             </acun:card>
         BLADE);
 
-        self::assertMatchesRegularExpression('/^\s*<div\s+class="flex flex-col rounded-sm bg-white shadow-sm dark:bg-zinc-900 kart" id="siparisler"\s*>\s*<div data-slot="card-header" class="flex items-start justify-between gap-3 px-5 py-4 baslik">/', $html, 'The slot is rendered as it is, right inside the card box.');
+        self::assertMatchesRegularExpression('/^\s*<div\s+class="flex flex-col rounded-sm bg-surface shadow-sm kart" id="siparisler"\s*>\s*<div data-slot="card-header" class="flex items-start justify-between gap-3 px-5 py-4 baslik">/', $html, 'The slot is rendered as it is, right inside the card box.');
         self::assertStringContainsString('<div data-slot="card-body"  class="flex-1 p-5 govde">', $html);
-        self::assertStringContainsString('<div data-slot="card-footer" class="flex items-center gap-2 border-t border-gray-100 px-5 py-3 dark:border-zinc-800 alt">Tümünü gör</div>', $html);
+        self::assertStringContainsString('<div data-slot="card-footer" class="flex items-center gap-2 border-t border-line-soft px-5 py-3 alt">Tümünü gör</div>', $html);
         self::assertSame(1, substr_count($html, 'p-5'), 'No classic padded body around the parts.');
         self::assertStringNotContainsString('x-data', $html);
     }
@@ -68,8 +68,8 @@ final class PartsCardTableAlertTest extends TestCase
             </acun:card.header>
         BLADE);
 
-        self::assertMatchesRegularExpression('/<h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-2"><svg data-icon><\/svg> Siparişler <span[^>]*bg-emerald-50[^>]*>\s*3 yeni\s*<\/span><\/h3>/', $html);
-        self::assertStringContainsString('<p class="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">Bugün 12 sipariş</p>', $html);
+        self::assertMatchesRegularExpression('/<h3 class="text-sm font-semibold text-ink flex items-center gap-2"><svg data-icon><\/svg> Siparişler <span[^>]*bg-success-tint[^>]*>\s*3 yeni\s*<\/span><\/h3>/', $html);
+        self::assertStringContainsString('<p class="mt-0.5 text-xs text-muted">Bugün 12 sipariş</p>', $html);
         self::assertMatchesRegularExpression('/<div class="flex flex-none items-center gap-1">\s*<button>Yeni sipariş<\/button>/', $html);
 
         // With a title the slot follows it in the same row.
@@ -118,7 +118,7 @@ final class PartsCardTableAlertTest extends TestCase
             <acun:card.footer>Alt</acun:card.footer>
         BLADE);
 
-        self::assertStringContainsString('<h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Müşteri özeti</h3>', $html);
+        self::assertStringContainsString('<h3 class="text-sm font-semibold text-ink">Müşteri özeti</h3>', $html);
         self::assertStringNotContainsString('<button', $html, 'No collapse / close buttons without a card.');
         self::assertStringContainsString('<div data-slot="card-body"  class="flex-1 divide-y" wire:key="b">', $html);
     }
@@ -133,7 +133,7 @@ final class PartsCardTableAlertTest extends TestCase
         BLADE);
 
         self::assertMatchesRegularExpression('/<div\s+class="flex-1 p-5">\s*<p>Kapı kodu 1234<\/p>\s*<div data-slot="card-footer"/', $html);
-        self::assertStringContainsString('<h3 class="text-sm font-semibold text-gray-900 dark:text-zinc-100">Teslimat notu</h3>', $html);
+        self::assertStringContainsString('<h3 class="text-sm font-semibold text-ink">Teslimat notu</h3>', $html);
     }
 
     public function test_nested_cards_each_keep_their_own_mode(): void
@@ -210,7 +210,7 @@ final class PartsCardTableAlertTest extends TestCase
             </acun:table>
         BLADE);
 
-        self::assertMatchesRegularExpression('/^\s*<div class="ui-table-box relative overflow-x-auto overflow-y-hidden rounded-sm bg-white shadow-sm dark:bg-zinc-900 mt-2" id="siparisler">\s*<table class="ui-table">\s*<!--[^>]*-->\s*<thead data-slot="table-columns" class="sticky top-0">\s*<tr>\s*<th data-slot="table-column" scope="col"\s*>Müşteri<\/th>/', $html);
+        self::assertMatchesRegularExpression('/^\s*<div class="ui-table-box relative overflow-x-auto overflow-y-hidden rounded-sm bg-surface shadow-sm mt-2" id="siparisler">\s*<table class="ui-table">\s*<!--[^>]*-->\s*<thead data-slot="table-columns" class="sticky top-0">\s*<tr>\s*<th data-slot="table-column" scope="col"\s*>Müşteri<\/th>/', $html);
         self::assertStringContainsString('<th data-slot="table-column" scope="col" class="text-center">Durum</th>', $html);
         self::assertStringContainsString('<th data-slot="table-column" scope="col" class="text-end w-24">Sipariş</th>', $html);
         self::assertStringContainsString('<tbody data-slot="table-rows" wire:sort="sirala">', $html);
@@ -325,8 +325,8 @@ final class PartsCardTableAlertTest extends TestCase
             </acun:alert>
         BLADE);
 
-        self::assertMatchesRegularExpression('/x-data="\{ shown: true \}" x-show="shown"\s+class="flex items-start gap-3 rounded-sm p-4 text-sm bg-amber-50 text-amber-800[^"]* mb-4"/', $html);
-        self::assertStringContainsString('<svg class="size-5 flex-none text-amber-500"', $html);
+        self::assertMatchesRegularExpression('/x-data="\{ shown: true \}" x-show="shown"\s+class="flex items-start gap-3 rounded-sm p-4 text-sm bg-warning-tint text-warning-tint-ink[^"]* mb-4"/', $html);
+        self::assertStringContainsString('<svg class="size-5 flex-none text-warning-line"', $html);
         self::assertMatchesRegularExpression('/<div class="flex-1">\s*<p data-slot="alert-title" class="font-medium text-base">3 sipariş gecikmede<\/p>\s*<div data-slot="alert-description" class="not-first:mt-1">\s*<ul/', $html, 'The parts sit next to the icon, without the classic text box.');
         self::assertStringContainsString('aria-label="Kapat"', $html);
         self::assertStringNotContainsString('<div class="">', $html);

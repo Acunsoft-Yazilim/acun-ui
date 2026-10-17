@@ -27,10 +27,10 @@
     <div class="min-w-0">
         @if ($title || $row)
             @php($headingTag = 'h'.max(2, min(6, (int) $headingLevel)))
-            <{{ $headingTag }} @class(['text-sm font-semibold text-gray-900 dark:text-zinc-100', 'flex items-center gap-2' => $row])>{{ $title }}{{ $slot }}</{{ $headingTag }}>
+            <{{ $headingTag }} @class(['text-sm font-semibold text-ink', 'flex items-center gap-2' => $row])>{{ $title }}{{ $slot }}</{{ $headingTag }}>
         @endif
         @if ($subtitle)
-            <p class="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">{{ $subtitle }}</p>
+            <p class="mt-0.5 text-xs text-muted">{{ $subtitle }}</p>
         @endif
     </div>
 
@@ -38,13 +38,13 @@
         {{ $actions ?? '' }}
 
         @if ($collapsible)
-            <button type="button" x-on:click="open = ! open" :aria-expanded="open.toString()" aria-label="{{ __('Collapse / expand') }}" class="flex size-7 cursor-pointer items-center justify-center rounded-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+            <button type="button" x-on:click="open = ! open" :aria-expanded="open.toString()" aria-label="{{ __('Collapse / expand') }}" class="flex size-7 cursor-pointer items-center justify-center rounded-sm text-muted hover:bg-hover hover:text-body">
                 <svg class="size-4 transition-transform" :class="! open && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/></svg>
             </button>
         @endif
 
         @if ($closable)
-            <button type="button" x-on:click="visible = false" aria-label="{{ __('Close') }}" class="flex size-7 cursor-pointer items-center justify-center rounded-sm text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-zinc-800 dark:hover:text-red-400">
+            <button type="button" x-on:click="visible = false" aria-label="{{ __('Close') }}" class="flex size-7 cursor-pointer items-center justify-center rounded-sm text-muted hover:bg-hover hover:text-danger-ink">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         @endif

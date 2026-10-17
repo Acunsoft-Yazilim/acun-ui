@@ -96,12 +96,12 @@
             x-on:mouseleave="if (! $el.contains(document.activeElement)) resume(toast.id)"
             x-on:focusin="pause(toast.id)"
             x-on:focusout="if (! $el.contains($event.relatedTarget)) resume(toast.id)"
-            class="flex items-start gap-3 w-80 rounded-sm p-4 text-sm shadow-lg ring-1 ring-black/5"
+            class="flex items-start gap-3 w-80 rounded-sm p-4 text-sm shadow-lg ring-1 ring-ink/5"
             :class="{
-                'bg-emerald-solid text-white': toast.type === 'success',
-                'bg-red-600 text-white': toast.type === 'error',
-                'bg-amber-solid text-white': toast.type === 'warning',
-                'bg-gray-900 text-white dark:bg-zinc-800': toast.type === 'info',
+                'bg-success text-on-success': toast.type === 'success',
+                'bg-danger text-on-danger': toast.type === 'error',
+                'bg-warning text-on-warning': toast.type === 'warning',
+                'bg-inverse text-on-inverse': toast.type === 'info',
             }"
         >
             <div class="flex-1">
@@ -117,7 +117,7 @@
                     ></a>
                 </template>
             </div>
-            <button type="button" x-on:click="dismiss(toast.id)" aria-label="{{ __('Close') }}" class="text-white/70 hover:text-white">
+            <button type="button" x-on:click="dismiss(toast.id)" aria-label="{{ __('Close') }}" class="opacity-70 hover:opacity-100">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>

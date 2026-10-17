@@ -29,7 +29,7 @@ final class PanelComponentsTest extends TestCase
     {
         return [
             'alert' => ['<x-ui.alert variant="success" title="Tamam" dismissible>Kaydedildi</x-ui.alert>', 'Kaydedildi'],
-            'badge' => ['<x-ui.badge variant="danger">Pasif</x-ui.badge>', 'bg-red-50'],
+            'badge' => ['<x-ui.badge variant="danger">Pasif</x-ui.badge>', 'bg-danger-tint'],
             'button-group' => ['<x-ui.button-group><x-ui.button>A</x-ui.button></x-ui.button-group>', 'role="group"'],
             'card' => ['<x-ui.card title="Özet">Gövde</x-ui.card>', 'Özet'],
             'checkbox' => ['<x-ui.checkbox wire:model.live="secili" label="Seç" />', 'id="secili"'],
@@ -65,14 +65,14 @@ final class PanelComponentsTest extends TestCase
             'icon' => ['<x-ui.icon name="trash" label="Sil" />', 'aria-label="Sil"'],
             'icon solid' => ['<x-ui.icon name="trash" solid />', 'fill-rule="evenodd"'],
             'icon full set' => ['<x-ui.icon name="academic-cap" />', 'stroke-linejoin="round"'],
-            'stat-card' => ['<x-ui.stat-card label="Sipariş" value="3.106" icon="shopping-bag" :change="-4" />', 'text-red-600'],
+            'stat-card' => ['<x-ui.stat-card label="Sipariş" value="3.106" icon="shopping-bag" :change="-4" />', 'text-danger-ink'],
             'card extras' => ['<x-ui.card title="T" subtitle="Alt" collapsible closable>G</x-ui.card>', 'visible = false'],
             'input-group' => ['<x-ui.input-group name="tel" prefix="+90" />', '+90'],
             'tabs pills' => ["<x-ui.tabs variant=\"pills\" :tabs=\"['a' => 'A']\"><x-ui.tab-panel value=\"a\">x</x-ui.tab-panel></x-ui.tabs>", 'role="tab"'],
             'command-palette' => ["<x-ui.command-palette placeholder=\"Ara\" :items=\"[['label' => 'Siparişler', 'href' => '/siparisler', 'group' => 'Sayfalar']]\" />", 'command-palette-open.window'],
             'brand-color-picker' => ['<x-ui.brand-color-picker label="Ana renk" />', 'type="color"'],
             'theme-customizer' => ['<x-ui.theme-customizer />', 'theme-customizer'],
-            'button label' => ['<x-ui.button variant="soft-danger">Sil</x-ui.button>', 'bg-red-100'],
+            'button label' => ['<x-ui.button variant="soft-danger">Sil</x-ui.button>', 'bg-danger-soft'],
             'empty-state' => ['<x-ui.empty-state title="Kayıt yok" description="Filtreyi değiştirin" />', 'Kayıt yok'],
             'skeleton' => ['<x-ui.skeleton variant="circle" class="size-8" />', 'rounded-full'],
             'avatar' => ['<x-ui.avatar name="Ayşe Yılmaz" status="online" />', 'AY'],
@@ -126,10 +126,10 @@ final class PanelComponentsTest extends TestCase
 
     public function test_button_supports_panel_variants_links_and_form_modal_appearance(): void
     {
-        self::assertStringContainsString('ui-btn ui-btn-danger', Blade::render('<x-ui.button variant="danger">Sil</x-ui.button>'));
+        self::assertStringContainsString('border-danger bg-danger text-on-danger', Blade::render('<x-ui.button variant="danger">Sil</x-ui.button>'));
         self::assertStringContainsString('<a href="/yeni"', Blade::render('<x-ui.button href="/yeni">Yeni</x-ui.button>'));
-        self::assertStringContainsString('border-red-500 text-red-600', Blade::render('<x-ui.button variant="danger" appearance="outline">Sil</x-ui.button>'));
-        self::assertStringContainsString('border-transparent bg-transparent text-gray-600 hover:not-disabled:text-gray-900', Blade::render('<x-ui.button variant="white" appearance="text">Vazgeç</x-ui.button>'));
+        self::assertStringContainsString('border-danger-line text-danger-ink', Blade::render('<x-ui.button variant="danger" appearance="outline">Sil</x-ui.button>'));
+        self::assertStringContainsString('border-transparent bg-transparent text-dim hover:not-disabled:text-ink', Blade::render('<x-ui.button variant="white" appearance="text">Vazgeç</x-ui.button>'));
         self::assertStringContainsString('aria-busy="true"', Blade::render('<x-ui.button loading>Kaydet</x-ui.button>'));
     }
 
@@ -186,7 +186,7 @@ final class PanelComponentsTest extends TestCase
     public function test_blank_layout_is_a_document_around_the_page(): void
     {
         $html = Blade::render(<<<'BLADE'
-            <x-ui.layout.blank title="Boş sayfa" class="bg-white" data-page="vitrin">
+            <x-ui.layout.blank title="Boş sayfa" class="bg-surface" data-page="vitrin">
                 <x-slot:head><link rel="icon" href="/favicon.svg"></x-slot:head>
                 <p>Kendi içeriği</p>
             </x-ui.layout.blank>
@@ -195,7 +195,7 @@ final class PanelComponentsTest extends TestCase
         self::assertStringStartsWith('<!DOCTYPE html>', trim($html));
         self::assertStringContainsString('<title>Boş sayfa</title>', $html);
         self::assertStringContainsString('<link rel="icon" href="/favicon.svg">', $html);
-        self::assertMatchesRegularExpression('~<body class="min-h-dvh text-gray-700 dark:text-zinc-200 bg-white" data-page="vitrin">\s*<p>Kendi içeriği</p>~', $html);
+        self::assertMatchesRegularExpression('~<body class="min-h-dvh text-body bg-surface" data-page="vitrin">\s*<p>Kendi içeriği</p>~', $html);
         self::assertStringNotContainsString('panel-sidebar', $html);
         self::assertStringContainsString('x-on:toast.window="push($event.detail)"', $html);
     }

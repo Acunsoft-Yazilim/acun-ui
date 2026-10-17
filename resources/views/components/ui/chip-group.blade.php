@@ -41,13 +41,13 @@
         <label class="relative">
             <input type="{{ $multiple ? 'checkbox' : 'radio' }}" name="{{ $inputName }}" value="{{ $key }}" class="peer sr-only" @checked(in_array((string) $key, $chosen, true)) {{ $binding }}>
             <span @class([
-                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm font-medium text-gray-700 transition-colors select-none hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-zinc-500',
-                'peer-checked:border-brand-600 peer-checked:bg-brand-50 peer-checked:text-brand-700 dark:peer-checked:border-brand-500 dark:peer-checked:bg-brand-500/15 dark:peer-checked:text-brand-300',
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-sm font-medium text-body transition-colors select-none hover:border-line-strong',
+                'peer-checked:border-primary-ink peer-checked:bg-primary-tint peer-checked:text-primary-tint-ink',
                 'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
             ])>
                 {{ $text }}
                 @if ($count !== null)
-                    <span class="rounded-full bg-gray-100 px-1.5 text-xs tabular-nums text-gray-600 dark:bg-zinc-800 dark:text-zinc-300">{{ is_numeric($count) ? \Acun\Ui\Support\Format::number((float) $count) : $count }}</span>
+                    <span class="rounded-full bg-sunken px-1.5 text-xs tabular-nums text-dim">{{ is_numeric($count) ? \Acun\Ui\Support\Format::number((float) $count) : $count }}</span>
                 @endif
             </span>
         </label>

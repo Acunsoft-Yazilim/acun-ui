@@ -13,7 +13,7 @@
             </acun:slot:actions>
         </acun:list-toolbar>
 --}}
-<div {{ $attributes->merge(['class' => 'flex flex-wrap items-center justify-between gap-3 rounded-sm bg-white p-3 shadow-sm dark:bg-zinc-900']) }}>
+<div {{ $attributes->merge(['class' => 'flex flex-wrap items-center justify-between gap-3 rounded-sm bg-surface p-3 shadow-sm']) }}>
     <div class="flex w-full items-center gap-3 sm:w-auto">
         @isset($start)
             {{ $start }}

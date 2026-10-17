@@ -59,6 +59,6 @@
         <span>{{ $label }}</span>
     </acun:button>
 
-    <p x-show="! supported" x-cloak class="text-xs text-gray-500 dark:text-zinc-400">{{ __('This browser does not support passkeys.') }}</p>
-    <p x-show="error" x-text="error" x-cloak role="alert" class="text-xs text-red-600 dark:text-red-400"></p>
+    <p x-show="! supported" x-cloak class="text-xs text-muted">{{ __('This browser does not support passkeys.') }}</p>
+    <p x-show="error" x-text="error" x-cloak role="alert" class="text-xs text-danger-ink"></p>
 </div>

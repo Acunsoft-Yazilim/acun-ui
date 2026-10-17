@@ -16,7 +16,7 @@
     x-on:keydown.end.prevent="focusTab($el, 'last')"
     {{ $attributes->class([
         'flex gap-1',
-        'overflow-x-auto overscroll-x-contain border-b border-gray-200 [scrollbar-width:thin] dark:border-zinc-700' => $variant !== 'pills',
+        'overflow-x-auto overscroll-x-contain border-b border-line [scrollbar-width:thin]' => $variant !== 'pills',
         'flex-wrap' => $variant === 'pills',
     ]) }}
 >

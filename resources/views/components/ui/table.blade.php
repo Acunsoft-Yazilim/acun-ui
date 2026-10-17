@@ -46,7 +46,7 @@
 @php
     $stack = $stack === true ? 'sm' : (in_array($stack, ['sm', 'md'], true) ? $stack : null);
 @endphp
-<div {{ $attributes->merge(['class' => 'ui-table-box relative overflow-x-auto overflow-y-hidden rounded-sm bg-white shadow-sm dark:bg-zinc-900', 'data-table-stack' => $stack]) }}>
+<div {{ $attributes->merge(['class' => 'ui-table-box relative overflow-x-auto overflow-y-hidden rounded-sm bg-surface shadow-sm', 'data-table-stack' => $stack]) }}>
 @if (\Acun\Ui\Support\Parts::used($slot, 'table'))
     <table class="ui-table">{{ $slot }}</table>
 @else

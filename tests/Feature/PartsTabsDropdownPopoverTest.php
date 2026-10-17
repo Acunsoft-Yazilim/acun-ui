@@ -96,13 +96,13 @@ final class PartsTabsDropdownPopoverTest extends TestCase
         // md is the classic look.
         self::assertStringContainsString('shrink-0 border-b-2', $underline);
         self::assertStringContainsString('px-3 py-2 text-sm gap-2', $underline);
-        self::assertStringContainsString("'border-brand-600 text-brand-700 dark:text-brand-400'", $underline);
+        self::assertStringContainsString("'border-primary-ink text-primary-tint-ink'", $underline);
 
         $pills = Blade::render('<acun:tabs variant="pills" size="sm"><acun:tabs.list><acun:tabs.trigger value="a" icon="map" badge="3">A</acun:tabs.trigger></acun:tabs.list></acun:tabs>');
         self::assertMatchesRegularExpression('/role="tablist"[^>]*class="flex gap-1 flex-wrap"/', $pills);
         self::assertStringNotContainsString('overflow-x-auto', $pills);
         self::assertStringContainsString('px-3 py-1.5 text-xs gap-1.5 rounded-sm', $pills);
-        self::assertStringContainsString("'bg-brand-600 text-white'", $pills);
+        self::assertStringContainsString("'bg-primary text-on-primary'", $pills);
         self::assertStringContainsString('class="size-3.5 flex-none"', $pills);
 
         $large = Blade::render('<acun:tabs size="lg"><acun:tabs.list><acun:tabs.trigger value="a" icon="map">A</acun:tabs.trigger></acun:tabs.list></acun:tabs>');
@@ -175,7 +175,7 @@ final class PartsTabsDropdownPopoverTest extends TestCase
 
         // Both are drawn by the parts, each with its own x-id scope and variant.
         self::assertSame(2, substr_count($html, "x-id=\"['tab', 'tabpanel']\""));
-        self::assertStringContainsString("selected('siparisler') ? 'bg-brand-600 text-white'", $html, 'The outer keeps pills.');
+        self::assertStringContainsString("selected('siparisler') ? 'bg-primary text-on-primary'", $html, 'The outer keeps pills.');
         self::assertMatchesRegularExpression('/data-slot="tabs-trigger".*?shrink-0 border-b-2/s', $html);
         self::assertStringContainsString("x-show=\"selected('sabah')\"", $html);
     }
@@ -226,16 +226,16 @@ final class PartsTabsDropdownPopoverTest extends TestCase
     public function test_dropdown_items_keep_their_classic_markup_and_take_an_icon_or_danger(): void
     {
         self::assertSame(
-            '<button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 text-left">Yenile</button>',
+            '<button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-body hover:bg-hover text-left">Yenile</button>',
             trim(Blade::render('<acun:dropdown.item>Yenile</acun:dropdown.item>')),
         );
 
         $icon = Blade::render('<acun:dropdown.item href="/r" icon="truck">Kargo</acun:dropdown.item>');
-        self::assertMatchesRegularExpression('/<a href="\/r"\s+class="[^"]*"><svg[^>]*class="size-4 flex-none text-gray-400 dark:text-zinc-500"/', $icon);
+        self::assertMatchesRegularExpression('/<a href="\/r"\s+class="[^"]*"><svg[^>]*class="size-4 flex-none text-faint"/', $icon);
 
         $danger = Blade::render('<acun:dropdown.item icon="trash" danger>Sil</acun:dropdown.item>');
-        self::assertStringContainsString('text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10', $danger);
-        self::assertStringNotContainsString('text-gray-700', $danger);
+        self::assertStringContainsString('text-danger-ink hover:bg-danger-tint', $danger);
+        self::assertStringNotContainsString('text-body', $danger);
         self::assertStringContainsString('class="size-4 flex-none"', $danger, 'The icon takes the red text colour.');
     }
 
@@ -268,12 +268,12 @@ final class PartsTabsDropdownPopoverTest extends TestCase
         self::assertStringContainsString('data-slot="dropdown-content"', $html);
         self::assertStringContainsString(':id="$id(\'dropdown-content\')"', $html);
         self::assertStringContainsString('x-on:keydown="menuKey($event)"', $html);
-        self::assertStringContainsString('class="absolute z-40 max-h-64 overflow-auto rounded-sm bg-white py-1 shadow-lg dark:bg-zinc-900 min-w-[12rem] left-0 bottom-full mb-2 w-64"', $html);
+        self::assertStringContainsString('class="absolute z-40 max-h-64 overflow-auto rounded-sm bg-surface py-1 shadow-lg min-w-[12rem] left-0 bottom-full mb-2 w-64"', $html);
 
         // Heading, separator, items.
         self::assertStringContainsString('<div data-slot="dropdown-heading" class="px-3 pt-2 pb-1 font-mono text-2xs', $html);
-        self::assertStringContainsString('<hr data-slot="dropdown-separator" class="my-1 border-gray-200 dark:border-zinc-800">', $html);
-        self::assertStringContainsString('text-red-600 hover:bg-red-50', $html);
+        self::assertStringContainsString('<hr data-slot="dropdown-separator" class="my-1 border-line">', $html);
+        self::assertStringContainsString('text-danger-ink hover:bg-danger-tint', $html);
 
         // No classic wrapper.
         self::assertStringNotContainsString('<div x-on:click="open = !open">', $html);
@@ -287,7 +287,7 @@ final class PartsTabsDropdownPopoverTest extends TestCase
 
         $full = Blade::render(sprintf($parts, ' full-width'));
         self::assertStringContainsString('class="relative block w-full"', $full);
-        self::assertStringContainsString('dark:bg-zinc-900 left-0 right-0 top-full mt-2"', $full);
+        self::assertStringContainsString('shadow-lg left-0 right-0 top-full mt-2"', $full);
     }
 
     public function test_classic_dropdown_is_drawn_by_the_parts_with_their_aria_keys_and_attributes(): void
@@ -361,7 +361,7 @@ final class PartsTabsDropdownPopoverTest extends TestCase
         self::assertStringContainsString(':aria-labelledby="$id(\'popover-title\')"', $html);
         self::assertStringContainsString('<div :id="$id(\'popover-title\')" class="border-b', $html);
         self::assertMatchesRegularExpression('/class="absolute z-40 [^"]* w-72 top-full mt-2 right-0" data-test="kural"/', $html);
-        self::assertStringContainsString('<div class="px-4 py-3 text-gray-600 dark:text-zinc-400">Ürünler teslimattan', $html);
+        self::assertStringContainsString('<div class="px-4 py-3 text-dim">Ürünler teslimattan', $html);
     }
 
     public function test_popover_content_takes_a_custom_width_and_works_without_a_title(): void
@@ -379,7 +379,7 @@ final class PartsTabsDropdownPopoverTest extends TestCase
         $html = Blade::render("<acun:popover title=\"Kural\" class=\"text-xs\">\n<acun:slot:trigger><button>?</button></acun:slot:trigger>\nAçıklama\n</acun:popover>");
 
         self::assertStringContainsString('<div x-on:click="open = ! open"><button>?</button></div>', $html);
-        self::assertStringContainsString('<div class="px-4 py-3 text-gray-600 dark:text-zinc-400 text-xs">Açıklama</div>', $html);
+        self::assertStringContainsString('<div class="px-4 py-3 text-dim text-xs">Açıklama</div>', $html);
         self::assertStringNotContainsString('data-slot', $html);
         self::assertStringNotContainsString('aria-expanded', $html);
     }

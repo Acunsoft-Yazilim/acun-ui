@@ -24,12 +24,12 @@
 --}}
 @if ($count > 0 || $allMatching)
     <div {{ $attributes->class([
-        'flex flex-wrap items-center gap-3 rounded-sm border border-brand-200 bg-brand-50 px-4 py-3 text-sm',
+        'flex flex-wrap items-center gap-3 rounded-sm border border-primary/25 px-4 py-3 text-sm',
         // Floating over the rows: solid in the dark theme (a see-through tint would show the rows below).
-        'sticky bottom-4 z-20 shadow-lg dark:border-brand-500/30 dark:bg-zinc-900' => $floating,
-        'dark:border-brand-500/20 dark:bg-brand-500/10' => ! $floating,
+        'sticky bottom-4 z-20 bg-surface bg-linear-to-r from-primary-tint to-primary-tint shadow-lg' => $floating,
+        'bg-primary-tint' => ! $floating,
     ]) }} role="status" data-selection-bar>
-        <span class="font-medium text-brand-800 dark:text-brand-300">
+        <span class="font-medium text-primary-tint-ink">
             {{ $allMatching
                 ? trans_choice(':count record (all matching the filters) selected.|:count records (all matching the filters) selected.', (int) ($total ?? $count), ['count' => \Acun\Ui\Support\Format::number((int) ($total ?? $count))])
                 : trans_choice(':count record selected.|:count records selected.', (int) $count, ['count' => \Acun\Ui\Support\Format::number((int) $count)]) }}

@@ -7,13 +7,13 @@
 
 @php
     $borderStyle = ['dashed' => 'border-dashed', 'dotted' => 'border-dotted'][$variant] ?? '';
-    $lineClass = "h-px flex-1 border-t {$borderStyle} border-gray-200 dark:border-zinc-700";
+    $lineClass = "h-px flex-1 border-t {$borderStyle} border-line";
 @endphp
 
 @if ($slot->isEmpty())
-    <hr {{ $attributes->merge(['class' => "border-t {$borderStyle} border-gray-200 dark:border-zinc-700"]) }}>
+    <hr {{ $attributes->merge(['class' => "border-t {$borderStyle} border-line"]) }}>
 @else
-    <div role="separator" {{ $attributes->merge(['class' => 'flex items-center gap-3 text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-zinc-400']) }}>
+    <div role="separator" {{ $attributes->merge(['class' => 'flex items-center gap-3 text-xs font-medium tracking-wide text-muted uppercase']) }}>
         @if ($align !== 'start')<span class="{{ $lineClass }}"></span>@endif
         <span class="flex-none">{{ $slot }}</span>
         @if ($align !== 'end')<span class="{{ $lineClass }}"></span>@endif

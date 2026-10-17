@@ -22,7 +22,7 @@
     x-on:keydown="menuKey($event)"
     :id="$id('dropdown-content')"
     {{ $attributes->class([
-        'absolute z-40 max-h-64 overflow-auto rounded-sm bg-white py-1 shadow-lg dark:bg-zinc-900',
+        'absolute z-40 max-h-64 overflow-auto rounded-sm bg-surface py-1 shadow-lg',
         'left-0 right-0' => $fullWidth,
         'min-w-[12rem]' => ! $fullWidth,
         'left-0' => ! $fullWidth && $align === 'start',

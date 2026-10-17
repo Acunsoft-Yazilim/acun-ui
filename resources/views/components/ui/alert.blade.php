@@ -11,13 +11,13 @@
 @php
     $variant = \Acun\Ui\Support\Tone::name($color ?? $variant, 'info');
     $variants = [
-        'primary' => ['wrap' => 'bg-brand-50 text-brand-800 dark:bg-brand-500/10 dark:text-brand-300', 'icon' => 'text-brand-600 dark:text-brand-400'],
-        'secondary' => ['wrap' => 'bg-secondary-100 text-secondary-800 dark:bg-secondary-500/15 dark:text-secondary-300', 'icon' => 'text-secondary-500'],
-        'success' => ['wrap' => 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300', 'icon' => 'text-emerald-500'],
-        'danger' => ['wrap' => 'bg-red-50 text-red-800 dark:bg-red-500/10 dark:text-red-300', 'icon' => 'text-red-500'],
-        'warning' => ['wrap' => 'bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300', 'icon' => 'text-amber-500'],
-        'info' => ['wrap' => 'bg-sky-50 text-sky-800 dark:bg-sky-500/10 dark:text-sky-300', 'icon' => 'text-sky-500'],
-        'dark' => ['wrap' => 'bg-dark/10 text-dark dark:bg-zinc-800 dark:text-zinc-200', 'icon' => 'text-dark dark:text-zinc-300'],
+        'primary' => ['wrap' => 'bg-primary-tint text-primary-tint-ink', 'icon' => 'text-primary-ink'],
+        'secondary' => ['wrap' => 'bg-secondary-tint text-secondary-tint-ink', 'icon' => 'text-secondary-line'],
+        'success' => ['wrap' => 'bg-success-tint text-success-tint-ink', 'icon' => 'text-success-line'],
+        'danger' => ['wrap' => 'bg-danger-tint text-danger-tint-ink', 'icon' => 'text-danger-line'],
+        'warning' => ['wrap' => 'bg-warning-tint text-warning-tint-ink', 'icon' => 'text-warning-line'],
+        'info' => ['wrap' => 'bg-info-tint text-info-tint-ink', 'icon' => 'text-info-line'],
+        'dark' => ['wrap' => 'bg-dark-tint text-dark-tint-ink', 'icon' => 'text-dark-ink'],
     ];
     $style = $variants[$variant];
     // Success: check mark, warning/danger: exclamation mark, the others: "i".

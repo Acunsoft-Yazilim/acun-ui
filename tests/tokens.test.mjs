@@ -227,6 +227,8 @@ test('the token contrast table holds in light, dark and the bordered skin', () =
  * none differs by more than 3 per channel.
  */
 test('the built-in values are the colours of today\'s components', () => {
+    // A solid button's hover: its fill with 12% black (the --btn-* variables of panel.css until step 5).
+    const hover = (shade) => `color-mix(in srgb, var(--color-${shade}) 88%, black)`;
     const shades = {
         page: ['gray-50', 'zinc-950'], surface: ['#fff', 'zinc-900'], field: ['#fff', 'zinc-800'], 'field-hover': ['gray-50', 'zinc-700'],
         'field-disabled': ['gray-50', 'zinc-900'], sunken: ['gray-100', 'zinc-800'], hover: ['gray-100', 'zinc-800'], track: ['gray-200', 'zinc-700'],
@@ -239,11 +241,12 @@ test('the built-in values are the colours of today\'s components', () => {
         'primary-tint': ['brand-50', 'brand-500/10'], 'primary-soft': ['brand-100', 'brand-500/15'], 'primary-tint-ink': ['brand-700', 'brand-300'],
         focus: ['brand-600', 'brand-600'],
 
-        secondary: ['var(--btn-secondary-bg)', 'var(--btn-secondary-bg)'], 'secondary-hover': ['var(--btn-secondary-hover)', 'var(--btn-secondary-hover)'],
+        // Today's solid button fills: the palette's solid shade, hovered with 12% black (the dark button is a grey in the dark theme).
+        secondary: ['secondary-500', 'secondary-500'], 'secondary-hover': [hover('secondary-500'), hover('secondary-500')],
         'secondary-ink': ['secondary-600', 'secondary-300'], 'secondary-line': ['secondary-500', 'secondary-400'], 'secondary-tint': ['secondary-100', 'secondary-500/15'],
         'secondary-soft': ['secondary-100', 'secondary-500/15'], 'secondary-tint-ink': ['secondary-700', 'secondary-300'],
 
-        dark: ['var(--btn-dark-bg)', 'var(--btn-dark-bg)'], 'dark-hover': ['var(--btn-dark-hover)', 'var(--btn-dark-hover)'], 'on-dark': ['#fff', '#fff'],
+        dark: ['#3f404d', 'zinc-700'], 'dark-hover': [hover('dark'), 'zinc-600'], 'on-dark': ['#fff', '#fff'],
         'dark-ink': ['#3f404d', 'zinc-300'], 'dark-line': ['#3f404d', 'zinc-300'], 'dark-tint': ['#3f404d/10', 'zinc-800'], 'dark-soft': ['#3f404d/10', 'zinc-700'],
         'dark-tint-ink': ['#3f404d', 'zinc-200'],
 
@@ -252,7 +255,7 @@ test('the built-in values are the colours of today\'s components', () => {
     };
     for (const [tone, palette, fill] of [['success', 'emerald', 'emerald-solid'], ['info', 'sky', 'sky-solid'], ['warning', 'amber', 'amber-solid'], ['danger', 'red', 'red-600']]) {
         Object.assign(shades, {
-            [tone]: [fill, fill], [`${tone}-hover`]: [`var(--btn-${tone}-hover)`, `var(--btn-${tone}-hover)`], [`on-${tone}`]: ['#fff', '#fff'],
+            [tone]: [fill, fill], [`${tone}-hover`]: [hover(fill), hover(fill)], [`on-${tone}`]: ['#fff', '#fff'],
             [`${tone}-ink`]: [`${palette}-600`, `${palette}-400`], [`${tone}-line`]: [`${palette}-500`, `${palette}-400`],
             [`${tone}-tint`]: [`${palette}-50`, `${palette}-500/10`], [`${tone}-soft`]: [`${palette}-100`, `${palette}-500/15`],
             [`${tone}-tint-ink`]: [`${palette}-700`, `${palette}-300`],
@@ -263,6 +266,7 @@ test('the built-in values are the colours of today\'s components', () => {
     const lighter = { 'accent-ink': ['accent-500', '#4387f6'], 'accent-line': ['accent-500', '#4387f6'] };
 
     const today = (shade, scope) => {
+        if (shade.startsWith('color-mix(')) return colour(shade, scope);
         const [, name, alpha] = shade.match(/^(.+?)(?:\/(\d+))?$/);
         const value = name.startsWith('#') || name.startsWith('var(') ? name : `var(--color-${name})`;
         const rgba = colour(value, scope);
@@ -326,6 +330,9 @@ test('the bridge gives today\'s primary colour for the default theme', () => {
     for (const block of [lightBlock, darkBlock]) assert.ok(ruleWith('.dark', '--ac-page').some((rule) => rule.declarations === block), 'The light and the dark block match .dark.');
     assert.equal(bridge.get('--ac-tone-primary'), 'var(--color-brand-600)');
     assert.equal(bridge.get('--ac-primary'), 'var(--btn-primary-bg)');
+    // The fields' focus shadow a theme may set (--ui-focus-shadow) reaches the token the fields read.
+    assert.equal(bridge.get('--ac-focus-shadow'), 'var(--ui-focus-shadow, 0 0 #0000)');
+    assert.equal(bridge.get('--ac-focus-shadow-danger'), 'var(--ui-focus-shadow-error, 0 0 #0000)');
 
     for (const mode of ['light', 'dark']) {
         const scope = overlay(legacyScopes[mode], scopes[mode], bridge);

@@ -34,13 +34,13 @@
     @endphp
     {{-- On phones only previous / current / next are shown, so the bar never widens the page. --}}
     <nav
-        class="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-sm border border-gray-200 dark:bg-zinc-900 dark:border-zinc-700"
+        class="flex flex-wrap items-center justify-between gap-3 p-3 bg-surface rounded-sm border border-line"
         role="navigation"
         aria-label="{{ __('Pagination Navigation') }}"
         x-data
         x-on:click="if ($event.target.closest('a, button:not([disabled])')) { const root = $el.closest('[wire\\:id]'); if (root && root.getBoundingClientRect().top < 0) root.scrollIntoView({ block: 'start' }); }"
     >
-        <div class="text-sm text-gray-600 dark:text-zinc-400">
+        <div class="text-sm text-dim">
             @if ($paginator->isEmpty() && $paginator->onFirstPage())
                 {{ __('No results') }}
             @elseif ($lengthAware)
@@ -68,9 +68,9 @@
             --}}
             @foreach ($lengthAware ? \Acun\Ui\Support\PaginationWindow::slots($paginator->currentPage(), $paginator->lastPage(), (int) $paginator->onEachSide) : [] as $slot)
                 @if ($slot === null)
-                    <span class="hidden min-w-9 py-1.5 text-center text-sm text-gray-400 sm:inline-block dark:text-zinc-500" aria-hidden="true">…</span>
+                    <span class="hidden min-w-9 py-1.5 text-center text-sm text-faint sm:inline-block" aria-hidden="true">…</span>
                 @elseif ($slot === $paginator->currentPage())
-                    <span aria-current="page" class="inline-flex min-w-9 items-center justify-center rounded-sm bg-brand-600 px-2 py-1.5 text-xs font-semibold text-white tabular-nums">{{ $slot }}</span>
+                    <span aria-current="page" class="inline-flex min-w-9 items-center justify-center rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold text-on-primary tabular-nums">{{ $slot }}</span>
                 @else
                     <acun:button variant="white" size="sm" class="hidden min-w-9 tabular-nums sm:inline-flex" href="{{ $paginator->url($slot) }}" wire:click.prevent="gotoPage({{ $slot }}, {{ $pageName }})">{{ $slot }}</acun:button>
                 @endif

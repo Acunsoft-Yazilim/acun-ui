@@ -27,7 +27,7 @@
     x-cloak
     :id="$id('tabpanel', @js($key))"
     :aria-labelledby="$id('tab', @js($key))"
-    {{ $attributes->merge(['tabindex' => '0'])->class($variant === 'cards' ? 'rounded-b-sm border border-t-0 border-gray-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900' : 'pt-4') }}
+    {{ $attributes->merge(['tabindex' => '0'])->class($variant === 'cards' ? 'rounded-b-sm border border-t-0 border-line bg-surface p-4' : 'pt-4') }}
 >
     {{ $slot }}
 </div>

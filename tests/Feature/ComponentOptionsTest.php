@@ -23,11 +23,11 @@ final class ComponentOptionsTest extends TestCase
     public function test_a_stat_card_colours_its_value_and_adds_a_hint(): void
     {
         $html = Blade::render('<acun:stat-card label="Kâr" value="₺48.210" value-color="success" hint="Hedef: ₺45.000" />');
-        self::assertMatchesRegularExpression('/<p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">₺48.210<\/p>/', $html);
+        self::assertMatchesRegularExpression('/<p class="mt-1 text-2xl font-semibold tabular-nums text-success-ink">₺48.210<\/p>/', $html);
         self::assertStringContainsString('Hedef: ₺45.000', $html);
 
         $plain = Blade::render('<acun:stat-card label="Sipariş" value="35" />');
-        self::assertStringContainsString('text-gray-900 dark:text-zinc-100">35</p>', $plain);
+        self::assertStringContainsString('text-ink">35</p>', $plain);
     }
 
     public function test_card_tabs_join_the_open_tab_to_a_framed_panel(): void
@@ -35,8 +35,8 @@ final class ComponentOptionsTest extends TestCase
         $html = Blade::render('<acun:tabs variant="cards" :tabs="[\'genel\' => \'Genel\', \'kargo\' => \'Kargo\']"><acun:tab-panel value="genel">G</acun:tab-panel></acun:tabs>');
 
         self::assertStringContainsString('-mb-px rounded-t-sm border', $html);
-        self::assertStringContainsString("border-gray-200 bg-white text-gray-900", $html);
-        self::assertStringContainsString('rounded-b-sm border border-t-0 border-gray-200 bg-white p-4', $html);
+        self::assertStringContainsString("border-line bg-surface text-ink", $html);
+        self::assertStringContainsString('rounded-b-sm border border-t-0 border-line bg-surface p-4', $html);
         self::assertStringNotContainsString('border-b-2', $html);
     }
 }

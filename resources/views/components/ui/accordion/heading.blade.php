@@ -31,11 +31,11 @@
 
     $key = \Illuminate\Support\Str::slug($name) ?: hash('crc32b', $name);
     $sign = match (true) {
-        $customIndicator !== null => '<span class="flex flex-none items-center text-gray-400 dark:text-zinc-500" aria-hidden="true">'.$customIndicator->toHtml().'</span>',
+        $customIndicator !== null => '<span class="flex flex-none items-center text-faint" aria-hidden="true">'.$customIndicator->toHtml().'</span>',
         $indicator === 'none' => null,
         // The vertical bar folds away when the section opens: plus becomes minus.
-        $indicator === 'plus' => '<svg class="size-4 flex-none text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M5 12h14"/><path stroke-linecap="round" d="M12 5v14" class="origin-center transition-transform group-aria-expanded:scale-y-0 motion-reduce:transition-none"/></svg>',
-        default => '<svg class="size-4 flex-none text-gray-400 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>',
+        $indicator === 'plus' => '<svg class="size-4 flex-none text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M5 12h14"/><path stroke-linecap="round" d="M12 5v14" class="origin-center transition-transform group-aria-expanded:scale-y-0 motion-reduce:transition-none"/></svg>',
+        default => '<svg class="size-4 flex-none text-faint transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>',
     };
     $signAtStart = $sign !== null && $indicatorPosition === 'start';
     // The accordion's heading-level (2–6) fits the headings into the page's outline.
@@ -50,10 +50,10 @@
         :aria-expanded="isOpen(@js($name)).toString()"
         :aria-controls="$id('accordion', @js($key))"
         @disabled($disabled)
-        {{ $attributes->class('group flex w-full cursor-pointer items-center justify-between gap-3 px-5 py-4 text-left text-sm font-medium text-gray-900 hover:bg-gray-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:text-zinc-100 dark:hover:bg-zinc-800/60 dark:disabled:hover:bg-transparent') }}
+        {{ $attributes->class('group flex w-full cursor-pointer items-center justify-between gap-3 px-5 py-4 text-left text-sm font-medium text-ink hover:bg-hover/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent') }}
     >
         @if ($signAtStart){!! $sign !!}@endif
-        <span class="flex min-w-0 flex-1 items-center gap-2" :class="isOpen(@js($name)) && 'text-brand-600 dark:text-brand-400'">{{ $slot }}</span>
+        <span class="flex min-w-0 flex-1 items-center gap-2" :class="isOpen(@js($name)) && 'text-primary-ink'">{{ $slot }}</span>
         @if ($sign !== null && ! $signAtStart){!! $sign !!}@endif
     </button>
 </{{ $headingTag }}>

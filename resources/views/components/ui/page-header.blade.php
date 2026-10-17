@@ -27,14 +27,14 @@
         <div class="min-w-0 space-y-1">
             @isset($badges)
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <h1 class="text-2xl font-semibold text-gray-900 dark:text-zinc-100">{{ $title }}</h1>
+                    <h1 class="text-2xl font-semibold text-ink">{{ $title }}</h1>
                     <div class="flex flex-wrap items-center gap-2">{{ $badges }}</div>
                 </div>
             @else
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-zinc-100">{{ $title }}</h1>
+                <h1 class="text-2xl font-semibold text-ink">{{ $title }}</h1>
             @endisset
             @if ($description)
-                <p class="text-sm text-gray-600 dark:text-zinc-400">{{ $description }}</p>
+                <p class="text-sm text-dim">{{ $description }}</p>
             @endif
         </div>
 

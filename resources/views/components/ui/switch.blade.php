@@ -41,24 +41,24 @@
             @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
             {{ $attributes->filter(fn ($value, $key) => ! $isLayout($key))->except(['id', 'label', 'checked', 'aria-describedby'])->merge(['value' => '1', 'class' => 'peer sr-only'.($controlClass !== '' ? ' '.$controlClass : '')]) }}
         />
-        <span class="{{ $trackClass }} rounded-full bg-gray-300 transition-colors peer-checked:bg-brand-600 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-aria-invalid:ring-2 peer-aria-invalid:ring-red-500 dark:bg-zinc-600 dark:peer-checked:bg-brand-500"></span>
-        <span class="{{ $thumbClass }} {{ $slideClass }} absolute top-0.5 left-0.5 rounded-full bg-white shadow transition-transform motion-reduce:transition-none"></span>
+        <span class="{{ $trackClass }} rounded-full bg-line-strong transition-colors peer-checked:bg-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-aria-invalid:ring-2 peer-aria-invalid:ring-danger-line"></span>
+        <span class="{{ $thumbClass }} {{ $slideClass }} absolute top-0.5 left-0.5 rounded-full bg-on-primary shadow transition-transform motion-reduce:transition-none"></span>
     </span>
 
     @if ($label || $description || $slot->isNotEmpty() || $showsMessage)
         <span class="text-sm">
             @if ($label || $slot->isNotEmpty())
-                <span class="font-medium text-gray-700 dark:text-zinc-300">{{ $label ?? $slot }}</span>
+                <span class="font-medium text-body">{{ $label ?? $slot }}</span>
             @endif
             @if ($description)
-                <span class="block text-gray-500 dark:text-zinc-400">{{ $description }}</span>
+                <span class="block text-muted">{{ $description }}</span>
             @endif
             @if ($showsMessage)
                 {{--
                     Inside the label, so the switch keeps its root element (and its place in a row);
                     aria-hidden keeps it out of the label's name, aria-describedby still reads it.
                 --}}
-                <span id="{{ $messageId }}" class="mt-0.5 block text-red-600 dark:text-red-400" aria-hidden="true">{{ $error }}</span>
+                <span id="{{ $messageId }}" class="mt-0.5 block text-danger-ink" aria-hidden="true">{{ $error }}</span>
             @endif
         </span>
     @endif

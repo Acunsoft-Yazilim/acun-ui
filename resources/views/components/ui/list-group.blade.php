@@ -11,8 +11,8 @@
         </acun:list-group>
 --}}
 <ul {{ $attributes->class([
-    'divide-y divide-gray-200 text-sm dark:divide-zinc-800',
-    'overflow-hidden rounded-sm border border-gray-200 bg-white dark:border-zinc-800 dark:bg-zinc-900' => ! $flush,
+    'divide-y divide-line text-sm',
+    'overflow-hidden rounded-sm border border-line bg-surface' => ! $flush,
 ]) }}>
     {{ $slot }}
 </ul>

@@ -22,7 +22,7 @@
     $names = (array) $locales;
     $current ??= app()->getLocale();
     $flagFor = fn (string $locale): ?string => $flags === false ? null : ($flags[$locale] ?? $locale);
-    $flagClass = 'h-3.5 w-5 flex-none overflow-hidden rounded-[2px] ring-1 ring-black/10 dark:ring-white/15';
+    $flagClass = 'h-3.5 w-5 flex-none overflow-hidden rounded-[2px] ring-1 ring-ink/10';
 @endphp
 
 @if ($action && count($names) > 1)
@@ -31,7 +31,7 @@
             <button
                 type="button"
                 title="{{ __('Language') }}"
-                class="flex h-9 flex-none cursor-pointer items-center justify-center gap-1 rounded-sm px-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                class="flex h-9 flex-none cursor-pointer items-center justify-center gap-1 rounded-sm px-2 text-muted transition-colors hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
                 @if (($currentFlag = $flagFor($current)) && \Acun\Ui\Support\Flags::exists($currentFlag))
                     {{ \Acun\Ui\Support\Flags::svg($currentFlag, $flagClass) }}
@@ -53,7 +53,7 @@
                         @endif
                         <span class="flex-1">{{ $name }}</span>
                         @if ($locale === $current)
-                            <acun:icon name="check" size="4" class="text-brand-600 dark:text-brand-400" />
+                            <acun:icon name="check" size="4" class="text-primary-ink" />
                         @endif
                     </acun:dropdown.item>
                 @endforeach

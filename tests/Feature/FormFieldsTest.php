@@ -88,7 +88,7 @@ final class FormFieldsTest extends TestCase
         $single = Blade::render('<x-ui.checkbox name="kosullar" label="Koşulları kabul ediyorum" />');
         self::assertStringContainsString('aria-invalid="true"', $single);
         self::assertStringContainsString('aria-describedby="kosullar-message"', $single);
-        self::assertStringContainsString('<span id="kosullar-message" class="mt-0.5 block text-red-600 dark:text-red-400" aria-hidden="true">Koşulları kabul edin.</span>', $single);
+        self::assertStringContainsString('<span id="kosullar-message" class="mt-0.5 block text-danger-ink" aria-hidden="true">Koşulları kabul edin.</span>', $single);
         self::assertStringContainsString('focus-visible:!outline-2', $single);
 
         $list = Blade::render('<x-ui.checkbox name="etiketler[]" value="acil" label="Acil" />');
@@ -308,7 +308,7 @@ final class FormFieldsTest extends TestCase
     public function test_a_checkbox_with_a_message_keeps_its_label_as_the_root(): void
     {
         $calm = trim(Blade::render('<x-ui.checkbox name="kabul" label="Kabul ediyorum" class="mt-4" wire:key="kabul" />'));
-        self::assertStringStartsWith('<label for="kabul" class="inline-flex items-center gap-2.5 text-sm text-gray-700 select-none dark:text-zinc-300 mt-4" wire:key="kabul">', $calm);
+        self::assertStringStartsWith('<label for="kabul" class="inline-flex items-center gap-2.5 text-sm text-body select-none mt-4" wire:key="kabul">', $calm);
 
         $this->withErrors(['kabul' => ['Koşulları kabul edin.']]);
         $html = trim(Blade::render('<x-ui.checkbox name="kabul" label="Kabul ediyorum" class="mt-4" wire:key="kabul" aria-describedby="kosullar" />'));
@@ -318,7 +318,7 @@ final class FormFieldsTest extends TestCase
         self::assertSame(1, substr_count($html, '<label'), 'One root element, no wrapper around it.');
         self::assertStringNotContainsString('<div', $html);
         // The message: inside the label, hidden from the label's name, read through aria-describedby.
-        self::assertMatchesRegularExpression('/<span id="kabul-message" class="[^"]*text-red-600[^"]*" aria-hidden="true">Koşulları kabul edin\.<\/span>/', $html);
+        self::assertMatchesRegularExpression('/<span id="kabul-message" class="[^"]*text-danger-ink[^"]*" aria-hidden="true">Koşulları kabul edin\.<\/span>/', $html);
         self::assertSame(1, substr_count($html, 'aria-describedby='), 'printed once');
         self::assertStringContainsString('aria-describedby="kosullar kabul-message"', $html);
         self::assertStringContainsString('Kabul ediyorum', $html);
@@ -348,7 +348,7 @@ final class FormFieldsTest extends TestCase
         $html = $test->html();
         self::assertMatchesRegularExpression('/<label for="kabul" class="inline-flex items-start [^"]* mt-4">/', $html);
         self::assertStringNotContainsString('gap-1 mt-4', $html, 'No wrapper takes the layout from the label.');
-        self::assertStringContainsString('<span id="kabul-message" class="mt-0.5 block text-red-600 dark:text-red-400" aria-hidden="true">Koşulları kabul edin.</span>', $html);
+        self::assertStringContainsString('<span id="kabul-message" class="mt-0.5 block text-danger-ink" aria-hidden="true">Koşulları kabul edin.</span>', $html);
         self::assertStringContainsString('aria-describedby="kabul-message"', $html);
     }
 
@@ -375,7 +375,7 @@ final class FormFieldsTest extends TestCase
 
     /**
      * input-class replaces the kit's class of the same kind (Tailwind sorts utilities by value,
-     * so ring-blue-500 lost to the kit's ring-gray-300 and h-12 to h-10 depending on the build),
+     * so ring-blue-500 lost to the kit's ring-line-strong and h-12 to h-10 depending on the build),
      * but never the error frame: a field with an error always shows it.
      */
     public function test_input_class_replaces_the_kit_classes_of_the_same_kind_but_not_the_error_frame(): void
@@ -384,17 +384,17 @@ final class FormFieldsTest extends TestCase
         self::assertSame(1, preg_match('/<input\s+id="sku"(?:[^>"]|"[^"]*")*>/s', $html, $input));
         self::assertSame(1, preg_match('/\sclass="([^"]*)"/', $input[0], $class));
         $classes = explode(' ', $class[1]);
-        foreach (['ring-blue-500', 'h-12', 'px-4', 'font-mono', 'ring-1', 'ring-inset', 'focus:ring-brand-600', 'dark:ring-zinc-600'] as $kept) {
+        foreach (['ring-blue-500', 'h-12', 'px-4', 'font-mono', 'ring-1', 'ring-inset', 'focus:ring-focus', 'bg-field'] as $kept) {
             self::assertContains($kept, $classes);
         }
-        foreach (['ring-gray-300', 'h-10', 'px-3'] as $replaced) {
+        foreach (['ring-line-strong', 'h-10', 'px-3'] as $replaced) {
             self::assertNotContains($replaced, $classes);
         }
 
         // The other fields follow the same rule.
         self::assertStringNotContainsString(' h-10 ', Blade::render('<x-ui.select name="durum" :options="[1 => \'A\']" input-class="h-12" />'));
         self::assertDoesNotMatchRegularExpression('/\srounded-sm\s/', Blade::render('<x-ui.checkbox name="kabul" input-class="rounded-full" />'));
-        self::assertStringContainsString('class="block w-full rounded-sm border-0 py-1.5 px-3 text-gray-900', Blade::render('<x-ui.textarea name="not" />'), 'No input-class: the kit classes as they are.');
+        self::assertStringContainsString('class="block w-full rounded-sm border-0 py-1.5 px-3 bg-field text-ink', Blade::render('<x-ui.textarea name="not" />'), 'No input-class: the kit classes as they are.');
         self::assertSame(1, preg_match('/<input\s+id="tutar"(?:[^>"]|"[^"]*")*>/s', Blade::render('<x-ui.input-group name="tutar" prefix="₺" input-class="px-1" />'), $group));
         self::assertStringNotContainsString(' px-3 ', $group[0]);
         self::assertStringContainsString(' px-1', $group[0]);
@@ -403,8 +403,8 @@ final class FormFieldsTest extends TestCase
         $this->withErrors(['sku' => ['Kod gerekli.']]);
         $invalid = Blade::render('<x-ui.input name="sku" input-class="ring-transparent focus:ring-blue-600 font-mono" />');
         self::assertSame(1, preg_match('/<input\s+id="sku"(?:[^>"]|"[^"]*")*>/s', $invalid, $input));
-        self::assertStringContainsString('ring-red-400', $input[0]);
-        self::assertStringContainsString('focus:ring-red-500', $input[0]);
+        self::assertStringContainsString('ring-danger-line', $input[0]);
+        self::assertStringContainsString('focus:ring-danger-line', $input[0]);
         self::assertStringContainsString('font-mono', $input[0]);
         self::assertStringNotContainsString('ring-transparent', $input[0]);
         self::assertStringNotContainsString('focus:ring-blue-600', $input[0]);
@@ -431,7 +431,7 @@ final class FormFieldsTest extends TestCase
         self::assertStringContainsString('aria-invalid="true"', $input);
         self::assertStringContainsString('aria-describedby="not switch-notify-message"', $input);
         // In the label (the root stays), out of its name (aria-hidden), read as the description.
-        self::assertStringContainsString('<span id="switch-notify-message" class="mt-0.5 block text-red-600 dark:text-red-400" aria-hidden="true">Bildirimleri açın.</span>', $html);
+        self::assertStringContainsString('<span id="switch-notify-message" class="mt-0.5 block text-danger-ink" aria-hidden="true">Bildirimleri açın.</span>', $html);
 
         // A switch of a list only says it is invalid; the list shows the message.
         $listed = Blade::render('<x-ui.switch wire:model="channels" value="sms" label="SMS" />');

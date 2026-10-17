@@ -60,7 +60,7 @@
         x-transition.opacity.duration.100ms
         role="dialog"
         @class([
-            'absolute z-40 w-72 rounded-sm bg-white text-sm shadow-lg ring-1 ring-gray-200 dark:bg-zinc-900 dark:ring-zinc-700',
+            'absolute z-40 w-72 rounded-sm bg-surface text-sm shadow-lg ring-1 ring-line',
             'top-full mt-2' => $position !== 'top',
             'bottom-full mb-2' => $position === 'top',
             'left-0' => $align === 'start',
@@ -68,9 +68,9 @@
         ])
     >
         @if ($title)
-            <div class="border-b border-gray-200 px-4 py-2.5 font-semibold text-gray-900 dark:border-zinc-700 dark:text-zinc-100">{{ $title }}</div>
+            <div class="border-b border-line px-4 py-2.5 font-semibold text-ink">{{ $title }}</div>
         @endif
-        <div {{ $attributes->merge(['class' => 'px-4 py-3 text-gray-600 dark:text-zinc-400']) }}>{{ $slot }}</div>
+        <div {{ $attributes->merge(['class' => 'px-4 py-3 text-dim']) }}>{{ $slot }}</div>
     </div>
 </div>
 @endif

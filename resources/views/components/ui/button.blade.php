@@ -34,46 +34,52 @@
 
     // Every colour has a solid, an outline-* and a soft-* variant: primary, secondary, success,
     // danger, warning, info, dark. Hover, press and the coloured shadow never apply while the
-    // button is disabled (hover:not-disabled:, and :not(:disabled) in panel.css).
+    // button is disabled (hover:not-disabled:). Every colour is a token (css/tokens.css), so the
+    // theme, the dark theme and a custom primary colour change them all.
     $variants = [
-        // Solid: fill, border, hover and shadow colours come from panel.css (.ui-btn-*,
-        // --btn-* variables), so a theme changes them in one place.
-        'primary' => 'ui-btn ui-btn-primary focus-visible:outline-focus',
-        'success' => 'ui-btn ui-btn-success focus-visible:outline-emerald-500',
-        'danger' => 'ui-btn ui-btn-danger focus-visible:outline-red-500',
-        'warning' => 'ui-btn ui-btn-warning focus-visible:outline-amber-500',
-        'info' => 'ui-btn ui-btn-info focus-visible:outline-sky-500',
-        'secondary' => 'ui-btn ui-btn-secondary focus-visible:outline-secondary-500',
-        'dark' => 'ui-btn ui-btn-dark focus-visible:outline-dark dark:focus-visible:outline-zinc-400',
-        'light' => 'ui-btn ui-btn-light focus-visible:outline-secondary-400',
+        // Solid: the tone's fill, its hover and its own text colour (a light custom primary colour
+        // takes dark text); the border is the fill.
+        'primary' => 'border-primary bg-primary text-on-primary hover:not-disabled:border-primary-hover hover:not-disabled:bg-primary-hover focus-visible:outline-focus',
+        'success' => 'border-success bg-success text-on-success hover:not-disabled:border-success-hover hover:not-disabled:bg-success-hover focus-visible:outline-success-line',
+        'danger' => 'border-danger bg-danger text-on-danger hover:not-disabled:border-danger-hover hover:not-disabled:bg-danger-hover focus-visible:outline-danger-line',
+        'warning' => 'border-warning bg-warning text-on-warning hover:not-disabled:border-warning-hover hover:not-disabled:bg-warning-hover focus-visible:outline-warning-line',
+        'info' => 'border-info bg-info text-on-info hover:not-disabled:border-info-hover hover:not-disabled:bg-info-hover focus-visible:outline-info-line',
+        'secondary' => 'border-secondary bg-secondary text-on-secondary hover:not-disabled:border-secondary-hover hover:not-disabled:bg-secondary-hover focus-visible:outline-secondary-line',
+        'dark' => 'border-dark bg-dark text-on-dark hover:not-disabled:border-dark-hover hover:not-disabled:bg-dark-hover focus-visible:outline-dark-line',
+        // Light: a sunken grey with a line, darker on hover.
+        'light' => 'border-line bg-sunken text-dim hover:not-disabled:border-line-strong hover:not-disabled:bg-track focus-visible:outline-line-hover',
 
-        // Outline: border and text in the colour, filled on hover. Text uses the darker
-        // shade of the colour so it stays readable on white. The brand hover fill is
-        // brand-600 in both themes (as for soft): white text reaches 4.5:1 on it for any
-        // brand colour, which brand-500 does not (#2563eb: 3.89:1).
-        'outline' => 'border-brand-600 text-brand-600 hover:not-disabled:bg-brand-600 hover:not-disabled:text-white focus-visible:outline-focus dark:border-brand-400 dark:text-brand-400 dark:hover:not-disabled:bg-brand-600 dark:hover:not-disabled:text-white',
-        'outline-success' => 'border-emerald-500 text-emerald-600 hover:not-disabled:bg-emerald-solid hover:not-disabled:text-white focus-visible:outline-emerald-500 dark:border-emerald-400 dark:text-emerald-400 dark:hover:not-disabled:bg-emerald-solid dark:hover:not-disabled:text-white',
-        'outline-danger' => 'border-red-500 text-red-600 hover:not-disabled:bg-red-600 hover:not-disabled:text-white focus-visible:outline-red-500 dark:border-red-400 dark:text-red-400 dark:hover:not-disabled:bg-red-600 dark:hover:not-disabled:text-white',
-        'outline-warning' => 'border-amber-500 text-amber-600 hover:not-disabled:bg-amber-solid hover:not-disabled:text-white focus-visible:outline-amber-500 dark:border-amber-400 dark:text-amber-400 dark:hover:not-disabled:bg-amber-solid dark:hover:not-disabled:text-white',
-        'outline-info' => 'border-sky-500 text-sky-600 hover:not-disabled:bg-sky-solid hover:not-disabled:text-white focus-visible:outline-sky-500 dark:border-sky-400 dark:text-sky-400 dark:hover:not-disabled:bg-sky-solid dark:hover:not-disabled:text-white',
-        'outline-secondary' => 'border-secondary-500 text-secondary-600 hover:not-disabled:bg-secondary-500 hover:not-disabled:text-white focus-visible:outline-secondary-500 dark:border-secondary-400 dark:text-secondary-300 dark:hover:not-disabled:bg-secondary-500 dark:hover:not-disabled:text-white',
-        'outline-dark' => 'border-dark text-dark hover:not-disabled:bg-dark hover:not-disabled:text-white focus-visible:outline-dark dark:border-zinc-300 dark:text-zinc-300 dark:hover:not-disabled:bg-zinc-300 dark:hover:not-disabled:text-zinc-900',
+        // Outline: border and text in the colour, filled on hover. The text is the colour's ink,
+        // readable on the surface; the hover is the solid fill with its own text colour.
+        'outline' => 'border-primary-ink text-primary-ink hover:not-disabled:bg-primary hover:not-disabled:text-on-primary focus-visible:outline-focus',
+        'outline-success' => 'border-success-line text-success-ink hover:not-disabled:bg-success hover:not-disabled:text-on-success focus-visible:outline-success-line',
+        'outline-danger' => 'border-danger-line text-danger-ink hover:not-disabled:bg-danger hover:not-disabled:text-on-danger focus-visible:outline-danger-line',
+        'outline-warning' => 'border-warning-line text-warning-ink hover:not-disabled:bg-warning hover:not-disabled:text-on-warning focus-visible:outline-warning-line',
+        'outline-info' => 'border-info-line text-info-ink hover:not-disabled:bg-info hover:not-disabled:text-on-info focus-visible:outline-info-line',
+        'outline-secondary' => 'border-secondary-line text-secondary-ink hover:not-disabled:bg-secondary hover:not-disabled:text-on-secondary focus-visible:outline-secondary-line',
+        'outline-dark' => 'border-dark-line text-dark-ink hover:not-disabled:bg-dark hover:not-disabled:text-on-dark focus-visible:outline-dark-line',
 
         // Soft: a light tint of the colour that fills in on hover.
-        'soft' => 'border-transparent bg-brand-100 text-brand-700 hover:not-disabled:bg-brand-600 hover:not-disabled:text-white focus-visible:outline-focus dark:bg-brand-500/15 dark:text-brand-400 dark:hover:not-disabled:bg-brand-600 dark:hover:not-disabled:text-white',
-        'soft-success' => 'border-transparent bg-emerald-100 text-emerald-700 hover:not-disabled:bg-emerald-solid hover:not-disabled:text-white focus-visible:outline-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-400 dark:hover:not-disabled:bg-emerald-solid dark:hover:not-disabled:text-white',
-        'soft-danger' => 'border-transparent bg-red-100 text-red-700 hover:not-disabled:bg-red-600 hover:not-disabled:text-white focus-visible:outline-red-500 dark:bg-red-500/15 dark:text-red-400 dark:hover:not-disabled:bg-red-600 dark:hover:not-disabled:text-white',
-        'soft-warning' => 'border-transparent bg-amber-100 text-amber-700 hover:not-disabled:bg-amber-solid hover:not-disabled:text-white focus-visible:outline-amber-500 dark:bg-amber-500/15 dark:text-amber-400 dark:hover:not-disabled:bg-amber-solid dark:hover:not-disabled:text-white',
-        'soft-info' => 'border-transparent bg-sky-100 text-sky-700 hover:not-disabled:bg-sky-solid hover:not-disabled:text-white focus-visible:outline-sky-500 dark:bg-sky-500/15 dark:text-sky-400 dark:hover:not-disabled:bg-sky-solid dark:hover:not-disabled:text-white',
-        'soft-secondary' => 'border-transparent bg-secondary-100 text-secondary-700 hover:not-disabled:bg-secondary-500 hover:not-disabled:text-white focus-visible:outline-secondary-500 dark:bg-secondary-500/15 dark:text-secondary-300 dark:hover:not-disabled:bg-secondary-500 dark:hover:not-disabled:text-white',
-        'soft-dark' => 'border-transparent bg-dark/10 text-dark hover:not-disabled:bg-dark hover:not-disabled:text-white focus-visible:outline-dark dark:bg-zinc-700/60 dark:text-zinc-200 dark:hover:not-disabled:bg-zinc-600 dark:hover:not-disabled:text-white',
+        'soft' => 'border-transparent bg-primary-soft text-primary-tint-ink hover:not-disabled:bg-primary hover:not-disabled:text-on-primary focus-visible:outline-focus',
+        'soft-success' => 'border-transparent bg-success-soft text-success-tint-ink hover:not-disabled:bg-success hover:not-disabled:text-on-success focus-visible:outline-success-line',
+        'soft-danger' => 'border-transparent bg-danger-soft text-danger-tint-ink hover:not-disabled:bg-danger hover:not-disabled:text-on-danger focus-visible:outline-danger-line',
+        'soft-warning' => 'border-transparent bg-warning-soft text-warning-tint-ink hover:not-disabled:bg-warning hover:not-disabled:text-on-warning focus-visible:outline-warning-line',
+        'soft-info' => 'border-transparent bg-info-soft text-info-tint-ink hover:not-disabled:bg-info hover:not-disabled:text-on-info focus-visible:outline-info-line',
+        'soft-secondary' => 'border-transparent bg-secondary-soft text-secondary-tint-ink hover:not-disabled:bg-secondary hover:not-disabled:text-on-secondary focus-visible:outline-secondary-line',
+        'soft-dark' => 'border-transparent bg-dark-soft text-dark-tint-ink hover:not-disabled:bg-dark hover:not-disabled:text-on-dark focus-visible:outline-dark-line',
 
-        // Neutral button (white with a border): Cancel, toolbars, pagination.
-        'white' => 'border-gray-300 bg-white text-gray-700 hover:not-disabled:border-gray-400 hover:not-disabled:bg-gray-50 focus-visible:outline-gray-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:not-disabled:border-zinc-500 dark:hover:not-disabled:bg-zinc-700',
+        // Neutral button (a field with a frame): Cancel, toolbars, pagination.
+        'white' => 'border-line-strong bg-field text-body hover:not-disabled:border-line-hover hover:not-disabled:bg-field-hover focus-visible:outline-line-hover',
         // Ghost: no background and no visible border in any state; only the text darkens on hover.
-        'ghost' => 'border-transparent bg-transparent text-gray-600 hover:not-disabled:text-gray-900 focus-visible:outline-gray-400 dark:text-zinc-300 dark:hover:not-disabled:text-white',
-        // Link: looks like a link (brand colour, underlined on hover) but keeps the button's size.
-        'link' => 'border-transparent bg-transparent text-brand-600 underline-offset-4 hover:not-disabled:underline focus-visible:outline-focus dark:text-brand-400',
+        'ghost' => 'border-transparent bg-transparent text-dim hover:not-disabled:text-ink focus-visible:outline-line-hover',
+        // Link: looks like a link (the primary ink, underlined on hover) but keeps the button's size.
+        'link' => 'border-transparent bg-transparent text-primary-ink underline-offset-4 hover:not-disabled:underline focus-visible:outline-focus',
+    ];
+
+    // shadow: a shadow in the solid fill's colour, gone on hover, press and while disabled.
+    $shadows = [
+        'primary' => 'shadow-primary/90', 'success' => 'shadow-success/90', 'danger' => 'shadow-danger/90', 'warning' => 'shadow-warning/90',
+        'info' => 'shadow-info/90', 'secondary' => 'shadow-secondary/90', 'dark' => 'shadow-dark/75', 'light' => 'shadow-secondary/18',
     ];
 
     // The palette's other names for a colour, alone or after outline-/soft- (error → danger,
@@ -97,7 +103,8 @@
         default => $variant,
     };
     $variant = $aliases[$variant] ?? $variant;
-    $variantClass = $variants[$variant] ?? $variants['primary'];
+    $variant = isset($variants[$variant]) ? $variant : 'primary';
+    $variantClass = $variants[$variant];
 
     // A link cannot be disabled: it gets aria-disabled, leaves the tab order and ignores the pointer.
     $disabledLink = $href && $disabled;
@@ -108,7 +115,7 @@
     $classes = $display.'items-center justify-center rounded-sm border font-semibold transition-[color,background-color,border-color,box-shadow,transform] duration-180 ease-out cursor-pointer select-none active:not-disabled:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:pointer-events-none aria-disabled:opacity-60 motion-reduce:transition-none motion-reduce:active:translate-y-0 '
         . ($sizes[$size] ?? $sizes['md']) . ' '
         . $variantClass
-        . ($shadow && str_starts_with($variantClass, 'ui-btn ') ? ' ui-btn-shadow' : '');
+        . ($shadow && isset($shadows[$variant]) ? ' shadow-[0_0.5rem_1.125rem_-0.5rem] '.$shadows[$variant].' hover:shadow-none active:shadow-none disabled:shadow-none aria-disabled:shadow-none' : '');
 @endphp
 
 @if ($href)

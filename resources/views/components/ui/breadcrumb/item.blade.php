@@ -22,9 +22,9 @@
     <acun:breadcrumb.separator />
 @endif
 @if ($current)
-    <span data-slot="breadcrumb-item" {{ $attributes->class('whitespace-nowrap font-medium text-gray-700 dark:text-zinc-200') }} aria-current="page">{{ $slot }}</span>
+    <span data-slot="breadcrumb-item" {{ $attributes->class('whitespace-nowrap font-medium text-body') }} aria-current="page">{{ $slot }}</span>
 @elseif ($href !== null)
-    <a data-slot="breadcrumb-item" href="{{ $href }}" wire:navigate {{ $attributes->class('whitespace-nowrap hover:text-gray-700 dark:hover:text-zinc-200') }}>{{ $slot }}</a>
+    <a data-slot="breadcrumb-item" href="{{ $href }}" wire:navigate {{ $attributes->class('whitespace-nowrap hover:text-body') }}>{{ $slot }}</a>
 @else
     <span data-slot="breadcrumb-item" {{ $attributes->class('whitespace-nowrap') }}>{{ $slot }}</span>
 @endif

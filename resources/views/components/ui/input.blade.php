@@ -27,8 +27,8 @@
     $describedBy = trim($attributes->get('aria-describedby').' '.($error || $hint ? $messageId : '')) ?: null;
     // The error frame (input-class never replaces it); the neutral dark ring only without an
     // error: in the dark theme it would hide the red one.
-    $errorRing = 'ring-red-400 focus:ring-red-500 focus:shadow-(--ui-focus-shadow-error)';
-    $ring = $error ? $errorRing : 'ring-gray-300 focus:ring-brand-600 focus:shadow-(--ui-focus-shadow) dark:ring-zinc-600';
+    $errorRing = 'ring-danger-line focus:ring-danger-line focus:shadow-(--ac-focus-shadow-danger)';
+    $ring = $error ? $errorRing : 'ring-line-strong focus:ring-focus focus:shadow-(--ac-focus-shadow)';
     $keep = $error ? $errorRing : '';
     // Layout attributes (class, style, x-show, wire:key…) place the whole field: they go on the
     // wrapper, so the label and the message follow them. The rest (name, wire:model, required,
@@ -38,10 +38,10 @@
 
 <div {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex flex-col gap-1.5') }}>
     @if ($variant !== 'floating' && $label)
-        <label for="{{ $inputId }}" class="text-sm font-medium text-gray-700 dark:text-zinc-300">
+        <label for="{{ $inputId }}" class="text-sm font-medium text-body">
             {{ $label }}
             @if ($attributes->get('required'))
-                <span class="text-red-500" aria-hidden="true">*</span>
+                <span class="text-danger-line" aria-hidden="true">*</span>
             @endif
         </label>
     @endif
@@ -56,8 +56,8 @@
                 @if ($error) aria-invalid="true" @endif
                 @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
                 {{ $controlAttributes->except(['id', 'label', 'hint', 'aria-describedby', 'placeholder'])->merge([
-                    'class' => \Acun\Ui\Support\Field::controlClass('peer block h-[45px] w-full rounded-sm border-0 bg-transparent px-3 pt-1.5 text-gray-900 ring-1 ring-inset transition placeholder:text-transparent focus:outline-none sm:text-sm dark:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 '
-                        . ($error ? $errorRing : 'ring-gray-300 hover:ring-gray-400 focus:ring-brand-600 focus:shadow-(--ui-focus-shadow) dark:ring-zinc-600 dark:hover:ring-zinc-500')
+                    'class' => \Acun\Ui\Support\Field::controlClass('peer block h-[45px] w-full rounded-sm border-0 bg-transparent px-3 pt-1.5 text-ink ring-1 ring-inset transition placeholder:text-transparent focus:outline-none sm:text-sm disabled:cursor-not-allowed disabled:opacity-60 '
+                        . ($error ? $errorRing : 'ring-line-strong hover:ring-line-hover focus:ring-focus focus:shadow-(--ac-focus-shadow)')
                         . ($viewable ? ' pe-11' : ''), $inputClass, $keep),
                 ]) }}
             />
@@ -65,11 +65,11 @@
             @if ($label)
                 <label
                     for="{{ $inputId }}"
-                    class="pointer-events-none absolute start-3 top-0 z-10 -translate-y-1/2 bg-white px-1 text-xs font-medium text-gray-600 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-500 peer-placeholder-shown:dark:text-zinc-400 peer-focus:top-0 peer-focus:bg-white peer-focus:text-xs peer-focus:text-brand-600 dark:bg-zinc-900 dark:text-zinc-300 peer-placeholder-shown:dark:bg-transparent peer-focus:dark:bg-zinc-900 peer-focus:dark:text-brand-400"
+                    class="pointer-events-none absolute start-3 top-0 z-10 -translate-y-1/2 bg-surface px-1 text-xs font-medium text-dim transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent peer-placeholder-shown:text-sm peer-placeholder-shown:text-muted peer-focus:top-0 peer-focus:bg-surface peer-focus:text-xs peer-focus:text-primary-ink"
                 >
                     {{ $label }}
                     @if ($attributes->get('required'))
-                        <span class="text-red-500" aria-hidden="true">*</span>
+                        <span class="text-danger-line" aria-hidden="true">*</span>
                     @endif
                 </label>
             @endif
@@ -81,16 +81,16 @@
                 @if ($error) aria-invalid="true" @endif
                 @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
                 {{ $controlAttributes->except(['id', 'label', 'hint', 'aria-describedby'])->merge([
-                    'class' => \Acun\Ui\Support\Field::controlClass('block h-10 w-full rounded-sm border-0 '.($type === 'search' ? 'ps-9 pe-3' : 'px-3').' text-gray-900 ring-1 ring-inset '
+                    'class' => \Acun\Ui\Support\Field::controlClass('block h-10 w-full rounded-sm border-0 '.($type === 'search' ? 'ps-9 pe-3' : 'px-3').' bg-field text-ink ring-1 ring-inset '
                         . $ring
-                        . ' placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none sm:text-sm dark:bg-zinc-800 dark:text-zinc-100 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 [&[readonly]]:bg-gray-50 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-500 dark:[&[readonly]]:bg-zinc-900'
+                        . ' placeholder:text-muted focus:outline-none sm:text-sm disabled:cursor-not-allowed disabled:bg-field-disabled disabled:text-muted [&[readonly]]:bg-field-disabled'
                         . ($viewable ? ' pe-10' : ''), $inputClass, $keep),
                 ]) }}
             />
 
             @if ($type === 'search')
                 {{-- Magnifier on the left in search boxes. --}}
-                <svg class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-gray-400 dark:text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <svg class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
             @endif
@@ -100,7 +100,7 @@
             <button
                 type="button"
                 @click="shown = !shown"
-                class="absolute inset-y-0 z-20 flex items-center text-gray-500 hover:text-gray-600 end-3 dark:hover:text-zinc-200"
+                class="absolute inset-y-0 z-20 flex items-center text-muted hover:text-body end-3"
                 :aria-pressed="shown.toString()"
                 aria-label="{{ __('Show password') }}"
             >
@@ -111,8 +111,8 @@
     </div>
 
     @if ($error)
-        <p id="{{ $messageId }}" class="text-sm text-red-600 dark:text-red-400">{{ $error }}</p>
+        <p id="{{ $messageId }}" class="text-sm text-danger-ink">{{ $error }}</p>
     @elseif ($hint)
-        <p id="{{ $messageId }}" class="text-sm text-gray-500 dark:text-zinc-400">{{ $hint }}</p>
+        <p id="{{ $messageId }}" class="text-sm text-muted">{{ $hint }}</p>
     @endif
 </div>

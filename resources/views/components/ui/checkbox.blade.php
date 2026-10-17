@@ -32,7 +32,7 @@
     label and the message): a morph that brings the error keeps the element, and the box keeps
     its place in a flex row.
 --}}
-<label for="{{ $boxId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex '.($showsMessage ? 'items-start' : 'items-center').' gap-2.5 text-sm text-gray-700 select-none dark:text-zinc-300') }}>
+<label for="{{ $boxId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex '.($showsMessage ? 'items-start' : 'items-center').' gap-2.5 text-sm text-body select-none') }}>
     <span @class(['relative flex size-4.5 flex-none items-center justify-center', 'mt-px' => $showsMessage])>
         <input
             id="{{ $boxId }}"
@@ -48,12 +48,12 @@
                 // specificity as our focus:ring-0 it wins depending on the
                 // compiled CSS order - '!' overrides it for good
                 // (the pattern used earlier in this project for the same kind of issue).
-                'class' => \Acun\Ui\Support\Field::controlClass('peer size-4.5 shrink-0 appearance-none rounded-sm border border-(--ui-control-border) bg-white checked:border-brand-600 checked:bg-brand-600 indeterminate:border-brand-600 indeterminate:bg-brand-600 focus:!outline-none focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-brand-600 aria-invalid:border-red-500 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-800 dark:checked:border-brand-500 dark:checked:bg-brand-500 dark:indeterminate:border-brand-500 dark:indeterminate:bg-brand-500', $inputClass),
+                'class' => \Acun\Ui\Support\Field::controlClass('peer size-4.5 shrink-0 appearance-none rounded-sm border border-control bg-field checked:border-primary checked:bg-primary indeterminate:border-primary indeterminate:bg-primary focus:!outline-none focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-focus aria-invalid:border-danger-line disabled:cursor-not-allowed disabled:opacity-40', $inputClass),
             ]) }}
         />
-        <svg class="pointer-events-none absolute size-3.5 text-white opacity-0 peer-checked:opacity-100 peer-indeterminate:opacity-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        <svg class="pointer-events-none absolute size-3.5 text-on-primary opacity-0 peer-checked:opacity-100 peer-indeterminate:opacity-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
         {{-- "Some selected" (input.indeterminate = true, e.g. a select-all box): a dash instead of the tick. --}}
-        <svg class="pointer-events-none absolute size-3.5 text-white opacity-0 peer-indeterminate:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" d="M6 12h12"/></svg>
+        <svg class="pointer-events-none absolute size-3.5 text-on-primary opacity-0 peer-indeterminate:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" d="M6 12h12"/></svg>
     </span>
     @if ($showsMessage)
         <span>
@@ -66,7 +66,7 @@
                 Inside the label (as acun:switch); aria-hidden keeps it out of the label's name,
                 the box's aria-describedby still reads it.
             --}}
-            <span id="{{ $messageId }}" class="mt-0.5 block text-red-600 dark:text-red-400" aria-hidden="true">{{ $error }}</span>
+            <span id="{{ $messageId }}" class="mt-0.5 block text-danger-ink" aria-hidden="true">{{ $error }}</span>
         </span>
     @elseif ($label)
         <span>{{ $label }}</span>

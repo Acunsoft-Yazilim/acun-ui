@@ -35,7 +35,7 @@
     $defaults = array_filter([
         'tabindex' => '0',
         'style' => $style,
-        'class' => $overflow.' [scrollbar-width:thin] [scrollbar-color:var(--color-gray-300)_transparent] hover:[scrollbar-color:var(--color-gray-400)_transparent] dark:[scrollbar-color:var(--color-zinc-700)_transparent] dark:hover:[scrollbar-color:var(--color-zinc-600)_transparent] [&::-webkit-scrollbar]:size-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-corner]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 dark:hover:[&::-webkit-scrollbar-thumb]:bg-zinc-600 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus',
+        'class' => $overflow.' [scrollbar-width:thin] [scrollbar-color:var(--ac-line-strong)_transparent] hover:[scrollbar-color:var(--ac-line-hover)_transparent] [&::-webkit-scrollbar]:size-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-corner]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-line-strong hover:[&::-webkit-scrollbar-thumb]:bg-line-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus',
     ], fn ($value) => $value !== '');
 @endphp
 

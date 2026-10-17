@@ -33,7 +33,7 @@
     <acun:button :variant="$outline" :size="$size" x-ref="ask" x-show="! asking" x-on:click="asking = true; $nextTick(() => $refs.confirm.focus())">{{ $slot }}</acun:button>
 
     <span x-show="asking" x-cloak role="group" :aria-label="@js($question)" class="inline-flex items-center gap-2">
-        <span class="text-sm text-gray-700 dark:text-zinc-300">{{ $question }}</span>
+        <span class="text-sm text-body">{{ $question }}</span>
         <acun:button :variant="$variant" :size="$size" x-ref="confirm" x-on:click="asking = false" {{ $attributes }}>{{ $confirmText ?? $slot }}</acun:button>
         <acun:button variant="ghost" :size="$size" x-on:click="asking = false; $nextTick(() => $refs.ask.focus())">{{ $cancelText }}</acun:button>
     </span>

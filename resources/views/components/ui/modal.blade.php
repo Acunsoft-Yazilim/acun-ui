@@ -112,12 +112,12 @@
         @if ($labelledBy) aria-labelledby="{{ $labelledBy }}"@if ($describedBy) aria-describedby="{{ $describedBy }}"@endif @else aria-label="{{ $ariaLabel ?? __('Dialog') }}" @endif
         tabindex="-1"
         {{-- Written in parts, a nested Livewire component that starts with a part (body and footer after the header) is layout-neutral, so its parts are the panel's rows. --}}
-        class="relative z-10 flex max-h-[85vh] w-full flex-col {{ $widths[$maxWidth] ?? $widths['md'] }} overflow-hidden rounded-sm bg-white shadow-xl dark:bg-zinc-900{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=modal-header],[data-slot=modal-body],[data-slot=modal-footer]))]:contents' : '' }}"
+        class="relative z-10 flex max-h-[85vh] w-full flex-col {{ $widths[$maxWidth] ?? $widths['md'] }} overflow-hidden rounded-sm bg-surface shadow-xl{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=modal-header],[data-slot=modal-body],[data-slot=modal-footer]))]:contents' : '' }}"
     >
         @if ($titleRow)
-            <div class="flex flex-none items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-zinc-700">
-                <h3 id="{{ $name }}-title" class="text-base font-semibold text-gray-900 dark:text-zinc-100">{{ $title }}</h3>
-                <button type="button" x-on:click="requestClose()" aria-label="{{ __('Close') }}" class="cursor-pointer text-gray-500 hover:text-red-600 dark:hover:text-red-400">
+            <div class="flex flex-none items-center justify-between border-b border-line px-5 py-4">
+                <h3 id="{{ $name }}-title" class="text-base font-semibold text-ink">{{ $title }}</h3>
+                <button type="button" x-on:click="requestClose()" aria-label="{{ __('Close') }}" class="cursor-pointer text-muted hover:text-danger-ink">
                     <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -137,7 +137,7 @@
 @endif
 
         @isset($footer)
-            <div class="flex flex-none items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-4 dark:border-zinc-700 dark:bg-zinc-800/50">
+            <div class="flex flex-none items-center justify-end gap-2 border-t border-line bg-sunken/50 px-5 py-4">
                 {{ $footer }}
             </div>
         @endisset

@@ -12,7 +12,7 @@
     x-on:click="$store.appearance.toggle()"
     title="{{ __('Change theme') }}"
     data-test="theme-toggle"
-    {{ $attributes->merge(['class' => 'flex size-9 flex-none cursor-pointer items-center justify-center rounded-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100']) }}
+    {{ $attributes->merge(['class' => 'flex size-9 flex-none cursor-pointer items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus']) }}
 >
     <span class="sr-only dark:hidden">{{ __('Switch to the dark theme') }}</span>
     <span class="sr-only hidden dark:inline">{{ __('Switch to the light theme') }}</span>

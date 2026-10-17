@@ -23,7 +23,7 @@
     :id="$id('popover')"
     @if ($title) :aria-labelledby="$id('popover-title')" @endif
     {{ $attributes->class([
-        'absolute z-40 rounded-sm bg-white text-sm shadow-lg ring-1 ring-gray-200 dark:bg-zinc-900 dark:ring-zinc-700',
+        'absolute z-40 rounded-sm bg-surface text-sm shadow-lg ring-1 ring-line',
         'w-72' => ! $customWidth,
         'top-full mt-2' => $position !== 'top',
         'bottom-full mb-2' => $position === 'top',
@@ -32,7 +32,7 @@
     ]) }}
 >
     @if ($title)
-        <div :id="$id('popover-title')" class="border-b border-gray-200 px-4 py-2.5 font-semibold text-gray-900 dark:border-zinc-700 dark:text-zinc-100">{{ $title }}</div>
+        <div :id="$id('popover-title')" class="border-b border-line px-4 py-2.5 font-semibold text-ink">{{ $title }}</div>
     @endif
-    <div class="px-4 py-3 text-gray-600 dark:text-zinc-400">{{ $slot }}</div>
+    <div class="px-4 py-3 text-dim">{{ $slot }}</div>
 </div>
