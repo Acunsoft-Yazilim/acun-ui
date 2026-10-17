@@ -1,6 +1,6 @@
 @props([
-    // Preset colours: key => [hex, name]; the key is the data-brand-color value.
-    // null: the palette's presets (Acun\Ui\Support\Layout::brandPresets()).
+    // Preset colours: key => [hex, name]; the key is the value $store.brand keeps.
+    // null: the palette's presets (Acun\Ui\Support\Appearance::presets()).
     'presets' => null,
     // Whether to show the free colour picker.
     'custom' => true,
@@ -17,7 +17,7 @@
 @php
     // Only #rrggbb values go into the page (a tenant's or a user's presets included); others are skipped.
     // \z, not $: $ also matches before a trailing newline ("#aabbcc\n").
-    $presets = collect($presets ?? \Acun\Ui\Support\Layout::brandPresets())
+    $presets = collect($presets ?? \Acun\Ui\Support\Appearance::presets())
         ->filter(fn ($preset) => is_array($preset) && is_string($preset[0] ?? null) && preg_match('/^#[0-9a-f]{6}\z/i', $preset[0]))
         ->map(fn (array $preset) => [strtolower($preset[0]), is_scalar($preset[1] ?? null) ? (string) $preset[1] : $preset[0]])
         ->all();
@@ -37,7 +37,7 @@
 <div
     x-data="{
         presets: @js(collect($presets)->map(fn ($p) => $p[0])),
-        // The page's own primary colour: what 'default' shows (a theme's --color-brand-600, not the kit's).
+        // The page's own primary colour: what 'default' shows (the theme's --ac-tone-primary, not the kit's).
         themeColor: null,
         get selected() { return $store.brand.color || 'default' },
         get isCustom() { return /^#[0-9a-f]{6}$/i.test(this.selected) },
@@ -48,12 +48,8 @@
             return this.presets[this.selected] ?? this.themeHex ?? '#000000';
         },
         init() {
-            // A preset or a custom colour on <html> sets --color-brand-600 itself: read it without one.
-            const root = document.documentElement;
-            const chosen = root.getAttribute('data-brand-color');
-            root.removeAttribute('data-brand-color');
-            this.themeColor = getComputedStyle(root).getPropertyValue('--color-brand-600').trim() || null;
-            if (chosen !== null) root.setAttribute('data-brand-color', chosen);
+            // The theme's own colour: the user's colour (--ac-user-*) never changes the theme's input.
+            this.themeColor = getComputedStyle(document.documentElement).getPropertyValue('--ac-tone-primary').trim() || null;
         },
         select(value) { $store.brand.set(value) },
     }"

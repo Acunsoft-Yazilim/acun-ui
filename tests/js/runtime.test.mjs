@@ -39,7 +39,7 @@ test('the runtime sets up window.AcunUI with its public API', () => {
     assert.equal(window.AcunUI, AcunUI);
     assert.equal(AcunUI.version, releaseVersion);
     assert.equal(AcunUI.initialized, true);
-    assert.deepEqual(Object.keys(AcunUI).sort(), ['components', 'drawer', 'events', 'focus', 'initialized', 'load', 'modal', 'overlays', 'scrollLock', 'version']);
+    assert.deepEqual(Object.keys(AcunUI).sort(), ['components', 'drawer', 'events', 'focus', 'initialized', 'isDark', 'load', 'modal', 'overlays', 'scrollLock', 'tokenColor', 'version']);
     assert.deepEqual(Object.keys(AcunUI.components).sort(), ['define', 'isLoaded', 'load']);
     assert.deepEqual(Object.keys(AcunUI.drawer).sort(), ['close', 'open', 'toggle']);
     assert.deepEqual(Object.keys(AcunUI.modal).sort(), ['close', 'open']);

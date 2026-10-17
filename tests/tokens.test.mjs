@@ -9,9 +9,11 @@ import { chrome, inChrome, stylesheet } from './js/chrome.mjs';
 // - every token is set in the light theme and resolves in the dark theme, and every colour role
 //   is a utility;
 // - the contrast every role promises, for light, dark and the bordered skin of both;
-// - the tokens carry today's look: the values equal the palette the components use now, and the
-//   bridge (the last block of themes.css) gives the primary colour of today's runtime: the
-//   presets, a custom colour and the semi-dark menu (in Chrome, where one is installed);
+// - the tokens carry the 1.x look: the values equal the palette the components used, and the
+//   primary roles read the user's colour first (--ac-user-*, js/appearance/theme.js), in every
+//   block and every nested section: the presets, a custom colour, the semi-dark menu and a
+//   light island (in Chrome, where one is installed);
+// - the corner and font utilities read their tokens, and brand-* (application code) follows them;
 // - the PRO stylesheet reads the tokens, without fallbacks of its own.
 // Colours are resolved as the browser mixes them: #rrggbb, rgb(), var() with fallbacks, and
 // color-mix(in srgb | in oklab, <colour> N%, <colour>) where an oklab mix is with transparent.
@@ -62,7 +64,8 @@ function rules(css) {
 
 const themeRules = rules(themesCss);
 const ruleWith = (selector, name) => themeRules.filter((rule) => rule.selectors.includes(selector) && rule.declarations.has(name));
-const [lightBlock, bridge] = ruleWith(':root', '--ac-tone-primary').map((rule) => rule.declarations);
+const toneBlocks = ruleWith(':root', '--ac-tone-primary').map((rule) => rule.declarations);
+const lightBlock = toneBlocks[0];
 const darkBlock = ruleWith("[data-theme$='dark']", '--ac-page')[0].declarations;
 const borderedBlock = ruleWith(":root[data-skin='bordered']", '--ac-page')[0].declarations;
 
@@ -74,15 +77,35 @@ const scopes = {
     'bordered dark': overlay(lightBlock, darkBlock, borderedBlock),
 };
 
-// Today's kit variables (panel.css), as each theme and skin cascades them on <html>.
+// The 1.x kit's variables, as each theme and skin cascaded them on <html>: what is left of them in
+// panel.css (the palette scales, the shadows), and, frozen here, the ones the runtime pipeline
+// replaced (the brand palette mixed from --color-brand-600, the primary fill, the backdrop, the
+// fields' focus shadow, the corner and the fonts; --color-dark is the dark tone of tokens.css now).
 const panelRules = rules(panelCss);
-// --color-dark was #3f404d in panel.css; tokens.css now owns the name (the dark tone, --ac-dark).
-const legacy = (...selectors) => overlay(new Map([['--color-dark', '#3f404d']]), ...selectors.flatMap((selector) => panelRules.filter((rule) => rule.selectors.length === 1 && rule.selectors[0] === selector).map((rule) => rule.declarations)));
+const brand = (share, toward) => `color-mix(in srgb, var(--color-brand-600) ${share}%, ${toward})`;
+const LEGACY = new Map([
+    ['--color-dark', '#3f404d'],
+    ['--color-brand-600', '#794dff'],
+    ...[[50, 6], [100, 12], [200, 24], [300, 42], [400, 66], [500, 84]].map(([step, share]) => [`--color-brand-${step}`, brand(share, 'white')]),
+    ...[[700, 86], [800, 70], [900, 55], [950, 38]].map(([step, share]) => [`--color-brand-${step}`, brand(share, 'black')]),
+    ['--btn-primary-bg', 'var(--color-brand-600)'],
+    ['--btn-primary-hover', brand(88, 'black')],
+    ['--ui-backdrop', 'rgb(10 10 10 / 0.45)'],
+    ['--ui-backdrop-blur', '2px'],
+    ['--ui-focus-shadow', '0 0 #0000'],
+    ['--ui-focus-shadow-error', '0 0 #0000'],
+    ['--radius-sm', '0.25rem'],
+    ['--font-sans', "var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"],
+    ['--font-mono', "var(--font-dm-mono, 'DM Mono'), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"],
+    ['--font-brand', "var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, sans-serif"],
+]);
+const LEGACY_DARK = new Map([['--ui-backdrop', 'rgb(0 0 0 / 0.72)'], ['--ui-backdrop-blur', '4px']]);
+const legacy = (dark, ...selectors) => overlay(LEGACY, ...selectors.flatMap((selector) => panelRules.filter((rule) => rule.selectors.length === 1 && rule.selectors[0] === selector).map((rule) => rule.declarations)), dark ? LEGACY_DARK : new Map());
 const legacyScopes = {
-    light: legacy('@theme', ':root'),
-    dark: legacy('@theme', ':root', '.dark', ':root.dark'),
-    'bordered light': legacy('@theme', ':root', ":root[data-skin='bordered']"),
-    'bordered dark': legacy('@theme', ':root', '.dark', ':root.dark', ":root[data-skin='bordered']", ":root.dark[data-skin='bordered']"),
+    light: legacy(false, '@theme', ':root'),
+    dark: legacy(true, '@theme', ':root', '.dark', ':root.dark'),
+    'bordered light': legacy(false, '@theme', ':root', ":root[data-skin='bordered']"),
+    'bordered dark': legacy(true, '@theme', ':root', '.dark', ':root.dark', ":root[data-skin='bordered']", ":root.dark[data-skin='bordered']"),
 };
 
 /** The text between the parentheses that open at index open, and the index after them. */
@@ -183,7 +206,11 @@ test('every colour role is a Tailwind colour that reads its token on the element
     for (const name of COLOUR_ROLES) {
         assert.match(theme, new RegExp(`\\n\\s*--color-${name}: var\\(--ac-${name}\\);`), `--color-${name}`);
     }
-    assert.match(theme, /--font-display: var\(--ac-font-display\);/);
+    for (const [utility, name] of [['font-sans', 'font-sans'], ['font-mono', 'font-mono'], ['font-display', 'font-display'], ['font-brand', 'font-brand'], ...['sm', 'md', 'lg', 'xl', '2xl', '3xl'].map((step) => [`radius-${step}`, 'radius'])]) {
+        assert.match(theme, new RegExp(`\\n\\s*--${utility}: var\\(--ac-${name}\\);`), `--${utility}`);
+    }
+    // panel.css no longer gives them values of its own.
+    assert.doesNotMatch(panelCss.replace(/\/\*[\s\S]*?\*\//g, ''), /--(?:font-(?:sans|mono|brand)|radius-(?:sm|md|lg|xl|2xl|3xl)):/);
     // tokens.css owns the names: panel.css no longer declares the focus colour or the dark colour.
     assert.doesNotMatch(panelCss, /--color-(?:focus|dark):/);
     assert.match(panelCss, /@import '\.\/tokens\.css';\n@import '\.\/themes\.css';/, 'The kit entry imports the tokens.');
@@ -274,8 +301,8 @@ test('the built-in values are the colours of today\'s components', () => {
     };
     const mismatches = [];
     for (const [i, mode] of ['light', 'dark'].entries()) {
-        // The bridge on: the primary colour comes from today's variables (the default theme).
-        const scope = overlay(legacyScopes[mode], scopes[mode], bridge);
+        // The default theme, without a colour of the user's.
+        const scope = overlay(legacyScopes[mode], scopes[mode]);
         for (const [role, pair] of Object.entries(shades)) {
             const exception = (i === 0 ? darker : lighter)[role];
             const expected = toHex(exception ? colour(exception[1], scope) : today(pair[i], legacyScopes[mode]));
@@ -288,15 +315,11 @@ test('the built-in values are the colours of today\'s components', () => {
                 if (!role.startsWith('accent')) assert.ok(step <= 3, `${mode} ${role}: ${step} per channel from ${exception[0]}`);
             }
         }
-        // Built in, without the bridge: the same colours for the default theme.
-        for (const role of ['primary', 'primary-hover', 'on-primary', 'primary-ink', 'primary-tint', 'focus']) {
-            assert.equal(toHex(token(role, scopes[mode])), toHex(token(role, scope)), `${mode} ${role} without the bridge`);
-        }
     }
     assert.deepEqual(mismatches, []);
 });
 
-test('the shadows, backdrop, focus shadow, corner and fonts are today\'s values', () => {
+test('the shadows, backdrop, focus shadow, corner and fonts are the 1.x values', () => {
     // A shadow's layers with their colours resolved; fully transparent layers paint nothing.
     const layers = (value, scope) => topLevel(substitute(value, scope))
         .filter((layer) => !/(?:^|\s)transparent$/.test(layer))
@@ -320,26 +343,73 @@ test('the shadows, backdrop, focus shadow, corner and fonts are today\'s values'
     }
 });
 
+/** The user's colour as js/appearance/theme.js writes it on <html> (applyColor). */
+const userVariables = (color, dark = null) => {
+    const shades = brandShades(color);
+    const own = dark ? brandShades(dark) : null;
+    return new Map([
+        ['--ac-user-fill', shades.fill], ['--ac-user-fill-hover', shades.hover], ['--ac-user-on-fill', shades.onFill],
+        ['--ac-user-tone', shades.tone], ['--ac-user-tone-dark', shades.toneDark],
+        ...(own ? [['--ac-user-fill-dark', own.fill], ['--ac-user-fill-hover-dark', own.hover], ['--ac-user-on-fill-dark', own.onFill]] : []),
+    ]);
+};
+
+/** The primary roles the blocks derive from a fill, its hover and text, and a tone (light) or dark tone (dark). */
+const primaryRoles = (mode, { fill, hover, onFill, tone }) => (mode === 'light' ? {
+    p: tone, primary: fill, 'primary-hover': hover, 'on-primary': onFill, focus: tone, 'primary-ink': tone,
+    'primary-line': `color-mix(in srgb, ${tone} 84%, white)`, 'primary-tint': `color-mix(in srgb, ${tone} 6%, white)`,
+    'primary-soft': `color-mix(in srgb, ${tone} 12%, white)`, 'primary-tint-ink': `color-mix(in srgb, ${tone} 86%, black)`,
+} : {
+    p: tone, primary: fill, 'primary-hover': hover, 'on-primary': onFill, focus: tone, 'primary-ink': `color-mix(in srgb, ${tone} 66%, white)`,
+    'primary-line': `color-mix(in srgb, ${tone} 66%, white)`, 'primary-tint': `color-mix(in oklab, color-mix(in srgb, ${tone} 84%, white) 10%, transparent)`,
+    'primary-soft': `color-mix(in oklab, color-mix(in srgb, ${tone} 84%, white) 15%, transparent)`, 'primary-tint-ink': `color-mix(in srgb, ${tone} 42%, white)`,
+});
+
+/** What each primary role should be for a colour of the user's (null: the theme's own, #794dff), light or dark. */
+function expectedPrimary(mode, color = null, dark = null) {
+    if (!color) {
+        const own = { fill: '#794dff', hover: 'color-mix(in srgb, #794dff 88%, black)', onFill: '#fff', tone: '#794dff' };
+        return primaryRoles(mode, own);
+    }
+    const shades = brandShades(color);
+    const own = dark ? brandShades(dark) : shades;
+    return primaryRoles(mode, mode === 'light' ? shades : { fill: own.fill, hover: own.hover, onFill: own.onFill, tone: shades.toneDark });
+}
+
 /**
- * The bridge: until the runtime writes data-theme, the .dark class marks the dark theme (on
- * <html> and on the semi-dark menu), and the primary colour and the other runtime-driven values
- * come from today's variables. For the default theme it gives #794dff, the button's #6a44e0
- * hover and white text, whatever the built-in blocks say.
+ * No bridge: the light and dark blocks are selected with data-theme alone, and the primary roles read
+ * the user's variables first, then the theme's own colour. For the default theme that is #794dff,
+ * the button's #6a44e0 hover and white text, as in 1.x.
  */
-test('the bridge gives today\'s primary colour for the default theme', () => {
-    for (const block of [lightBlock, darkBlock]) assert.ok(ruleWith('.dark', '--ac-page').some((rule) => rule.declarations === block), 'The light and the dark block match .dark.');
-    assert.equal(bridge.get('--ac-tone-primary'), 'var(--color-brand-600)');
-    assert.equal(bridge.get('--ac-primary'), 'var(--btn-primary-bg)');
-    // The fields' focus shadow a theme may set (--ui-focus-shadow) reaches the token the fields read.
-    assert.equal(bridge.get('--ac-focus-shadow'), 'var(--ui-focus-shadow, 0 0 #0000)');
-    assert.equal(bridge.get('--ac-focus-shadow-danger'), 'var(--ui-focus-shadow-error, 0 0 #0000)');
+test('the primary roles read the user\'s colour first, then the theme\'s own', () => {
+    assert.equal(toneBlocks.length, 1, 'One block sets the tone inputs.');
+    assert.deepEqual(ruleWith('.dark', '--ac-page'), [], 'The .dark class selects no block.');
+    const rulesOnly = themesCss.replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.doesNotMatch(rulesOnly, /--btn-|--ui-|--color-brand-|\.dark\b/, 'Nothing of the 1.x runtime.');
 
     for (const mode of ['light', 'dark']) {
-        const scope = overlay(legacyScopes[mode], scopes[mode], bridge);
-        const values = Object.fromEntries(['tone-primary', 'p', 'primary', 'primary-hover', 'on-primary', 'focus'].map((name) => [name, toHex(token(name, scope))]));
+        const values = Object.fromEntries(['tone-primary', 'p', 'primary', 'primary-hover', 'on-primary', 'focus'].map((name) => [name, toHex(token(name, scopes[mode]))]));
         assert.deepEqual(values, { 'tone-primary': '#794dff', p: '#794dff', primary: '#794dff', 'primary-hover': '#6a44e0', 'on-primary': '#ffffff', focus: '#794dff' }, mode);
-        assert.equal(substitute('var(--ac-radius)', scope), '0.25rem');
+        assert.equal(substitute('var(--ac-radius)', scopes[mode]), '0.25rem');
     }
+
+    const mismatches = [];
+    for (const [color, dark] of [[null], ['#008933'], ['#3f404d', '#474747'], ['#ffd400'], ['#1e3a8a']]) {
+        const user = color ? userVariables(color, dark) : new Map();
+        for (const mode of ['light', 'dark']) {
+            const scope = overlay(scopes[mode], user);
+            for (const [role, expected] of Object.entries(expectedPrimary(mode, color, dark))) {
+                const [actual, wanted] = [toHex(token(role, scope)), toHex(colour(expected, scope))];
+                if (actual !== wanted) mismatches.push(`${color ?? 'default'} ${mode} ${role}: ${actual}, expected ${wanted}`);
+            }
+        }
+    }
+    assert.deepEqual(mismatches, []);
+
+    // A preset gives 1.x's values: green's fill, hover, text and brand-600 (dark theme too) are the palette's solid green.
+    const green = overlay(scopes.light, userVariables('#008933'));
+    assert.deepEqual(['primary', 'primary-hover', 'on-primary', 'p'].map((role) => toHex(token(role, green))), ['#008933', '#00792d', '#ffffff', '#008933']);
+    assert.equal(toHex(token('p', overlay(scopes.dark, userVariables('#008933')))), '#008933');
 });
 
 test('the PRO stylesheet reads the tokens, without fallbacks of its own', () => {
@@ -368,44 +438,45 @@ test('a shadow utility can read a token, without its colour modifier', async () 
 });
 
 /**
- * In Chrome, with today's runtime: the presets, a custom colour (the shades theme.js writes) and
- * the semi-dark menu. On the page and in the menu (.panel-sidebar.dark in the light theme), each
- * primary role equals the variable the components read today, in the light and the dark theme.
+ * In Chrome: the user's colour reaches every block and every section. The variables applyColor
+ * writes on <html> (the presets, the dark preset with its own dark fill, a custom yellow and navy),
+ * data-theme light or dark on <html>, the semi-dark menu (data-theme="dark") and a light island in
+ * it (data-theme="light"): each primary role is what the pipeline promises, and application code's
+ * brand-* utilities follow the element's theme too.
  */
-test('the bridge follows today\'s runtime: presets, a custom colour and the semi-dark menu', { skip: !chrome && 'no Chrome' }, async () => {
-    const custom = (color) => {
-        const shades = brandShades(color);
-        return {
-            '--brand-custom-600': shades.brand600, '--brand-custom-600-dark': shades.brand600Dark, '--btn-primary-bg': color, '--btn-primary-border': color,
-            '--btn-primary-hover': shades.hover, '--btn-primary-hover-border': shades.hover, '--btn-primary-shadow': `color-mix(in srgb, ${color} 90%, transparent)`,
-            '--btn-primary-color': shades.text, '--btn-primary-hover-color': shades.hoverText,
-        };
-    };
-    const colours = [['default', {}], ...['green', 'red', 'yellow', 'blue', 'gray', 'dark'].map((name) => [name, {}]), ['custom', custom('#ffd400')], ['custom', custom('#1e3a8a')]];
-    const light = { 'p': 'var(--color-brand-600)', primary: 'var(--btn-primary-bg)', 'primary-hover': 'var(--btn-primary-hover)', 'on-primary': 'var(--btn-primary-color, #fff)', focus: 'var(--ui-focus-ring, var(--color-brand-600))', 'primary-ink': 'var(--color-brand-600)', 'primary-line': 'var(--color-brand-500)', 'primary-tint': 'var(--color-brand-50)', 'primary-soft': 'var(--color-brand-100)', 'primary-tint-ink': 'var(--color-brand-700)', surface: '#fff', line: 'var(--color-gray-200)', ink: 'var(--color-gray-900)' };
-    const dark = { ...light, 'primary-ink': 'var(--color-brand-400)', 'primary-line': 'var(--color-brand-400)', 'primary-tint': 'color-mix(in oklab, var(--color-brand-500) 10%, transparent)', 'primary-soft': 'color-mix(in oklab, var(--color-brand-500) 15%, transparent)', 'primary-tint-ink': 'var(--color-brand-300)', surface: 'var(--color-zinc-900)', line: 'var(--color-zinc-700)', ink: 'var(--color-zinc-100)' };
-    // The palette variables the probes read are written by their utilities.
-    const body = `<i id="page"></i><aside class="panel-sidebar dark"><i id="menu"></i></aside><div class="hidden bg-brand-50 bg-brand-100 bg-brand-300 bg-brand-400 bg-brand-500 bg-brand-600 bg-brand-700 bg-gray-200 bg-gray-900 bg-zinc-100 bg-zinc-700 bg-zinc-900"></div>`;
+test('the user\'s colour reaches every block and section: presets, custom colours, the semi-dark menu, a light island', { skip: !chrome && 'no Chrome' }, async () => {
+    const colours = [[null], ['#008933'], ['#d83838'], ['#9f6b13'], ['#038197'], ['#6b7280'], ['#3f404d', '#474747'], ['#ffd400'], ['#1e3a8a']];
+    const cases = colours.map(([color, dark]) => ({
+        name: color ?? 'default',
+        user: Object.fromEntries(color ? userVariables(color, dark) : []),
+        light: expectedPrimary('light', color, dark),
+        dark: expectedPrimary('dark', color, dark),
+    }));
+    // brand-* (application code): the element's tone, in the 1.x shades of it.
+    const body = `<i id="page" class="text-brand-600 bg-brand-50"></i><aside data-theme="dark"><i id="menu" class="text-brand-600 bg-brand-50"></i><div data-theme="light"><i id="island" class="text-brand-600 bg-brand-50"></i></div></aside>`;
     const result = inChrome({ css: await stylesheet(body), body, measure: `
-        const colours = ${JSON.stringify(colours)}, light = ${JSON.stringify(light)}, dark = ${JSON.stringify(dark)};
+        const cases = ${JSON.stringify(cases)};
         const root = document.documentElement;
-        const probe = (element, value) => { element.style.color = 'red'; element.style.color = value; return rgba(getComputedStyle(element).color).join(); };
+        const probe = (element, value) => { element.style.color = 'red'; element.style.color = value; const colour = rgba(getComputedStyle(element).color).join(); element.style.color = ''; return colour; };
         const mismatches = [];
         let compared = 0;
-        for (const [name, properties] of colours) {
+        for (const { name, user, light, dark } of cases) {
             root.removeAttribute('style');
-            root.dataset.brandColor = name;
-            Object.entries(properties).forEach(([property, value]) => root.style.setProperty(property, value));
+            Object.entries(user).forEach(([property, value]) => root.style.setProperty(property, value));
             for (const mode of ['light', 'dark']) {
-                root.classList.toggle('dark', mode === 'dark');
-                // The menu is dark in both themes; the page follows the theme.
-                for (const [where, expected] of [['page', mode === 'dark' ? dark : light], ['menu', dark]]) {
+                root.dataset.theme = mode;
+                // The menu is dark in both modes, the island in it light; the page follows the mode.
+                for (const [where, expected] of [['page', mode === 'dark' ? dark : light], ['menu', dark], ['island', light]]) {
                     const element = document.getElementById(where);
-                    for (const [role, today] of Object.entries(expected)) {
+                    for (const [role, value] of Object.entries(expected)) {
                         compared++;
-                        const [token, now] = [probe(element, 'var(--ac-' + role + ')'), probe(element, today)];
-                        if (token !== now) mismatches.push(name + (properties['--btn-primary-bg'] ?? '') + ' ' + mode + ' ' + where + ' ' + role + ': ' + token + ' vs ' + now);
+                        const [token, wanted] = [probe(element, 'var(--ac-' + role + ')'), probe(element, value)];
+                        if (token !== wanted) mismatches.push(name + ' ' + mode + ' ' + where + ' ' + role + ': ' + token + ' vs ' + wanted);
                     }
+                    const tone = expected.p;
+                    const brand = [rgba(getComputedStyle(element).color).join(), rgba(getComputedStyle(element).backgroundColor).join()];
+                    const wanted = [probe(element, tone), probe(element, 'color-mix(in srgb, ' + tone + ' 6%, white)')];
+                    if (brand.join('|') !== wanted.join('|')) mismatches.push(name + ' ' + mode + ' ' + where + ' brand-600/brand-50: ' + brand.join('|') + ' vs ' + wanted.join('|'));
                 }
             }
         }
@@ -413,5 +484,5 @@ test('the bridge follows today\'s runtime: presets, a custom colour and the semi
     ` });
 
     assert.deepEqual(result.mismatches, []);
-    assert.equal(result.compared, colours.length * 2 * 2 * Object.keys(light).length);
+    assert.equal(result.compared, cases.length * 2 * 3 * Object.keys(cases[0].light).length);
 });

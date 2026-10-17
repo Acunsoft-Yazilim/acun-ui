@@ -2,6 +2,7 @@
 
 namespace Acun\Ui\Tests\Feature;
 
+use Acun\Ui\Support\Appearance;
 use Acun\Ui\Support\Layout;
 use Acun\Ui\Tests\TestCase;
 use Illuminate\Support\Facades\Blade;
@@ -11,25 +12,41 @@ final class LayoutSettingsTest extends TestCase
 {
     public function test_config_values_are_defaults_for_the_browser_not_saved_preferences(): void
     {
-        config(['acun-ui.layout.theme' => 'dark', 'acun-ui.layout.sidebar_mode' => 'collapsed', 'acun-ui.layout.brand_color' => 'green']);
+        config(['acun-ui.layout.mode' => 'dark', 'acun-ui.layout.sidebar_mode' => 'collapsed', 'acun-ui.layout.brand_color' => 'green']);
 
         $config = $this->runtimeConfig(Blade::render('<x-ui.layout.head />'));
 
-        self::assertSame('dark', $config['defaults']['theme']);
+        self::assertSame('dark', $config['defaults']['mode']);
         self::assertSame('collapsed', $config['defaults']['sidebar_mode']);
         self::assertSame('green', $config['defaults']['brand_color']);
         // A default must not override the choice stored in the browser, so it is not sent as the saved preference.
-        self::assertNull($config['theme']);
+        self::assertNull($config['mode']);
+        self::assertArrayNotHasKey('theme', $config['defaults']);
+    }
+
+    /** 1.5: until 3.0 a 1.x theme of light, dark or system (config, prop, Layout::page()) is the mode. */
+    public function test_a_1x_theme_value_is_read_as_the_mode(): void
+    {
+        config(['acun-ui.layout.theme' => 'dark']);
+
+        $config = $this->runtimeConfig(Blade::render('<x-ui.layout.head />'));
+        self::assertSame('dark', $config['defaults']['mode']);
+        self::assertSame(['key' => 'default', 'light' => 'light', 'dark' => 'dark'], $config['theme'], 'Not a theme key.');
+
+        self::assertSame('light', $this->runtimeConfig(Blade::render('<x-ui.layout.head theme="light" />'))['mode']);
+        self::assertSame('system', $this->runtimeConfig(Blade::render('<x-ui.layout.head mode="system" theme="dark" />'))['mode'], 'The mode prop wins.');
     }
 
     public function test_a_page_can_force_its_own_settings(): void
     {
-        config(['acun-ui.layout.theme' => 'dark']);
+        config(['acun-ui.layout.mode' => 'dark']);
         Layout::page(['theme' => 'light', 'navbar_mode' => 'hidden']);
 
-        $config = $this->runtimeConfig(Blade::render('<x-ui.layout.head theme="dark" />'));
+        $config = $this->runtimeConfig(Blade::render('<x-ui.layout.head mode="dark" />'));
 
-        self::assertSame('light', $config['theme'], 'The page wins over the saved preference and the config.');
+        self::assertSame('light', $config['mode'], 'The page wins over the saved preference and the config (a 1.x theme value is the mode).');
+        self::assertSame('light', Layout::forced('mode'));
+        self::assertNull(Layout::forced('theme'));
         self::assertSame('hidden', $config['navbarMode']);
         self::assertTrue($config['forced']);
     }
@@ -62,33 +79,45 @@ final class LayoutSettingsTest extends TestCase
         Layout::page(['sidebar' => 'collapsed']);
     }
 
-    /** The primary colour presets are the palette's colours; a light swatch gets a dark tick. */
-    public function test_brand_presets_are_the_palette_colours(): void
+    /**
+     * The presets are the palette's solid fills (plan 3.7, 9: a swatch shows the real fill, e.g. green
+     * #008933, not #00ca4b); the runtime gets them as colours (the island's colors).
+     */
+    public function test_brand_presets_are_the_palette_fills(): void
     {
         self::assertSame(
-            ['default' => '#794dff', 'green' => '#00ca4b', 'red' => '#fb4141', 'yellow' => '#fcaa1e', 'blue' => '#04b6d4', 'gray' => '#6b7280', 'dark' => '#3f404d'],
+            ['default' => '#794dff', 'green' => '#008933', 'red' => '#d83838', 'yellow' => '#9f6b13', 'blue' => '#038197', 'gray' => '#6b7280', 'dark' => '#3f404d'],
             array_map(fn (array $preset) => $preset[0], Layout::brandPresets()),
         );
+        self::assertSame(Appearance::COLORS, Layout::BRAND_COLORS, 'The 1.x name is kept until 3.0.');
 
         $picker = Blade::render('<x-ui.brand-color-picker />');
-        self::assertMatchesRegularExpression('/title="Sarı"[^>]*style="background: #fcaa1e"\s*>\s*<svg[^>]*text-ink/', $picker);
+        self::assertMatchesRegularExpression('/title="Sarı"[^>]*style="background: #9f6b13"\s*>\s*<svg[^>]*text-surface/', $picker);
         self::assertMatchesRegularExpression('/title="Koyu"[^>]*style="background: #3f404d"\s*>\s*<svg[^>]*text-surface/', $picker);
 
-        // A name that is no longer a preset (saved before the palette changed) falls back to the default.
-        self::assertSame(['default', 'green', 'red', 'yellow', 'blue', 'gray', 'dark'], $this->runtimeConfig(Blade::render('<x-ui.layout.head />'))['brandPresets']);
+        // The theme's own colour (default) is no colour of the runtime: it removes the user's.
+        self::assertSame(
+            ['green' => '#008933', 'red' => '#d83838', 'yellow' => '#9f6b13', 'blue' => '#038197', 'gray' => '#6b7280', 'dark' => ['light' => '#3f404d', 'dark' => '#474747']],
+            $this->runtimeConfig(Blade::render('<x-ui.layout.head />'))['colors'],
+        );
     }
 
     /**
      * The tick is white while it stands out 3:1 on the swatch, else dark (cyan gave a white tick at 2.43:1):
-     * the light theme's surface or ink (data-theme="light" on it), so it stays so in the dark theme.
+     * the light theme's surface or ink (data-theme="light" on it), so it stays so in the dark theme. The
+     * presets carry white text, so their ticks are white; a tenant's light colour gets the dark one.
      */
     public function test_the_picker_tick_takes_the_more_readable_colour_by_contrast(): void
     {
         $picker = Blade::render('<x-ui.brand-color-picker />');
 
-        foreach (['Varsayılan' => 'text-surface', 'Yeşil' => 'text-ink', 'Kırmızı' => 'text-surface', 'Sarı' => 'text-ink', 'Turkuaz' => 'text-ink', 'Gri' => 'text-surface', 'Koyu' => 'text-surface'] as $name => $tick) {
-            self::assertMatchesRegularExpression('/title="'.$name.'"[^>]*>\s*<svg[^>]*\b'.$tick.'\b/', $picker, $name);
+        foreach (['Varsayılan', 'Yeşil', 'Kırmızı', 'Sarı', 'Turkuaz', 'Gri', 'Koyu'] as $name) {
+            self::assertMatchesRegularExpression('/title="'.$name.'"[^>]*>\s*<svg[^>]*\btext-surface\b/', $picker, $name);
         }
+
+        $light = Blade::render('<x-ui.brand-color-picker :presets="[\'acik\' => [\'#04b6d4\', \'Açık\'], \'sari\' => [\'#fcaa1e\', \'Sarı\']]" :custom="false" />');
+        self::assertMatchesRegularExpression('/title="Açık"[^>]*>\s*<svg[^>]*\btext-ink\b/', $light);
+        self::assertMatchesRegularExpression('/title="Sarı"[^>]*>\s*<svg[^>]*\btext-ink\b/', $light);
     }
 
     /** Presets can come from a tenant or a user: only #rrggbb values reach the style attribute. */

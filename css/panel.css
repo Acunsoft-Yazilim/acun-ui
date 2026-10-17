@@ -14,10 +14,10 @@
  *
  *     @source '../../vendor/acunsoft/acun-ui/resources/views';
  *
- * The brand palette (--color-brand-*) and fonts can be overridden in the app with @theme.
- *
  * The design tokens: the --ac-* roles of the built-in light and dark themes (themes.css) and
  * their Tailwind utilities (tokens.css: bg-surface, text-muted, bg-primary text-on-primary…).
+ * A theme sets the tokens ([data-theme] { --ac-tone-primary: …; --ac-radius: … }); the user's
+ * colour and the mode come from the runtime (js/appearance/theme.js).
  */
 @import './tokens.css';
 @import './themes.css';
@@ -31,23 +31,19 @@
 @source inline("size-{2,2.5,3,3.5,4,4.5,5,5.5,6,7,8,9,10,11,12,14,16,20,24,28,32,40,48}");
 
 /*
- * ── Acun UI design system ───────────────────────────────────────────────
- * Colour, typography and shadow values. Components use Tailwind's own scale
- * names (brand, gray, zinc, emerald, sky, amber, red); here the values of
- * those scales are replaced with the Acun UI palette.
+ * ── Acun UI palette ─────────────────────────────────────────────────────
+ * The type scale, the shadows and the palette scales of application code and data
+ * colours (components use the tokens). The values of Tailwind's scale names are
+ * replaced with the Acun UI palette; brand-* is in tokens.css (the theme's primary).
  *
- *   brand    Primary colour (#794dff) · shades derive from --color-brand-600
  *   accent   Brand accent (blue) · logo mark, small highlighted elements
  *   gray     Light theme neutrals (zinc grey) · 900 = ink
  *   zinc     Dark theme neutrals (black) · components use them under dark:
  *   emerald  Success · sky Info · amber Warning · red Danger · secondary, dark, light
  */
 @theme {
-    /* Typography: Public Sans (text) + DM Mono (code, numeric labels). Both are
-       SIL OFL; the app loads them (Vite fonts, a font CDN or local files). */
-    --font-sans: var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-mono: var(--font-dm-mono, 'DM Mono'), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    --font-brand: var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, sans-serif;
+    /* Fonts: Public Sans (text) and DM Mono (code, numeric labels), both SIL OFL, which the app loads;
+       the font-* utilities read the --ac-font-* tokens (themes.css, tokens.css). */
 
     /* Type scale (with line heights). Body 14px, small 13px, label 12px. */
     --text-2xs: 0.6875rem;
@@ -68,20 +64,6 @@
     --text-3xl--line-height: 2.5rem;
     --text-4xl: 2.5rem;
     --text-4xl--line-height: 3rem;
-
-    /* Primary colour (#794dff). Shades derive from a single variable; setting
-       --color-brand-600 is enough to change the brand colour (see data-brand-color). */
-    --color-brand-600: #794dff;
-    --color-brand-50: color-mix(in srgb, var(--color-brand-600) 6%, white);
-    --color-brand-100: color-mix(in srgb, var(--color-brand-600) 12%, white);
-    --color-brand-200: color-mix(in srgb, var(--color-brand-600) 24%, white);
-    --color-brand-300: color-mix(in srgb, var(--color-brand-600) 42%, white);
-    --color-brand-400: color-mix(in srgb, var(--color-brand-600) 66%, white);
-    --color-brand-500: color-mix(in srgb, var(--color-brand-600) 84%, white);
-    --color-brand-700: color-mix(in srgb, var(--color-brand-600) 86%, black);
-    --color-brand-800: color-mix(in srgb, var(--color-brand-600) 70%, black);
-    --color-brand-900: color-mix(in srgb, var(--color-brand-600) 55%, black);
-    --color-brand-950: color-mix(in srgb, var(--color-brand-600) 38%, black);
 
     /* Brand accent: blue. */
     --color-accent-500: #3b82f6;
@@ -209,16 +191,7 @@
     --shadow-lg: 0 0 0 1px var(--shadow-edge-lg, rgb(24 24 27 / 0.06)), 0 12px 32px 0 var(--shadow-far-lg, rgb(24 24 27 / 0.12)), 0 4px 10px 0 var(--shadow-near-lg, rgb(24 24 27 / 0.05));
     --shadow-xl: 0 0 0 1px var(--shadow-edge-xl, transparent), 0 24px 70px 0 var(--shadow-far-xl, rgb(24 24 27 / 0.16)), 0 4px 18px 0 var(--shadow-near-xl, rgb(24 24 27 / 0.08));
 
-    /* Corners: a single theme-wide default (4px). Components use rounded-sm;
-       rounded-md / lg / xl in app code produce the same corner. Setting
-       --radius-sm alone is enough to change the whole theme.
-       Round elements (avatar, badge, dot) stay separate with rounded-full. */
-    --radius-sm: 0.25rem;
-    --radius-md: var(--radius-sm);
-    --radius-lg: var(--radius-sm);
-    --radius-xl: var(--radius-sm);
-    --radius-2xl: var(--radius-sm);
-    --radius-3xl: var(--radius-sm);
+    /* Corners: one radius, the --ac-radius token (4px), which rounded-sm … rounded-3xl read (tokens.css). */
 }
 
 /* In the dark theme the hairline is light-toned and the soft layers are deep black. */
@@ -233,99 +206,6 @@
     --shadow-near-lg: transparent;
     --shadow-far-xl: rgb(0 0 0 / 0.45);
     --shadow-near-xl: transparent;
-}
-
-/*
- * Primary colour presets picked in Theme Settings (Acun\Ui\Support\Layout::BRAND_COLORS),
- * one per palette colour. The primary fill is the palette colour's own solid fill (the same as the
- * success, danger… buttons), and --color-brand-600 (links, the active menu item, focus frames,
- * small fills; every brand-* shade derives from it) is that same fill: it reads 4.5:1 on white and
- * carries white text. Every value derives from the palette tokens above. The tokens read them
- * through the bridge in themes.css (--btn-primary-bg, --btn-primary-hover; theme.js writes the same
- * variables for a custom colour, with --btn-primary-color for the text on the fill).
- */
-:root[data-brand-color='green'] {
-    --color-brand-600: var(--color-emerald-solid);
-    --btn-primary-bg: var(--color-emerald-solid);
-    --btn-primary-hover: color-mix(in srgb, var(--color-emerald-solid) 88%, black);
-}
-
-:root[data-brand-color='red'] {
-    --color-brand-600: var(--color-red-600);
-    --btn-primary-bg: var(--color-red-600);
-    --btn-primary-hover: color-mix(in srgb, var(--color-red-600) 88%, black);
-}
-
-:root[data-brand-color='yellow'] {
-    --color-brand-600: var(--color-amber-solid);
-    --btn-primary-bg: var(--color-amber-solid);
-    --btn-primary-hover: color-mix(in srgb, var(--color-amber-solid) 88%, black);
-}
-
-:root[data-brand-color='blue'] {
-    --color-brand-600: var(--color-sky-solid);
-    --btn-primary-bg: var(--color-sky-solid);
-    --btn-primary-hover: color-mix(in srgb, var(--color-sky-solid) 88%, black);
-}
-
-:root[data-brand-color='gray'] {
-    --color-brand-600: var(--color-secondary-500);
-    --btn-primary-bg: var(--color-secondary-500);
-    --btn-primary-hover: color-mix(in srgb, var(--color-secondary-500) 88%, black);
-}
-
-:root[data-brand-color='dark'] {
-    --color-brand-600: var(--color-dark);
-    --btn-primary-bg: var(--color-dark);
-    --btn-primary-hover: color-mix(in srgb, var(--color-dark) 88%, black);
-}
-
-/*
- * On the black dark theme a dark primary would disappear: there it is a neutral grey, not
- * another colour. Focus frames in it stand out 3:1 on every dark surface (zinc-800 to 950)
- * and white text on it reads 4.5:1; the fill is the dark theme's grey.
- */
-:root.dark[data-brand-color='dark'] {
-    --color-brand-600: var(--color-gray-500);
-    --btn-primary-bg: var(--color-zinc-600);
-    --btn-primary-hover: color-mix(in srgb, var(--color-zinc-600) 88%, black);
-}
-
-/*
- * A custom colour (#rrggbb): js/appearance/theme.js measures its shades and writes them
- * on <html> (the button's fill, hover and text colours too). --brand-custom-600 reaches
- * 4.5:1 on white (text on white, white text on it); in the dark theme a dark colour gets
- * a lighter tone that still stands out 3:1 on every dark surface (focus frames, borders).
- * The rules match only while those shades are on <html> (its style attribute), so markup
- * that names the custom colour without them keeps the theme's own primary colour.
- */
-:root[data-brand-color='custom'][style*='--brand-custom-600'] {
-    --color-brand-600: var(--brand-custom-600);
-}
-
-:root.dark[data-brand-color='custom'][style*='--brand-custom-600'] {
-    --color-brand-600: var(--brand-custom-600-dark, var(--brand-custom-600));
-}
-
-/*
- * Semi-dark (the dark menu in the light theme: .panel-sidebar.dark) takes the dark theme's
- * --color-brand-600 where it differs: the dark preset and a custom colour. The brand-*
- * shades derive from it on :root, so the ones the dark menu reads (the active item, the
- * collapse button's hover) derive again here.
- */
-:root[data-brand-color='dark'] .panel-sidebar.dark {
-    --color-brand-600: var(--color-gray-500);
-}
-
-:root[data-brand-color='custom'][style*='--brand-custom-600'] .panel-sidebar.dark {
-    --color-brand-600: var(--brand-custom-600-dark, var(--brand-custom-600));
-}
-
-:root[data-brand-color='dark'] .panel-sidebar.dark,
-:root[data-brand-color='custom'][style*='--brand-custom-600'] .panel-sidebar.dark {
-    --color-brand-300: color-mix(in srgb, var(--color-brand-600) 42%, white);
-    --color-brand-400: color-mix(in srgb, var(--color-brand-600) 66%, white);
-    --color-brand-500: color-mix(in srgb, var(--color-brand-600) 84%, white);
 }
 
 /*
@@ -386,7 +266,7 @@
 }
 
 :root {
-    --livewire-progress-bar-color: var(--color-brand-600);
+    --livewire-progress-bar-color: var(--ac-p);
 }
 
 dialog#livewire-error::backdrop {
@@ -437,37 +317,11 @@ dialog#livewire-error::backdrop {
 }
 
 /*
- * One backdrop for every overlay (modal, drawer, command palette, dialogs, the
- * PRO form modal and filter drawer). On the black dark theme a light dimming is
- * invisible, so it is darker there and blurs the page behind the dialog.
- */
-:root {
-    --ui-backdrop: rgb(10 10 10 / 0.45);
-    --ui-backdrop-blur: 2px;
-}
-
-:root.dark {
-    --ui-backdrop: rgb(0 0 0 / 0.72);
-    --ui-backdrop-blur: 4px;
-}
-
-/*
- * Focus look of the form fields (input, select, textarea, input group, combobox,
- * tag input, OTP): the 1px frame takes the brand colour (red on an invalid field),
- * without a shadow. A theme can add one for every field here, e.g.
- *     --ui-focus-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-600) 12%, transparent);
- */
-:root {
-    --ui-focus-shadow: 0 0 #0000;
-    --ui-focus-shadow-error: 0 0 #0000;
-}
-
-/*
- * Focus ring: the keyboard focus frame of buttons, links, tabs, menus and form fields, drawn
- * with the outline-focus and ring-focus utilities (--color-focus in tokens.css: --ac-focus). It is
- * the primary colour (--color-brand-600; the dark theme's in the dark theme and in the semi-dark
- * menu). A theme sets another colour with --ui-focus-ring, e.g.
- *     :root { --ui-focus-ring: var(--color-accent-600); }
+ * The focus ring (outline-focus, ring-focus: --ac-focus, the primary text tone), the fields' focus
+ * shadow (--ac-focus-shadow, --ac-focus-shadow-danger; none by default) and the backdrop of every
+ * overlay (--ac-backdrop, --ac-backdrop-blur; darker and blurred in a dark theme) are tokens
+ * (themes.css). A theme sets them in its block, e.g.
+ *     :root, [data-theme] { --ac-focus-shadow: 0 0 0 3px color-mix(in srgb, var(--ac-p) 12%, transparent); }
  */
 
 /* The frame of a checkbox and a radio: 3:1 against the page, as a control's edge must be. */
@@ -480,23 +334,10 @@ dialog#livewire-error::backdrop {
     --ui-control-border: var(--color-zinc-500);
 }
 
-/*
- * The primary fill, as the runtime gives it: the default derives from --color-brand-600 (so a
- * theme's own @theme value changes it: #794dff, hover #6a44e0); the presets above and a custom
- * colour (js/appearance/theme.js, which also writes --btn-primary-color, the measured text on the
- * fill) set their own. Only the tokens read these (the bridge in themes.css: --ac-primary,
- * --ac-primary-hover, --ac-on-primary); acun:button and the other components paint with the
- * tokens (bg-primary text-on-primary…). A hover is the fill with 12% black.
- */
-:root {
-    --btn-primary-bg: var(--color-brand-600);
-    --btn-primary-hover: color-mix(in srgb, var(--color-brand-600) 88%, black);
-}
-
 .ui-backdrop {
-    background-color: var(--ui-backdrop);
-    backdrop-filter: blur(var(--ui-backdrop-blur));
-    -webkit-backdrop-filter: blur(var(--ui-backdrop-blur));
+    background-color: var(--ac-backdrop);
+    backdrop-filter: blur(var(--ac-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--ac-backdrop-blur));
 }
 
 /* Set by window.acunScrollLock (acun:layout.head) while a modal, drawer or the command palette is open. */
@@ -540,7 +381,7 @@ html.scroll-locked {
     }
 
     code, kbd, samp, pre {
-        font-family: var(--font-mono);
+        font-family: var(--ac-font-mono);
     }
 
     *,

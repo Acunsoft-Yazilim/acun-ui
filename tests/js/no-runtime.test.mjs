@@ -18,7 +18,7 @@ console.warn = (...args) => {
 process.on('uncaughtException', (exception) => uncaught.push(exception.message));
 
 globalThis.acunTestPage = {
-    head: '<script type="application/json" data-acun-ui-config>{"theme":"dark","brandColor":"green","sidebarMode":"collapsed","navbarMode":null,"skin":"bordered","semiDark":null,"preferenceUrl":null,"defaults":{},"brandPresets":["default","green"],"forced":false}</script>',
+    head: '<script type="application/json" data-acun-ui-config>{"scope":"app","theme":{"key":"default","light":"light","dark":"dark"},"targets":{"light":"#ffffff","dark":"#1f1f1f"},"colors":{"green":"#008933"},"mode":"dark","brandColor":"green","sidebarMode":"collapsed","navbarMode":null,"skin":"bordered","semiDark":null,"preferenceUrl":null,"defaults":{},"forced":false}</script>',
     boot: true,
     runtime: false,
 };
@@ -47,8 +47,9 @@ test('the boot script applies the theme before the first paint without the runti
     const root = document.documentElement;
 
     assert.equal(window.AcunUI, undefined);
+    assert.equal(root.dataset.theme, 'dark');
     assert.ok(root.classList.contains('dark'));
-    assert.equal(root.dataset.brandColor, 'green');
+    assert.equal(root.style.getPropertyValue('--ac-user-fill'), '#008933');
     assert.equal(root.dataset.skin, 'bordered');
     assert.equal(root.dataset.sidebarCollapsed, 'true');
 });

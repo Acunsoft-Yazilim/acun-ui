@@ -41,9 +41,14 @@
  *
  * focus is the keyboard focus ring (outline-focus, ring-focus).
  *
- * The gray-*, zinc-* and status palette scales and brand-* stay in panel.css for application
- * code and data colours. The radius, font and shadow utilities also keep their panel.css
- * values for now; --ac-radius, --ac-font-* and --ac-shadow-* already carry the same values.
+ * The corners (rounded-sm … rounded-3xl: one radius, --ac-radius) and the fonts (font-sans,
+ * font-mono, font-display, font-brand) read their tokens too. The shadow utilities keep their
+ * composed panel.css values: a shadow whose theme value is a variable loses its colour modifier
+ * (shadow-black/40), which application code uses; --ac-shadow-* carry the same values.
+ *
+ * The gray-*, zinc-* and status palette scales stay in panel.css for application code and data
+ * colours. brand-* (application code, until 3.0) is the primary text tone of the element's theme
+ * and the user's colour, in today's shades of it (below).
  */
 @theme inline {
     --color-page: var(--ac-page);
@@ -146,6 +151,34 @@
      */
     --color-focus: var(--ac-focus);
 
-    /* The headings' font (font-display); the sans font unless a theme sets --ac-font-display. */
+    /* Corners: one radius for every step (round elements use rounded-full); a theme sets --ac-radius. */
+    --radius-sm: var(--ac-radius);
+    --radius-md: var(--ac-radius);
+    --radius-lg: var(--ac-radius);
+    --radius-xl: var(--ac-radius);
+    --radius-2xl: var(--ac-radius);
+    --radius-3xl: var(--ac-radius);
+
+    /* Fonts: text, code and numeric labels, the headings (the sans font unless a theme sets --ac-font-display), the logo. */
+    --font-sans: var(--ac-font-sans);
+    --font-mono: var(--ac-font-mono);
     --font-display: var(--ac-font-display);
+    --font-brand: var(--ac-font-brand);
+
+    /*
+     * brand-* for application code (bg-brand-600, text-brand-700, shadow-brand-900/10…), kept until
+     * 3.0: the primary text tone of the element's theme with the user's colour (--ac-p), in the
+     * shades the 1.x palette mixed from --color-brand-600. Components use the primary roles.
+     */
+    --color-brand-50: color-mix(in srgb, var(--ac-p) 6%, white);
+    --color-brand-100: color-mix(in srgb, var(--ac-p) 12%, white);
+    --color-brand-200: color-mix(in srgb, var(--ac-p) 24%, white);
+    --color-brand-300: color-mix(in srgb, var(--ac-p) 42%, white);
+    --color-brand-400: color-mix(in srgb, var(--ac-p) 66%, white);
+    --color-brand-500: color-mix(in srgb, var(--ac-p) 84%, white);
+    --color-brand-600: var(--ac-p);
+    --color-brand-700: color-mix(in srgb, var(--ac-p) 86%, black);
+    --color-brand-800: color-mix(in srgb, var(--ac-p) 70%, black);
+    --color-brand-900: color-mix(in srgb, var(--ac-p) 55%, black);
+    --color-brand-950: color-mix(in srgb, var(--ac-p) 38%, black);
 }

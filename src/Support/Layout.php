@@ -16,30 +16,16 @@ use InvalidArgumentException;
  *   // In a controller or a Livewire component's mount(), or at the top of a Blade page:
  *   Layout::page(['sidebar_mode' => 'collapsed', 'navbar_mode' => 'static']);
  *
- * The page values live in a scoped (per-request) container binding.
+ * The page values live in a scoped (per-request) container binding. 'mode' is light, dark or
+ * system; 'theme' is a theme's key (Appearance). A 1.x 'theme' of light, dark or system is
+ * read as the mode until 3.0.
  */
 final class Layout
 {
-    public const KEYS = ['theme', 'brand_color', 'skin', 'content_width', 'semi_dark', 'sidebar_mode', 'navbar_mode', 'customizer', 'theme_toggle'];
+    public const KEYS = ['mode', 'theme', 'brand_color', 'skin', 'content_width', 'semi_dark', 'sidebar_mode', 'navbar_mode', 'customizer', 'theme_toggle'];
 
-    /**
-     * Primary colour presets (the html data-brand-color value => fill colour), from the
-     * Acun UI palette: primary, success, danger, warning, info, secondary, dark. panel.css
-     * gives each one its button shades; see brandPresets() for the names.
-     *
-     * 'default' is no preset: the page keeps its stylesheet's own --color-brand-600, which a
-     * theme may change. Its value here is the kit's (panel.css @theme), for the server;
-     * acun:brand-color-picker paints that swatch with the page's colour.
-     */
-    public const BRAND_COLORS = [
-        'default' => '#794dff',
-        'green' => '#00ca4b',
-        'red' => '#fb4141',
-        'yellow' => '#fcaa1e',
-        'blue' => '#04b6d4',
-        'gray' => '#6b7280',
-        'dark' => '#3f404d',
-    ];
+    /** @deprecated The preset colours are Appearance::COLORS (kept until 3.0). */
+    public const BRAND_COLORS = Appearance::COLORS;
 
     /** @var array<string, mixed> */
     private array $page = [];
@@ -47,22 +33,13 @@ final class Layout
     /**
      * The presets with their names, for acun:brand-color-picker: key => [hex, name].
      *
+     * @deprecated Appearance::presets() (kept until 3.0).
+     *
      * @return array<string, array{0: string, 1: string}>
      */
     public static function brandPresets(): array
     {
-        $names = [
-            'default' => __('Default'), 'green' => __('Green'), 'red' => __('Red'), 'yellow' => __('Yellow'),
-            'blue' => __('Cyan'), 'gray' => __('Gray'), 'dark' => __('Dark'),
-        ];
-
-        $presets = [];
-
-        foreach (self::BRAND_COLORS as $key => $hex) {
-            $presets[$key] = [$hex, $names[$key]];
-        }
-
-        return $presets;
+        return Appearance::presets();
     }
 
     /**
@@ -76,6 +53,12 @@ final class Layout
 
         if ($unknown !== []) {
             throw new InvalidArgumentException('Unknown layout setting: '.implode(', ', $unknown).'. Allowed: '.implode(', ', self::KEYS).'.');
+        }
+
+        // 1.x: the theme was the mode.
+        if (Appearance::isMode($values['theme'] ?? null)) {
+            $values['mode'] ??= $values['theme'];
+            unset($values['theme']);
         }
 
         $state = app(self::class);
@@ -94,10 +77,19 @@ final class Layout
         return app(self::class)->page[$key] ?? null;
     }
 
-    /** The application's default from config/acun-ui.php, or null. */
+    /**
+     * The application's default from config/acun-ui.php, or null. A 1.x 'theme' of light, dark
+     * or system is the mode's default.
+     */
     public static function default(string $key): mixed
     {
-        return config('acun-ui.layout.'.$key);
+        $legacy = config('acun-ui.layout.theme');
+
+        return match ($key) {
+            'mode' => config('acun-ui.layout.mode') ?? (Appearance::isMode($legacy) ? $legacy : null),
+            'theme' => Appearance::isMode($legacy) ? null : $legacy,
+            default => config('acun-ui.layout.'.$key),
+        };
     }
 
     /**
@@ -108,7 +100,7 @@ final class Layout
      */
     public static function clientDefaults(): array
     {
-        return collect(['theme', 'brand_color', 'skin', 'content_width', 'semi_dark', 'sidebar_mode', 'navbar_mode'])
+        return collect(['mode', 'brand_color', 'skin', 'content_width', 'semi_dark', 'sidebar_mode', 'navbar_mode'])
             ->mapWithKeys(fn (string $key) => [$key => self::default($key)])
             ->all();
     }

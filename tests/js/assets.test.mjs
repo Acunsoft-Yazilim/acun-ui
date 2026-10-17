@@ -27,6 +27,8 @@ for (const { file } of BUILDS) {
     });
 }
 
+// 5.5 KB (was 5): since 2.0 it also gives the semi-dark menu and the navbar their saved choice as the parser adds
+// them (no flash of the server's value) and reads the choices of the page's scope.
 test('the boot script stays small: it blocks the first paint', () => {
-    assert.ok(fs.statSync(new URL('acun-ui-boot.js', dist)).size < 5 * 1024);
+    assert.ok(fs.statSync(new URL('acun-ui-boot.js', dist)).size < 5.5 * 1024);
 });

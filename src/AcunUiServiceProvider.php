@@ -3,6 +3,7 @@
 namespace Acun\Ui;
 
 use Acun\Ui\Support\AcunTagCompiler;
+use Acun\Ui\Support\Appearance;
 use Acun\Ui\Support\Assets;
 use Acun\Ui\Support\BladeComments;
 use Acun\Ui\Support\ComponentPaths;
@@ -23,6 +24,10 @@ final class AcunUiServiceProvider extends ServiceProvider
 
         // Per-page layout settings (Layout::page()); scoped, so they reset on every request (Octane too).
         $this->app->scoped(Layout::class);
+
+        // The theme pairs products define (Appearance::define()), for the life of the application;
+        // the theme and scope of one request (Appearance::use()) are request attributes.
+        $this->app->singletonIf(Appearance::class);
 
         // @acunUiScripts prints once per request.
         $this->app->scoped(Assets::class);

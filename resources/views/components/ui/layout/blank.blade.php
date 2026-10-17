@@ -1,7 +1,9 @@
 @props([
     'title' => null,
     // Preferences (see acun:layout.head).
+    'mode' => null,
     'theme' => null,
+    'scope' => null,
     'brandColor' => null,
     'defaultBrandColor' => null,
     // Spaces before the <head> lines in the page source (see acun:layout.head).
@@ -18,10 +20,15 @@
         </acun:layout.blank>
     Slots: head (extra <head> contents), (default) the page.
 --}}
+@php
+    $appearance = \Acun\Ui\Support\Appearance::page($mode, $theme);
+    // Without JS the page keeps this theme; the boot script sets the saved one before the first paint.
+    $documentTheme = \Acun\Ui\Support\Appearance::documentTheme($appearance);
+@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $documentTheme }}"@if ($documentTheme === $appearance['theme']['dark']) class="dark"@endif>
     <head>
-        <acun:layout.head :title="$title" :theme="$theme" :brand-color="$brandColor" :default-brand-color="$defaultBrandColor" :indent="$indent">
+        <acun:layout.head :title="$title" :mode="$appearance['mode']" :theme="$appearance['theme']['key']" :scope="$scope" :brand-color="$brandColor" :default-brand-color="$defaultBrandColor" :indent="$indent">
             {{ $head ?? '' }}
         </acun:layout.head>
     </head>

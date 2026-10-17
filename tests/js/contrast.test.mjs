@@ -6,8 +6,10 @@ import { brandShades } from '../../js/appearance/theme.js';
 import { chrome, inChrome, stylesheet } from './chrome.mjs';
 
 // Contrast as Chrome paints it (see chrome.mjs): the placeholders of the fields and of the command
-// palette, the counter on a button, the focus ring token and the primary colour presets in a theme
-// of another colour. Text needs 4.5:1, a focus frame 3:1 (WCAG AA).
+// palette, the counter on a button, the focus ring token and the user's colour in a theme of
+// another colour. The mode is data-theme on <html>; the semi-dark menu is data-theme="dark"; the
+// user's colour is the --ac-user-* variables js/appearance/theme.js writes on <html>.
+// Text needs 4.5:1, a focus frame 3:1 (WCAG AA).
 
 const skip = !chrome && 'Chrome is not installed (CHROME_PATH)';
 const root = fileURLToPath(new URL('../../../../', import.meta.url));
@@ -56,25 +58,31 @@ const measureText = `
         return result;
     };
     const light = measure();
+    root.dataset.theme = 'dark';
     root.classList.add('dark');
     const dark = measure();
+    root.dataset.theme = 'light';
     root.classList.remove('dark');
     // A custom primary colour with dark text (js/appearance/theme.js measures its shades).
-    root.dataset.brandColor = 'custom';
     Object.entries(window.customYellow).forEach(([name, value]) => root.style.setProperty(name, value));
     const yellow = textContrast(document.querySelector('[data-case="primary"] button > span.rounded-full'));
     return { light, dark, yellow };
 `;
 
-const yellow = brandShades('#ffd400');
-const customYellow = {
-    '--brand-custom-600': yellow.brand600, '--brand-custom-600-dark': yellow.brand600Dark, '--btn-primary-bg': '#ffd400', '--btn-primary-border': '#ffd400',
-    '--btn-primary-hover': yellow.hover, '--btn-primary-hover-border': yellow.hover, '--btn-primary-color': yellow.text, '--btn-primary-hover-color': yellow.hoverText,
+/** The variables applyColor writes on <html> for a colour (and its own dark fill). */
+const userVariables = (color, dark = null) => {
+    const shades = brandShades(color);
+    const own = dark ? brandShades(dark) : null;
+    return {
+        '--ac-user-fill': shades.fill, '--ac-user-fill-hover': shades.hover, '--ac-user-on-fill': shades.onFill, '--ac-user-tone': shades.tone, '--ac-user-tone-dark': shades.toneDark,
+        ...(own ? { '--ac-user-fill-dark': own.fill, '--ac-user-fill-hover-dark': own.hover, '--ac-user-on-fill-dark': own.onFill } : {}),
+    };
 };
+const customYellow = userVariables('#ffd400');
 
 test('placeholders, the command palette and button counters read 4.5:1 in both themes', { skip }, async () => {
     const css = await stylesheet(markup);
-    const { light, dark, yellow: onYellow } = inChrome({ css, body: `${page}<script>window.customYellow = ${JSON.stringify(customYellow)};</script>`, measure: measureText });
+    const { light, dark, yellow: onYellow } = inChrome({ css, body: `${page}<script>window.customYellow = ${JSON.stringify(customYellow)};</script>`, measure: measureText, htmlAttributes: 'data-theme="light"' });
 
     const failing = Object.entries({ ...Object.fromEntries(Object.entries(light).map(([k, v]) => [`light ${k}`, v])), ...Object.fromEntries(Object.entries(dark).map(([k, v]) => [`dark ${k}`, v])) })
         .filter(([what, value]) => (what.includes('fill alpha') ? value !== 0 : value < 4.5));
@@ -85,63 +93,71 @@ test('placeholders, the command palette and button counters read 4.5:1 in both t
 });
 
 /**
- * TEMA-9: the focus ring of the kit is one token, --ui-focus-ring; without it the ring is the
- * primary colour as before (the dark theme's in the semi-dark menu).
+ * TEMA-9: the focus ring of the kit is one token, --ac-focus: the primary text tone of the element's
+ * theme (the dark theme's in the semi-dark menu) unless a theme sets it in its block.
  */
-test('the focus ring is --ui-focus-ring, the primary colour unless a theme sets it', { skip }, async () => {
-    // The semi-dark menu: .panel-sidebar.dark in the light theme.
-    const body = `${page}<aside class="panel-sidebar dark bg-zinc-900"><span id="semi-dark">${menuButton}</span></aside>`;
+test('the focus ring is --ac-focus, the primary colour unless a theme sets it', { skip }, async () => {
+    // The semi-dark menu: data-theme="dark" in the light mode; the dark preset (its own dark fill).
+    const body = `${page}<aside data-theme="dark" class="panel-sidebar bg-surface"><span id="semi-dark">${menuButton}</span></aside>`;
     const css = await stylesheet(body);
-    const result = inChrome({ css, body, htmlAttributes: 'data-brand-color="dark"', measure: `
+    const style = Object.entries(userVariables('#3f404d', '#474747')).map(([name, value]) => `${name}: ${value}`).join('; ');
+    const result = inChrome({ css, body, htmlAttributes: `data-theme="light" style="${style}"`, measure: `
         const ring = (element) => { element.focus({ focusVisible: true }); return hex(getComputedStyle(element).outlineColor); };
         const buttons = [...document.querySelectorAll('[data-case="focus"] :is(button, a)')];
-        const brand = () => hex(getComputedStyle(document.documentElement).getPropertyValue('--color-brand-600'));
-        const preset = { buttons: buttons.map(ring), brand: brand(), semiDark: ring(document.querySelector('#semi-dark button')) };
-        document.documentElement.style.setProperty('--ui-focus-ring', 'rgb(0, 128, 0)');
+        const preset = { buttons: buttons.map(ring), semiDark: ring(document.querySelector('#semi-dark button')) };
+        // A theme's own focus colour, in its block (every themed element).
+        const theme = document.createElement('style');
+        theme.textContent = ':root, [data-theme] { --ac-focus: rgb(0, 128, 0); }';
+        document.head.append(theme);
         const themed = { buttons: buttons.map(ring), semiDark: ring(document.querySelector('#semi-dark button')) };
         return { preset, themed };
     ` });
 
-    // The dark preset: #3f404d on the page; the semi-dark menu takes the dark theme's grey (3:1 on zinc-900).
-    assert.deepEqual(result.preset.buttons, [result.preset.brand, result.preset.brand, result.preset.brand]);
-    assert.equal(result.preset.brand, '#3f404d');
-    assert.equal(result.preset.semiDark, '#71717b');
+    // The dark preset: #3f404d on the page; the semi-dark menu takes its dark tone (3:1 on the dark fields).
+    assert.deepEqual(result.preset.buttons, ['#3f404d', '#3f404d', '#3f404d']);
+    assert.equal(result.preset.semiDark, brandShades('#3f404d').toneDark);
     assert.deepEqual(result.themed, { buttons: ['#008000', '#008000', '#008000'], semiDark: '#008000' });
 });
 
 /**
  * T3-D10: in a theme with its own primary colour (teal, the theming guide's example) no preset
  * shows the kit's default purple: the dark preset is a neutral grey on the dark theme and in the
- * semi-dark menu; markup that names the custom colour before theme.js wrote its shades keeps teal.
+ * semi-dark menu; without the user's variables the page keeps teal.
  */
 test('the presets and the custom colour never show the default purple in a teal theme', { skip }, async () => {
-    const body = `<span id="page" class="text-brand-600">Sayfa</span><aside class="panel-sidebar dark bg-zinc-900"><span id="menu" class="text-brand-600">Menü</span></aside>`;
-    const css = await stylesheet(body, '@theme { --color-brand-600: #0f766e; }');
-    const result = inChrome({ css, body, measure: `
+    const body = `<span id="page" class="text-primary-ink">Sayfa</span><aside data-theme="dark" class="panel-sidebar bg-surface"><span id="menu" class="text-focus">Menü</span></aside>`;
+    const css = await stylesheet(body, ':root, [data-theme] { --ac-tone-primary: #0f766e; }');
+    const presets = { dark: userVariables('#3f404d', '#474747'), navy: userVariables('#1e3a8a') };
+    const result = inChrome({ css, body, htmlAttributes: 'data-theme="light"', measure: `
+        const presets = ${JSON.stringify(presets)};
         const root = document.documentElement;
         const colours = () => [hex(getComputedStyle(document.getElementById('page')).color), hex(getComputedStyle(document.getElementById('menu')).color)];
+        const use = (variables) => { root.removeAttribute('style'); Object.entries(variables ?? {}).forEach(([name, value]) => root.style.setProperty(name, value)); };
         const result = { theme: colours() };
-        root.dataset.brandColor = 'dark';
+        use(presets.dark);
         result.darkPreset = colours();
-        root.classList.add('dark');
+        root.dataset.theme = 'dark';
         result.darkPresetDarkTheme = colours();
-        root.classList.remove('dark');
-        root.dataset.brandColor = 'custom';
-        result.customWithoutShades = colours();
-        root.style.setProperty('--brand-custom-600', '#1e3a8a');
-        root.style.setProperty('--brand-custom-600-dark', '#5c6fa8');
+        root.dataset.theme = 'light';
+        use(null);
+        result.noColour = colours();
+        use(presets.navy);
         result.custom = colours();
-        root.classList.add('dark');
+        root.dataset.theme = 'dark';
         result.customDarkTheme = colours();
         return result;
     ` });
 
+    const darkTone = brandShades('#3f404d').toneDark;
+    const navyDark = brandShades('#1e3a8a').toneDark;
+    // The dark theme's text on a surface is 66% of the tone with white (--ac-primary-ink).
+    const ink = (tone) => `#${[1, 3, 5].map((i) => Math.round(Number.parseInt(tone.slice(i, i + 2), 16) * 0.66 + 255 * 0.34).toString(16).padStart(2, '0')).join('')}`;
     assert.deepEqual(result, {
         theme: ['#0f766e', '#0f766e'],
-        darkPreset: ['#3f404d', '#71717b'],
-        darkPresetDarkTheme: ['#71717b', '#71717b'],
-        customWithoutShades: ['#0f766e', '#0f766e'],
-        custom: ['#1e3a8a', '#5c6fa8'],
-        customDarkTheme: ['#5c6fa8', '#5c6fa8'],
+        darkPreset: ['#3f404d', darkTone],
+        darkPresetDarkTheme: [ink(darkTone), darkTone],
+        noColour: ['#0f766e', '#0f766e'],
+        custom: ['#1e3a8a', navyDark],
+        customDarkTheme: [ink(navyDark), navyDark],
     });
 });

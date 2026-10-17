@@ -7,7 +7,8 @@
 // - the dialog behaviours: page scroll lock, focus trap and restore, Escape, nested
 //   dialogs (behavior/), used by acun:drawer, acun:modal and acun:command-palette;
 // - the Alpine components acunDrawer and acunModal (acunPasskey is a chunk of its own), and on pages with
-//   acun:layout.head the theme and menu stores (appearance/);
+//   acun:layout.head the theme and menu stores (appearance/), and AcunUI.isDark(element) and
+//   AcunUI.tokenColor(element, '--ac-line') for code that draws in the theme's colours (charts);
 // - the loading of heavy components in chunks of their own, the first time their element
 //   (data-acun-component) is on the page (core/components.js; the PRO package defines its own);
 // - the Livewire fixes (select values, morphs after wire:navigate, lists kept in view,
@@ -31,6 +32,7 @@ import { reloadWhenLeavingForcedLayout } from './behavior/forced-layout.js';
 import { syncSelectValues } from './behavior/select-sync.js';
 import { skipDetachedMorphs } from './behavior/morph-guard.js';
 import { registerStores } from './appearance/stores.js';
+import { isDark, tokenColor } from './appearance/theme.js';
 import { drawer } from './components/drawer.js';
 import { modal } from './components/modal.js';
 
@@ -44,6 +46,9 @@ const api = {
     modal: commands('modal'),
     components,
     load: components.load,
+    // Whether an element is in a dark theme (its nearest data-theme ends in "dark"), and a token's colour on it as rgb().
+    isDark,
+    tokenColor,
 };
 
 function registerAlpine(Alpine) {
@@ -144,4 +149,6 @@ export {
     modal,
     syncSelectValues,
     skipDetachedMorphs,
+    isDark,
+    tokenColor,
 };

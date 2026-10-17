@@ -20,8 +20,8 @@ export function fallbackStores(config) {
         sidebar: { collapsed: start.sidebarCollapsed, hover: false, hoverSuppressed: false, openHover: noop, closeHover: noop, toggle: noop, set: noop, setCollapsed: noop },
         navbar: { mode: start.navbarMode, set: noop },
         customizer: { skin: start.skin, contentWidth: start.contentWidth, semiDark: start.semiDark, setSkin: noop, setContentWidth: noop, setSemiDark: noop, apply: noop, reset: noop },
-        brand: { color: start.brandColor, set: noop },
-        appearance: { value: start.theme, set: noop, toggle: noop, apply: noop },
+        brand: { color: start.brandColor, set: noop, forget: noop },
+        appearance: { value: start.mode, set: noop, toggle: noop, apply: noop },
     };
 }
 

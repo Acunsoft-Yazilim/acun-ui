@@ -1,10 +1,10 @@
 {{--
-    Light/dark theme button in the navbar: one click switches to dark, another
-    back to light (see toggle() of the appearance store in acun:layout.head - the
-    theme changes instantly and the preference is saved to the account). The icon
-    and screen reader text depend on the `dark:` variant, not on Alpine: the 'dark'
-    class on <html> is written before the page is painted, so the correct icon
-    shows even on the first frame.
+    Light/dark theme button in the navbar: one click switches to the dark mode, another
+    back to light (see toggle() of the appearance store in acun:layout.head - <html
+    data-theme> changes instantly and the choice is saved to the account). The icon
+    and screen reader text depend on the `dark:` variant, not on Alpine: data-theme and
+    the 'dark' class on <html> are written before the page is painted, so the correct
+    icon shows even on the first frame.
 --}}
 <button
     type="button"

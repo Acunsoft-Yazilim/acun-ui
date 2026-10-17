@@ -7,10 +7,13 @@ return [
     | auth, message). These are defaults: a choice the user made (saved in the
     | browser, or passed to the layout as a saved account preference) wins.
     | A single page can force its own values with Acun\Ui\Support\Layout::page().
-    | null keeps the package default shown in the comment.
+    | null keeps the package default shown in the comment. The choices are kept per
+    | scope, so two products on one site (a panel and a storefront) never share them.
     */
     'layout' => [
-        'theme' => null,          // light | dark | system (system)
+        'mode' => null,           // light | dark | system (system)
+        'theme' => null,          // a theme's key (default: the built-in light/dark pair); a 1.x light | dark | system here is read as the mode until 3.0
+        'scope' => null,          // the browser storage of the choices, localStorage 'acun-ui:{scope}' (app; the panel layouts use panel)
         'brand_color' => null,    // default | green | red | yellow | blue | gray | dark | #rrggbb (default)
         'skin' => null,           // default | bordered (default)
         'content_width' => null,  // full | boxed: at most 1440px, centred (full)

@@ -13,20 +13,24 @@
  * A named theme is a pair whose dark member's name ends in "dark" (atelier, atelier-dark). Its
  * file uses the same specificity, loads after this one and declares only what differs.
  *
- * The primary colour reads the user's colour first (--ac-user-*, written on <html> by the
- * runtime) and then the theme's own (--ac-tone-primary, optionally --ac-tone-primary-dark and
- * --ac-tone-on-primary).
+ * The runtime writes data-theme on <html>: the light or the dark member of the page's pair, by
+ * the mode (light, dark or system). A section names its own: the semi-dark menu is
+ * data-theme="dark", a light island in a dark page data-theme="light".
  *
- * Bridge: until the runtime writes data-theme, the dark theme is the .dark class on <html>
- * and on the semi-dark menu, and the primary colour, the focus ring, the backdrop, the corner
- * and the sans font come from the kit's current variables (the last block below). Both parts
- * go when the runtime moves to data-theme and the user variables.
+ * The primary colour reads the user's colour first and then the theme's own (--ac-tone-primary,
+ * optionally --ac-tone-primary-dark and --ac-tone-on-primary). The user's colour is measured once
+ * (js/appearance/theme.js brandShades, against the hardest text backgrounds of the enabled
+ * themes) and written on <html> as
+ *   --ac-user-fill, --ac-user-fill-hover, --ac-user-on-fill   the primary fill, its hover, its text
+ *   --ac-user-tone                                            the text tone on light backgrounds (4.5:1)
+ *   --ac-user-tone-dark                                       the text tone on dark backgrounds (3:1)
+ *   --ac-user-fill-dark, -fill-hover-dark, -on-fill-dark      a colour with its own dark fill
+ * Every themed element inherits them, so every block and every nested section reads them.
  */
 @layer base {
-    /* The light theme: the full set, on every themed element (.dark too while the bridge is on; the dark block overrides it there). */
+    /* The light theme: the full set, on every themed element (the dark block overrides it on a dark one). */
     :root,
-    [data-theme],
-    .dark {
+    [data-theme] {
         /* Tone inputs: the "500" shade of each colour (primary: its "600"). */
         --ac-tone-primary: #794dff;
         --ac-tone-secondary: #6b7280;
@@ -175,9 +179,8 @@
         --ac-shadow-xl: 0 0 0 1px transparent, 0 24px 70px 0 rgb(24 24 27 / 0.16), 0 4px 18px 0 rgb(24 24 27 / 0.08);
     }
 
-    /* The dark theme: every theme name that ends in "dark" (and .dark while the bridge is on). Black with neutral greys. */
-    [data-theme$='dark'],
-    .dark {
+    /* The dark theme: every theme name that ends in "dark". Black with neutral greys. */
+    [data-theme$='dark'] {
         --ac-page: #0a0a0a;
         --ac-surface: #141414;
         --ac-field: #1f1f1f;
@@ -267,8 +270,7 @@
 
     /* Bordered skin (<html data-skin="bordered">): every shadow is the 1px line; the page is the surface. */
     :root[data-skin='bordered'],
-    :root[data-skin='bordered'] [data-theme],
-    :root[data-skin='bordered'] .dark {
+    :root[data-skin='bordered'] [data-theme] {
         --ac-page: var(--ac-surface);
         --ac-shadow-xs: 0 0 0 1px var(--ac-line);
         --ac-shadow-sm: 0 0 0 1px var(--ac-line);
@@ -291,30 +293,5 @@
 
     :where(h1, h2, h3, h4, h5, h6) {
         color: var(--ac-ink);
-    }
-
-    /*
-     * Bridge: the kit's current runtime drives the tokens. The primary colour is
-     * --color-brand-600 (the presets, a custom colour and the semi-dark menu set it), its fill
-     * the runtime's --btn-primary-bg and --btn-primary-hover (presets in panel.css, a custom
-     * colour from theme.js, which also writes its measured text, --btn-primary-color); the focus
-     * ring and the fields' focus shadow keep --ui-focus-ring and --ui-focus-shadow(-error), which
-     * a theme may set; the backdrop, the corner and the sans font are the kit's current values.
-     * Read on every themed element, so the semi-dark menu takes its own.
-     */
-    :root,
-    [data-theme],
-    .dark {
-        --ac-tone-primary: var(--color-brand-600);
-        --ac-primary: var(--btn-primary-bg);
-        --ac-primary-hover: var(--btn-primary-hover);
-        --ac-on-primary: var(--btn-primary-color, #fff);
-        --ac-focus: var(--ui-focus-ring, var(--ac-p));
-        --ac-focus-shadow: var(--ui-focus-shadow, 0 0 #0000);
-        --ac-focus-shadow-danger: var(--ui-focus-shadow-error, 0 0 #0000);
-        --ac-backdrop: var(--ui-backdrop);
-        --ac-backdrop-blur: var(--ui-backdrop-blur);
-        --ac-radius: var(--radius-sm);
-        --ac-font-sans: var(--font-sans);
     }
 }
