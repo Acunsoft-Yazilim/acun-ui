@@ -11,7 +11,7 @@ use Acun\Ui\Tests\TestCase;
  */
 final class TranslationsTest extends TestCase
 {
-    private const PACKAGES = [__DIR__.'/../..', __DIR__.'/../../../acun-ui-pro'];
+    private const PACKAGES = [__DIR__.'/../..', __DIR__.'/../../../acun-pro'];
 
     private const CALL = "~(?:__|trans|trans_choice|@lang)\\(\\s*('(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\")~u";
 
@@ -47,7 +47,8 @@ final class TranslationsTest extends TestCase
             $translations = json_decode(file_get_contents("$package/lang/tr.json"), true, flags: JSON_THROW_ON_ERROR);
 
             foreach ($this->files($package, ['resources/views', 'src']) as $file) {
-                preg_match_all(self::CALL, file_get_contents($file), $calls);
+                // A key in a Blade comment (a usage example) is not used.
+                preg_match_all(self::CALL, (string) preg_replace('/\{\{--.*?--\}\}/s', '', file_get_contents($file)), $calls);
 
                 foreach ($calls[1] as $literal) {
                     $key = self::decode($literal);

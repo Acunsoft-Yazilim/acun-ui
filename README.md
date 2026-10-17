@@ -5,7 +5,7 @@ The free edition of **Acun UI**, one package on Composer (`acunsoft/acun-ui`) an
 - **Blade and Livewire components** for Laravel (`<acun:*>`, `src/`, `resources/views`), auto-discovered through `Acun\Ui\AcunUiServiceProvider`.
 - **The CSS and JavaScript core**: a Tailwind CSS v4 theme layer (`css/panel.css`) and the Alpine.js runtime (`js/`). It is framework-agnostic; the Acun UI HTML pages use the same classes and scripts.
 
-**Acun UI PRO** (`acunsoft/acun-ui-pro`, Composer, paid) adds advanced components, guarded form modals, a Livewire list page generator, charts and maps on top of this package. Its JS and CSS ship inside that package, not on npm.
+**Acun Pro** (`acunsoft/acun-pro`, Composer, paid) adds advanced components, guarded form modals, a Livewire list page generator, charts, maps and e-commerce (storefront pages and the Nova, Vivid and Atelier themes) on top of this package. Its JS and CSS ship inside that package (npm `@acunsoft/acun-pro` from `vendor/`), not on npm.
 
 ## Requirements
 
@@ -70,7 +70,7 @@ Without Vite, `@acunUiScripts` loads a browser build of the same code (`dist/`).
 
 The API: `AcunUI.modal.open(name)` / `close(name?)`, `AcunUI.drawer.open(name)` / `close(name?)` / `toggle(name)`, `AcunUI.scrollLock.lock()` / `unlock()`, and `AcunUI.overlays.open(element, { close, trap })` / `close(element)` for a dialog of your own (scroll lock, Escape, Tab trap and focus restore together). The same commands as events on `window`, with `{ name }`: `acun:modal:open`, `acun:modal:close`, `acun:drawer:open`, `acun:drawer:close`, `acun:drawer:toggle` (close without a name closes every open one). Notifications: `acun:modal:opened`, `acun:modal:closed`, `acun:drawer:opened`, `acun:drawer:closed`. The first names (`open-modal`, `close-drawer`, `drawer-state-changed`, `modal-closed`…) and `window.acunScrollLock` (with a console warning) still work.
 
-The JS of the PRO components (charts, maps, date ranges, the unsaved-changes guard, the form modal) and the form modal and dialog styles come with `acunsoft/acun-ui-pro`; see its README.
+The JS of the PRO components (charts, maps, date ranges, the unsaved-changes guard, the form modal) and the form modal and dialog styles come with `acunsoft/acun-pro`; see its README.
 
 ## Exports
 
@@ -84,7 +84,7 @@ The JS of the PRO components (charts, maps, date ranges, the unsaved-changes gua
 
 ## Türkçe
 
-Acun UI'nin ücretsiz sürümü: Laravel için Blade ve Livewire bileşenleri, CSS ve JavaScript çekirdeği tek pakette (Composer `acunsoft/acun-ui`, npm `@acunsoft/acun-ui`). Ücretli `acunsoft/acun-ui-pro` ve HTML sürümü bu paketi kullanır. Kurulum yukarıdaki adımlarla aynıdır; Türkçe doküman ürün sitesindedir.
+Acun UI'nin ücretsiz sürümü: Laravel için Blade ve Livewire bileşenleri, CSS ve JavaScript çekirdeği tek pakette (Composer `acunsoft/acun-ui`, npm `@acunsoft/acun-ui`). Ücretli `acunsoft/acun-pro` ve HTML sürümü bu paketi kullanır. Kurulum yukarıdaki adımlarla aynıdır; Türkçe doküman ürün sitesindedir.
 
 ## License
 

@@ -16,7 +16,7 @@ final class AcunUiServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Layout defaults and the asset settings (free and PRO) under config('acun-ui').
+        // Layout defaults and the asset settings under config('acun-ui').
         $this->mergeConfigFrom(__DIR__.'/../config/acun-ui.php', 'acun-ui');
 
         // Per-page layout settings (Layout::page()); scoped, so they reset on every request (Octane too).
@@ -57,7 +57,7 @@ final class AcunUiServiceProvider extends ServiceProvider
 
         // The CSS and the JS runtime are this package's css/ and js/ (npm: @acunsoft/acun-ui). The JS
         // browser builds (dist/) are served from here: the boot script acun:layout.head loads, and the runtime for
-        // applications without Vite (@acunUiScripts; the PRO package adds its own JS to it).
+        // applications without Vite (@acunUiScripts; acunsoft/acun-pro adds its own JS to it).
         $this->loadRoutesFrom(__DIR__.'/../routes/assets.php');
         Blade::directive('acunUiScripts', fn (string $expression): string => '<?php echo app(\\'.Assets::class.'::class)->scripts('.$expression.'); ?>');
         $this->publishes([
@@ -75,7 +75,7 @@ final class AcunUiServiceProvider extends ServiceProvider
         // Laravel's @fonts with the built fonts CSS as a cached file instead of an inline style block.
         Blade::directive('acunFonts', fn (string $expression): string => '<?php echo \\'.Fonts::class.'::tags('.$expression.'); ?>');
 
-        // The PRO components (acunsoft/acun-ui-pro) add their own folder to the same acun namespace.
+        // The paid components (acunsoft/acun-pro: PRO and shop) add their own folders to the same acun namespace.
 
         // Once every provider (the application's too) has registered its views and components.
         $this->app->booted(fn () => self::warnAboutNamespaceTakeovers());
@@ -89,8 +89,8 @@ final class AcunUiServiceProvider extends ServiceProvider
      * Blade::componentNamespace(…, 'acun') or Blade::component('acun::…', …) by the application or
      * another package would silently replace kit components. Such a registration is logged as a
      * warning. To change a kit component, publish its views (acun-ui-views); give your own
-     * components another prefix. Blade::anonymousComponentPath(…, 'acun') is how the kit's packages
-     * (PRO, e-commerce) join the namespace; a folder added after them only adds new names.
+     * components another prefix. Blade::anonymousComponentPath(…, 'acun') is how the paid package
+     * (acunsoft/acun-pro) joins the namespace; a folder added after them only adds new names.
      */
     public static function warnAboutNamespaceTakeovers(): void
     {

@@ -188,7 +188,7 @@ final class PageSourceTest extends TestCase
         $tag = '~<(?:acun:|x-)[\w.:-]+(?:\s+(?:[^\s"\'>=]+(?:=(?:"[^"]*"|\'[^\']*\'|[^\s>]+))?))*\s*/?>~s';
         $found = [];
 
-        foreach ([__DIR__.'/../../resources/views', __DIR__.'/../../../acun-ui-pro/resources/views'] as $root) {
+        foreach ([__DIR__.'/../../resources/views', __DIR__.'/../../../acun-pro/resources/views', __DIR__.'/../../../acun-pro/themes'] as $root) {
             foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)) as $file) {
                 $source = file_get_contents($file->getPathname());
                 preg_match_all($tag, $source, $tags);

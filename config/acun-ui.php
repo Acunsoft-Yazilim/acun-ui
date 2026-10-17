@@ -36,19 +36,7 @@ return [
         'url' => null,
     ],
 
-    // PRO JS without Vite: @acunUiScripts (acunsoft/acun-ui-pro).
-    'pro' => [
-        'assets' => [
-            // true: the package serves dist/acun-ui-pro.js at /{prefix}/acun-ui-pro.js for @acunUiScripts without Vite.
-            // Off by default (with Vite the paid bundle would be public at a known address); or publish it / set url.
-            'route' => false,
-            // The route's path prefix (no middleware, cached for a year). After
-            // php artisan vendor:publish --tag=acun-ui-pro-assets the copy in
-            // public/vendor/acun-ui-pro is loaded instead.
-            'prefix' => 'acun-ui',
-            // A full URL of the file (a CDN); wins over both.
-            'url' => null,
-        ],
-    ],
+    // The PRO JS without Vite (acunsoft/acun-pro) is set in config/acun-pro.php (panel.assets);
+    // a 1.x 'pro' => ['assets' => […]] block here is still read until 3.0.
 
 ];

@@ -29,8 +29,8 @@
         {{ $slot }}
 
         <acun:toast-container />
-        {{-- PRO (acunsoft/acun-ui-pro) adds the unsaved-changes dialog here; skipped without it. --}}
-        @includeIf('acun-ui-pro::layout-extras')
+        {{-- Acun Pro (acunsoft/acun-pro) adds the unsaved-changes dialog here; skipped without it. --}}
+        @includeIf('acun-pro::layout-extras')
 
         @livewireScripts
         {{-- Code for this page only: @push('page-scripts') in the page. --}}

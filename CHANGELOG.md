@@ -7,6 +7,7 @@ Details, with who is affected and how to fix each change: https://ui.acunsoft.co
 ### Breaking changes
 
 - One free package: `acunsoft/acun-ui-core` (the CSS and JS) and `acunsoft/acun-ui-free` (the Blade and Livewire components) are now `acunsoft/acun-ui` on Composer and `@acunsoft/acun-ui` on npm. The PHP namespace (`Acun\Ui\`), the service provider, the `acun-ui` view namespace, the `<acun:*>` tags, the config file and the publish tags are unchanged. Apps change their `composer.json`, the npm dependency (`"@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui"`), and the `@acunsoft/acun-ui-core` imports and `vendor/acunsoft/acun-ui-free` paths in their CSS, JS and Vite config.
+- The `pro` block of `config/acun-ui.php` moved to `config/acun-pro.php` (`panel.assets`) in the paid `acunsoft/acun-pro`, which still reads a 1.x block until 3.0. The layouts include `acun-pro::layout-extras` (was `acun-ui-pro::layout-extras`).
 
 ## 1.1.0
 
