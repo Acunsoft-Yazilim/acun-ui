@@ -64,17 +64,6 @@ final class NewComponentsTest extends TestCase
         self::assertStringContainsString('<img src="/logo.svg"', Blade::render('<acun:logo src="/logo.svg" class="h-8" />'));
     }
 
-    public function test_filter_context_lists_the_filters_with_their_remove_and_clear_actions(): void
-    {
-        $html = Blade::render('<acun:filter-context :filters="[\'durum\' => \'Durum: Kargoda\', \'tarih\' => \'Ekim 2026\']" remove="filtreyiKaldir" clear="filtreleriTemizle" :count="1250" />');
-
-        self::assertStringContainsString('1.250 sonuç', $html);
-        self::assertStringContainsString('wire:click="filtreyiKaldir(\'durum\')"', $html);
-        self::assertStringContainsString('aria-label="Filtreyi kaldır: Durum: Kargoda"', $html);
-        self::assertStringContainsString('wire:click="filtreleriTemizle"', $html);
-        self::assertSame('', trim(Blade::render('<acun:filter-context />')), 'Nothing without filters.');
-    }
-
     public function test_two_factor_qr_and_recovery_codes(): void
     {
         $qr = Blade::render('<acun:two-factor-qr secret="JBSWY3DPEHPK3PXP"><svg viewBox="0 0 10 10"></svg></acun:two-factor-qr>');

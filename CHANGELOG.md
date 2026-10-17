@@ -8,6 +8,12 @@ Details, with who is affected and how to fix each change: https://ui.acunsoft.co
 
 - One free package: `acunsoft/acun-ui-core` (the CSS and JS) and `acunsoft/acun-ui-free` (the Blade and Livewire components) are now `acunsoft/acun-ui` on Composer and `@acunsoft/acun-ui` on npm. The PHP namespace (`Acun\Ui\`), the service provider, the `acun-ui` view namespace, the `<acun:*>` tags, the config file and the publish tags are unchanged. Apps change their `composer.json`, the npm dependency (`"@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui"`), and the `@acunsoft/acun-ui-core` imports and `vendor/acunsoft/acun-ui-free` paths in their CSS, JS and Vite config.
 - The `pro` block of `config/acun-ui.php` moved to `config/acun-pro.php` (`panel.assets`) in the paid `acunsoft/acun-pro`, which still reads a 1.x block until 3.0. The layouts include `acun-pro::layout-extras` (was `acun-ui-pro::layout-extras`).
+- The panel shell moved to the paid `acunsoft/acun-pro`: the layouts `acun:layout.sidebar`, `horizontal`, `auth`, `message` and `print`, `acun:menu` with `Acun\Ui\Menu\Menu` (now `Acun\Panel\Menu`; the old name is an alias there until 3.0), `acun:nav.*`, `acun:user-menu`, `acun:filter-button`, `acun:filter-context`, `acun:auth-panel` and `acun:message-panel`, with their CSS (the content area and docked filter panel, the sticky top bar, the side menu) and their translations. This package keeps `acun:layout.head` and `acun:layout.blank`. An application with only this package that uses them adds `acunsoft/acun-pro`; with both packages nothing changes. Without it a paid tag stops with "… is an Acun Pro component (acunsoft/acun-pro) …".
+
+### New
+
+- `acun:avatar`, `acun:avatar-group`, `acun:kbd`, `acun:skeleton`, `acun:switch`, `acun:empty-state` and `acun:copy-button` are free (they were PRO), with their translations.
+- `Acun\Ui\AcunUi::addComponentPath($path, published: false)` adds a component folder to the `acun` prefix. Published copies (`resources/views/vendor/acun-ui/components/ui`, and Acun Pro's `vendor/acun-pro` and 1.x `vendor/acun-ui-pro`) are searched before both packages, whatever order Composer lists the providers in, so a copy keeps replacing its component after the component moved between the packages.
 
 ## 1.1.0
 

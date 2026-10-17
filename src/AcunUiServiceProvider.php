@@ -5,8 +5,10 @@ namespace Acun\Ui;
 use Acun\Ui\Support\AcunTagCompiler;
 use Acun\Ui\Support\Assets;
 use Acun\Ui\Support\BladeComments;
+use Acun\Ui\Support\ComponentPaths;
 use Acun\Ui\Support\Fonts;
 use Acun\Ui\Support\Layout;
+use Acun\Ui\Support\PaidComponents;
 use Illuminate\Foundation\Vite;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +26,9 @@ final class AcunUiServiceProvider extends ServiceProvider
 
         // @acunUiScripts prints once per request.
         $this->app->scoped(Assets::class);
+
+        // The component folders of the acun prefix (AcunUi::addComponentPath()), published copies first.
+        $this->app->singletonIf(ComponentPaths::class);
     }
 
     public function boot(): void
@@ -33,19 +38,23 @@ final class AcunUiServiceProvider extends ServiceProvider
         $this->loadJsonTranslationsFrom(__DIR__.'/../lang');
         // The kit's own component namespace: <acun:button> is <x-acun::button>, so a component of the
         // application (resources/views/components/ui/button.blade.php) never replaces a kit component.
-        // Views copied with vendor:publish (resources/views/vendor/acun-ui/components/ui) come first.
-        // "acun" is reserved for the kit: see warnAboutNamespaceTakeovers().
-        $published = resource_path('views/vendor/acun-ui/components/ui');
-        if (is_dir($published)) {
-            Blade::anonymousComponentPath($published, 'acun');
-        }
-        Blade::anonymousComponentPath(__DIR__.'/../resources/views/components/ui', 'acun');
+        // Views copied with vendor:publish (resources/views/vendor/acun-ui/components/ui) come first,
+        // before acunsoft/acun-pro's folders too: AcunUi::addComponentPath() keeps every published copy
+        // ahead of every package. "acun" is reserved for the kit: see warnAboutNamespaceTakeovers().
+        AcunUi::addComponentPath(resource_path('views/vendor/acun-ui/components/ui'), published: true);
+        AcunUi::addComponentPath(__DIR__.'/../resources/views/components/ui');
         // The older <x-ui.*> names keep working; there an application component with the same name wins
         // (resources/views/components/ui/*), by design: only the acun namespace is the kit's alone.
         Blade::anonymousComponentPath(__DIR__.'/../resources/views/components');
         // The short tags: <acun:button> is <x-acun::button>, rewritten before Blade compiles the template;
         // lines holding only a Blade comment go too, so they leave no blank lines in the page source.
-        Blade::prepareStringsForCompilationUsing(fn (string $template) => BladeComments::strip(AcunTagCompiler::compile($template)));
+        // A tag of acunsoft/acun-pro (the panel layouts, the menu, the PRO components) stops with an
+        // error that names the package when the application does not have it.
+        Blade::prepareStringsForCompilationUsing(function (string $template): string {
+            PaidComponents::ensureInstalled(AcunTagCompiler::names($template));
+
+            return BladeComments::strip(AcunTagCompiler::compile($template));
+        });
 
         $this->publishes([
             __DIR__.'/../config/acun-ui.php' => config_path('acun-ui.php'),
@@ -75,7 +84,8 @@ final class AcunUiServiceProvider extends ServiceProvider
         // Laravel's @fonts with the built fonts CSS as a cached file instead of an inline style block.
         Blade::directive('acunFonts', fn (string $expression): string => '<?php echo \\'.Fonts::class.'::tags('.$expression.'); ?>');
 
-        // The paid components (acunsoft/acun-pro: PRO and shop) add their own folders to the same acun namespace.
+        // The paid components (acunsoft/acun-pro: the panel, PRO and shop) add their own folders to the
+        // same acun namespace with AcunUi::addComponentPath().
 
         // Once every provider (the application's too) has registered its views and components.
         $this->app->booted(fn () => self::warnAboutNamespaceTakeovers());
@@ -89,8 +99,9 @@ final class AcunUiServiceProvider extends ServiceProvider
      * Blade::componentNamespace(…, 'acun') or Blade::component('acun::…', …) by the application or
      * another package would silently replace kit components. Such a registration is logged as a
      * warning. To change a kit component, publish its views (acun-ui-views); give your own
-     * components another prefix. Blade::anonymousComponentPath(…, 'acun') is how the paid package
-     * (acunsoft/acun-pro) joins the namespace; a folder added after them only adds new names.
+     * components another prefix. AcunUi::addComponentPath() is how the paid package
+     * (acunsoft/acun-pro) joins the namespace; a folder added with Blade::anonymousComponentPath(…, 'acun')
+     * comes after the kit's and only adds new names.
      */
     public static function warnAboutNamespaceTakeovers(): void
     {

@@ -208,14 +208,13 @@ final class ComponentBehaviourTest extends TestCase
     public function test_layout_preferences_passed_by_the_server_win_over_the_browser(): void
     {
         // The runtime starts from these and falls back to the browser only for null (tests/js/appearance.test.mjs).
-        $saved = $this->runtimeConfig(Blade::render('<x-ui.layout.sidebar navbar-mode="static" :semi-dark="false">x</x-ui.layout.sidebar>'));
+        $saved = $this->runtimeConfig(Blade::render('<x-ui.layout.head navbar-mode="static" :semi-dark="false" />'));
         self::assertSame('static', $saved['navbarMode']);
         self::assertFalse($saved['semiDark']);
 
-        $unsaved = Blade::render('<x-ui.layout.sidebar>x</x-ui.layout.sidebar>');
+        $unsaved = Blade::render('<x-ui.layout.head />');
         self::assertNull($this->runtimeConfig($unsaved)['navbarMode']);
         self::assertNull($this->runtimeConfig($unsaved)['semiDark']);
-        self::assertStringContainsString('data-navbar="fixed"', $unsaved);
     }
 
     /** @return array<string, array{0: string}> */
@@ -336,32 +335,6 @@ final class ComponentBehaviourTest extends TestCase
         self::assertStringContainsString($class, Blade::render($blade));
     }
 
-    /**
-     * @return array<string, array{0: string}>
-     */
-    public static function menuComponents(): array
-    {
-        return [
-            'item' => ['<x-ui.nav.item href="/a" title="A" %s />'],
-            'sub-item' => ['<x-ui.nav.sub-item href="/a" title="A" %s />'],
-            'horizontal-item' => ['<x-ui.nav.horizontal-item href="/a" title="A" %s />'],
-            'coming-soon' => ['<x-ui.nav.coming-soon title="A" %s />'],
-            'group' => ['<x-ui.nav.group title="A" %s>x</x-ui.nav.group>'],
-            'sub-group' => ['<x-ui.nav.sub-group title="A" %s>x</x-ui.nav.sub-group>'],
-            'horizontal-group' => ['<x-ui.nav.horizontal-group title="A" %s>x</x-ui.nav.horizontal-group>'],
-        ];
-    }
-
-    #[DataProvider('menuComponents')]
-    public function test_menu_components_keep_extra_attributes(string $blade): void
-    {
-        $html = Blade::render(sprintf($blade, 'class="extra-class" data-menu="reports" wire:key="m-1"'));
-
-        self::assertStringContainsString('extra-class', $html);
-        self::assertStringContainsString('data-menu="reports"', $html);
-        self::assertStringContainsString('wire:key="m-1"', $html);
-    }
-
     public function test_info_is_sky_in_every_component_and_brand_badges_remain(): void
     {
         self::assertStringContainsString('bg-sky-50 text-sky-800', Blade::render('<x-ui.alert>Bilgi</x-ui.alert>'));
@@ -393,10 +366,6 @@ final class ComponentBehaviourTest extends TestCase
     {
         return [
             'button' => ['<x-ui.button href="https://docs.example.test" external>Doküman</x-ui.button>'],
-            'nav item' => ['<x-ui.nav.item href="https://docs.example.test" title="Doküman" external />'],
-            'nav item with target' => ['<x-ui.nav.item href="https://docs.example.test" title="Doküman" target="_blank" />'],
-            'horizontal item' => ['<x-ui.nav.horizontal-item href="https://docs.example.test" title="Doküman" external />'],
-            'sub item' => ['<x-ui.nav.sub-item href="https://docs.example.test" title="Doküman" external />'],
             'dropdown item' => ['<x-ui.dropdown-item href="https://docs.example.test" external>Doküman</x-ui.dropdown-item>'],
         ];
     }

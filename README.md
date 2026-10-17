@@ -2,10 +2,12 @@
 
 The free edition of **Acun UI**, one package on Composer (`acunsoft/acun-ui`) and npm (`@acunsoft/acun-ui`):
 
-- **Blade and Livewire components** for Laravel (`<acun:*>`, `src/`, `resources/views`), auto-discovered through `Acun\Ui\AcunUiServiceProvider`.
+- **Blade and Livewire components** for Laravel (`<acun:*>`, `src/`, `resources/views`), auto-discovered through `Acun\Ui\AcunUiServiceProvider`: buttons, cards, alerts, badges, form fields, tables and list parts, modals, drawers, dropdowns, tabs, the command palette, toasts, avatars, keyboard keys, skeletons, switches, empty states, copy buttons and more, the light/dark theme switcher, and the document layouts `acun:layout.head` and `acun:layout.blank`.
 - **The CSS and JavaScript core**: a Tailwind CSS v4 theme layer (`css/panel.css`) and the Alpine.js runtime (`js/`). It is framework-agnostic; the Acun UI HTML pages use the same classes and scripts.
 
-**Acun Pro** (`acunsoft/acun-pro`, Composer, paid) adds advanced components, guarded form modals, a Livewire list page generator, charts, maps and e-commerce (storefront pages and the Nova, Vivid and Atelier themes) on top of this package. Its JS and CSS ship inside that package (npm `@acunsoft/acun-pro` from `vendor/`), not on npm.
+**Acun Pro** (`acunsoft/acun-pro`, Composer, paid) adds the panel (the sidebar, horizontal, auth, message and print layouts, the JSON menu, the user menu and the list filters), advanced components, guarded form modals, a Livewire list page generator, charts, maps and e-commerce (storefront pages and the Nova, Vivid and Atelier themes) on top of this package. Its JS and CSS ship inside that package (npm `@acunsoft/acun-pro` from `vendor/`), not on npm. Without it, a tag of Acun Pro (`<acun:layout.sidebar>`, `<acun:menu>`, `<acun:combobox>`…) stops with an error that says so.
+
+A package of components can join the `acun` tag prefix with `Acun\Ui\AcunUi::addComponentPath($path)`; folders added with `published: true` (vendor:publish copies) are searched before every package folder.
 
 ## Requirements
 
@@ -63,7 +65,7 @@ import '@acunsoft/acun-ui';
 This is the Acun UI runtime; panel pages need it. It sets up one global, `window.AcunUI`, and installs once per page:
 
 - the dialog behaviour of drawers, modals and the command palette: a counted page scroll lock, Escape and Tab for the newest dialog only, focus restore;
-- the Alpine components `acunDrawer` and `acunModal`, and on pages with `acun:layout.head` the theme and menu stores;
+- the Alpine components `acunDrawer` and `acunModal`, and on pages with `acun:layout.head` the theme and menu stores (the menu stores drive Acun Pro's panel layouts);
 - the Livewire fixes: `<select>` values after morphs, no morphs into detached components, lists kept in view, a full page load when leaving a page that forces its layout.
 
 Without Vite, `@acunUiScripts` loads a browser build of the same code (`dist/`). The theme itself is applied before the first paint by a small blocking script that `acun:layout.head` loads (`js/boot.js`).
@@ -84,7 +86,7 @@ The JS of the PRO components (charts, maps, date ranges, the unsaved-changes gua
 
 ## Türkçe
 
-Acun UI'nin ücretsiz sürümü: Laravel için Blade ve Livewire bileşenleri, CSS ve JavaScript çekirdeği tek pakette (Composer `acunsoft/acun-ui`, npm `@acunsoft/acun-ui`). Ücretli `acunsoft/acun-pro` ve HTML sürümü bu paketi kullanır. Kurulum yukarıdaki adımlarla aynıdır; Türkçe doküman ürün sitesindedir.
+Acun UI'nin ücretsiz sürümü: Laravel için Blade ve Livewire bileşenleri, `acun:layout.head` ve `acun:layout.blank` belge düzenleri, CSS ve JavaScript çekirdeği tek pakette (Composer `acunsoft/acun-ui`, npm `@acunsoft/acun-ui`). Panel düzenleri, JSON menü ve PRO bileşenler ücretli `acunsoft/acun-pro` paketindedir; o paket ve HTML sürümü bu paketi kullanır. Kurulum yukarıdaki adımlarla aynıdır; Türkçe doküman ürün sitesindedir.
 
 ## License
 

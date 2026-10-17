@@ -5,7 +5,7 @@ namespace Acun\Ui\Tests\Feature;
 use Acun\Ui\Tests\TestCase;
 use Illuminate\Support\Facades\Blade;
 
-/** Smaller accessibility promises: heading levels, the confirmation alertdialog, the skip link. */
+/** Smaller accessibility promises: heading levels, the confirmation alertdialog. */
 final class AccessibilityTest extends TestCase
 {
     public function test_cards_and_accordions_take_a_heading_level(): void
@@ -31,16 +31,5 @@ final class AccessibilityTest extends TestCase
 
         // A plain modal stays a dialog.
         self::assertStringContainsString('role="dialog"', Blade::render('<acun:modal name="m" title="Başlık">İçerik</acun:modal>'));
-    }
-
-    public function test_the_panel_layouts_start_with_a_skip_link_to_the_content(): void
-    {
-        foreach (['<acun:layout.sidebar brand-name="Panel">İçerik</acun:layout.sidebar>', '<acun:layout.horizontal brand-name="Panel">İçerik</acun:layout.horizontal>'] as $layout) {
-            $html = Blade::render($layout);
-
-            self::assertMatchesRegularExpression('/<body[^>]*>\s*(?:<!--.*?-->\s*)*<a href="#main-content" class="sr-only focus:not-sr-only/s', $html);
-            self::assertStringContainsString('İçeriğe geç', $html);
-            self::assertMatchesRegularExpression('/<main id="main-content" tabindex="-1"/', $html);
-        }
     }
 }

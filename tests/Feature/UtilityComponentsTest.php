@@ -11,7 +11,7 @@ use Illuminate\Support\ViewErrorBag;
 
 /**
  * The contract of the small utility components: x-ui.scroll-area,
- * x-ui.copy-button and x-ui.kbd.
+ * x-ui.copy-button, x-ui.kbd and x-ui.avatar.
  */
 final class UtilityComponentsTest extends TestCase
 {
@@ -74,4 +74,99 @@ final class UtilityComponentsTest extends TestCase
         self::assertStringContainsString('horizontal: true,', $shadowed);
     }
 
+    public function test_copy_button_reads_its_text_or_target_from_the_button(): void
+    {
+        $text = Blade::render('<x-ui.copy-button text="BŞV-2026-004817" />');
+        $target = Blade::render('<x-ui.copy-button target="#adres" />');
+
+        self::assertStringContainsString('data-copy-text="BŞV-2026-004817"', $text);
+        self::assertStringNotContainsString('data-copy-target', $text);
+        self::assertStringContainsString('data-copy-target="#adres"', $target);
+        self::assertStringNotContainsString('data-copy-text', $target);
+        self::assertStringContainsString('x-on:click="copy($el.querySelector(\'button\'))"', $target);
+    }
+
+    public function test_copy_button_announces_the_result_politely(): void
+    {
+        $html = self::decodeUnicodeEscapes(Blade::render('<x-ui.copy-button text="a" />'));
+
+        self::assertMatchesRegularExpression('/<span class="sr-only" aria-live="polite" x-text="[^"]*Kopyalandı[^"]*Kopyalanamadı[^"]*"><\/span>/', $html);
+        self::assertStringContainsString('<span x-show="copyState === \'idle\'">Kopyala</span>', $html);
+        self::assertStringContainsString('<span x-show="copyState === \'copied\'" x-cloak>Kopyalandı</span>', $html);
+        self::assertStringContainsString('navigator.clipboard.writeText(text)', $html);
+        self::assertStringContainsString("document.execCommand('copy')", $html);
+    }
+
+    public function test_copy_button_labels_are_translatable(): void
+    {
+        // English is the keys themselves; an application's lang/en.json can still reword them.
+        Lang::addLines(['*.Could not copy' => 'Copy failed'], 'en');
+        App::setLocale('en');
+
+        $html = Blade::render('<x-ui.copy-button text="a" />');
+
+        self::assertStringContainsString('>Copy</span>', $html);
+        self::assertStringContainsString('>Copied</span>', $html);
+        self::assertStringContainsString('>Copy failed</span>', $html);
+        self::assertStringNotContainsString('Kopyala', $html);
+    }
+
+    public function test_copy_button_passes_attributes_and_props_to_the_button(): void
+    {
+        $html = Blade::render('<x-ui.copy-button text="a" variant="ghost" size="sm" class="w-full" disabled x-on:click="sayac++" wire:click="kaydet" />');
+
+        self::assertMatchesRegularExpression('/<button type="button" disabled\s+class="[^"]*px-2\.5 py-\[5px\] text-xs[^"]*text-gray-600 hover:not-disabled:text-gray-900[^"]* w-full"/', $html);
+        self::assertStringContainsString('x-on:click="sayac++"', $html);
+        self::assertStringContainsString('wire:click="kaydet"', $html);
+    }
+
+    public function test_icon_only_copy_button_is_named_by_its_label(): void
+    {
+        $html = Blade::render('<x-ui.copy-button target="#link" size="icon" label="Bağlantıyı kopyala" />');
+
+        self::assertStringContainsString('aria-label="Bağlantıyı kopyala" title="Bağlantıyı kopyala"', $html);
+        self::assertStringNotContainsString('<span x-show', $html);
+        self::assertStringContainsString('aria-live="polite"', $html);
+        self::assertStringNotContainsString('aria-label=', Blade::render('<x-ui.copy-button text="a" />'));
+    }
+
+    public function test_kbd_renders_a_single_key_from_the_slot(): void
+    {
+        $html = Blade::render('<x-ui.kbd class="ms-1">Esc</x-ui.kbd>');
+
+        self::assertMatchesRegularExpression('/^<kbd class="[^"]*rounded-sm border border-gray-200[^"]*dark:bg-zinc-800[^"]* ms-1">Esc<\/kbd>$/', trim($html));
+    }
+
+    public function test_kbd_combination_nests_one_kbd_per_key(): void
+    {
+        $html = Blade::render('<x-ui.kbd :keys="[\'Ctrl\', \'Shift\', \'P\']" data-test="kisayol" />');
+
+        self::assertMatchesRegularExpression('/^<kbd class="inline-flex items-center gap-1 font-sans" data-test="kisayol">/', trim($html));
+        self::assertSame(4, substr_count($html, '<kbd'));
+        self::assertSame(2, substr_count($html, '>+</span>'));
+        self::assertMatchesRegularExpression('/>Ctrl<\/kbd>.*>Shift<\/kbd>.*>P<\/kbd>/s', $html);
+
+        $bare = Blade::render('<x-ui.kbd :keys="[\'⌘\', \'K\']" separator="" size="sm" />');
+        self::assertStringNotContainsString('>+</span>', $bare);
+        self::assertStringContainsString('h-5 min-w-5', $bare);
+    }
+
+    public function test_kbd_symbols_get_a_spoken_name(): void
+    {
+        $html = Blade::render('<x-ui.kbd :keys="[\'⌘\', \'K\']" />');
+
+        self::assertStringContainsString('<span class="sr-only">Command</span><span aria-hidden="true" class="font-sans">⌘</span>', $html);
+        self::assertStringContainsString('<span class="sr-only">Enter</span><span aria-hidden="true" class="font-sans">↵</span>', Blade::render('<x-ui.kbd>↵</x-ui.kbd>'));
+    }
+
+    /** Avatar takes the palette colour names; the older names keep working. */
+    public function test_avatar_takes_the_palette_names(): void
+    {
+        self::assertStringContainsString("bg-secondary-100 text-secondary-700", Blade::render("<x-ui.avatar name=\"Ayşe Demir\" color=\"secondary\" />"));
+        self::assertStringContainsString("bg-secondary-100 text-secondary-700", Blade::render("<x-ui.avatar name=\"Ayşe Demir\" color=\"neutral\" />"));
+        self::assertStringContainsString("bg-brand-100 text-brand-700", Blade::render("<x-ui.avatar name=\"Ayşe Demir\" />"));
+
+        // The "+3" bubble of an avatar group follows the avatars' size.
+        self::assertStringContainsString("flex size-8 text-xs items-center", Blade::render("<x-ui.avatar-group :more=\"3\" size=\"sm\"><x-ui.avatar name=\"Ayşe Demir\" size=\"sm\" /></x-ui.avatar-group>"));
+    }
 }

@@ -52,16 +52,8 @@ final class PanelComponentsTest extends TestCase
             'theme-toggle' => ['<x-ui.theme-toggle />', '$store.appearance.toggle()'],
             'auth-header' => ['<x-ui.auth-header title="Giriş" description="Hesabınıza girin" />', 'Hesabınıza girin'],
             'auth-session-status' => ['<x-ui.auth-session-status status="Bağlantı gönderildi" />', 'Bağlantı gönderildi'],
-            'user-menu' => ['<x-ui.user-menu name="Ada Ertepınar"><x-ui.dropdown-item>Çıkış</x-ui.dropdown-item></x-ui.user-menu>', '>AE<'],
             'list-toolbar' => ["<x-ui.list-toolbar>\n<x-slot:actions>Yeni</x-slot:actions>\nAra\n</x-ui.list-toolbar>", '<div class="flex flex-wrap items-center gap-2">'],
-            'filter-button' => ['<x-ui.filter-button drawer="siparis-filtreleri" :count="2" />', 'siparis-filtreleri'],
             'selection-bar' => ['<x-ui.selection-bar :count="3"><x-ui.button>Sil</x-ui.button></x-ui.selection-bar>', '3 kayıt seçildi.'],
-            'nav.item' => ['<x-ui.nav.item href="/a" title="Anasayfa" active />', 'aria-current="page"'],
-            'nav.group' => ['<x-ui.nav.group title="Raporlar"><x-ui.nav.sub-item href="/r" title="Satışlar" /></x-ui.nav.group>', 'menu-group-opened'],
-            'nav.heading' => ['<x-ui.nav.heading first>Genel</x-ui.nav.heading>', 'menu-heading'],
-            'nav.coming-soon' => ['<x-ui.nav.coming-soon title="Excel" compact />', 'Yakında'],
-            'nav.horizontal-item' => ['<x-ui.nav.horizontal-item href="/" title="Anasayfa" />', 'wire:navigate'],
-            'nav.horizontal-group' => ['<x-ui.nav.horizontal-group title="Ayarlar" align="right"><x-ui.nav.sub-item compact href="/t" title="Tema" /></x-ui.nav.horizontal-group>', 'right-0'],
             'accordion' => ["<x-ui.accordion open=\"a\">\n<x-ui.accordion-item name=\"a\" title=\"Başlık\">İçerik</x-ui.accordion-item>\n</x-ui.accordion>", ':aria-controls="$id(\'accordion\', \'a\')"'],
             'collapse' => ['<x-ui.collapse label="Ayrıntı">Gizli</x-ui.collapse>', 'x-collapse'],
             'carousel' => ['<x-ui.carousel :interval="3000"><div>1</div><div>2</div></x-ui.carousel>', 'aria-roledescription="carousel"'],
@@ -80,8 +72,12 @@ final class PanelComponentsTest extends TestCase
             'command-palette' => ["<x-ui.command-palette placeholder=\"Ara\" :items=\"[['label' => 'Siparişler', 'href' => '/siparisler', 'group' => 'Sayfalar']]\" />", 'command-palette-open.window'],
             'brand-color-picker' => ['<x-ui.brand-color-picker label="Ana renk" />', 'type="color"'],
             'theme-customizer' => ['<x-ui.theme-customizer />', 'theme-customizer'],
-            'nav badge' => ['<x-ui.nav.group title="Kartlar" :badge="6"><x-ui.nav.sub-item href="#" title="A" /></x-ui.nav.group>', '>6<'],
             'button label' => ['<x-ui.button variant="soft-danger">Sil</x-ui.button>', 'bg-red-100'],
+            'empty-state' => ['<x-ui.empty-state title="Kayıt yok" description="Filtreyi değiştirin" />', 'Kayıt yok'],
+            'skeleton' => ['<x-ui.skeleton variant="circle" class="size-8" />', 'rounded-full'],
+            'avatar' => ['<x-ui.avatar name="Ayşe Yılmaz" status="online" />', 'AY'],
+            'avatar-group' => ['<x-ui.avatar-group :more="3"><x-ui.avatar name="A B" /></x-ui.avatar-group>', '+3'],
+            'switch' => ['<x-ui.switch name="bildirim" label="Bildirim" checked />', 'role="switch"'],
         ];
     }
 
@@ -100,6 +96,8 @@ final class PanelComponentsTest extends TestCase
             'checkbox' => ['<x-ui.checkbox wire:model="remember" label="Beni hatırla" />', 'remember'],
             'checkbox in array' => ['<x-ui.checkbox wire:model.live="selected" value="5" label="Seç" />', 'selected-5'],
             'radio' => ['<x-ui.radio wire:model="plan" value="team" label="Takım" />', 'plan-team'],
+            'switch' => ['<x-ui.switch wire:model="notify" label="Bildirim" />', 'switch-notify'],
+            'switch in array' => ['<x-ui.switch wire:model="channels" value="sms" label="SMS" />', 'switch-channels-sms'],
         ];
     }
 
@@ -152,87 +150,6 @@ final class PanelComponentsTest extends TestCase
         self::assertStringContainsString('href="'.url('/panel').'"', Blade::render('<x-ui.breadcrumb />'));
     }
 
-    public function test_sidebar_layout_renders_slots_and_preferences(): void
-    {
-        $html = Blade::render(<<<'BLADE'
-            <x-ui.layout.sidebar brand-name="Acme Yazılım" brand-tagline="Yönetim paneli" navbar-mode="static" sidebar-mode="collapsed" theme="dark" preference-url="/tercih">
-                <x-slot:head><link rel="icon" href="/favicon.svg"></x-slot:head>
-                <x-slot:logo><svg data-logo></svg></x-slot:logo>
-                <x-slot:nav><x-ui.nav.item href="/" title="Anasayfa" active /></x-slot:nav>
-                <x-slot:userMenu><x-ui.user-menu name="Ada Ertepınar" /></x-slot:userMenu>
-                <x-slot:drawerFooter><button>Çıkış Yap</button></x-slot:drawerFooter>
-                <p>Sayfa içeriği</p>
-            </x-ui.layout.sidebar>
-        BLADE);
-
-        self::assertStringContainsString('<!DOCTYPE html>', $html);
-        self::assertStringContainsString('class="layout-vertical', $html);
-        self::assertStringContainsString('data-navbar="static"', $html);
-        self::assertStringContainsString('"collapsed"', $html);
-        self::assertStringContainsString('"\/tercih"', $html);
-        self::assertStringContainsString('href="/favicon.svg"', $html);
-        self::assertStringContainsString('data-logo', $html);
-        self::assertStringContainsString('Acme Yazılım', $html);
-        self::assertSame(2, substr_count($html, 'Anasayfa</span>'), 'The menu must be rendered both in the sidebar and in the mobile drawer.');
-        self::assertStringContainsString('Çıkış Yap', $html);
-        self::assertStringContainsString('Sayfa içeriği', $html);
-        self::assertStringContainsString('rounded-sm bg-white px-3 shadow-sm', $html, 'The top bar must be a floating card.');
-        self::assertStringNotContainsString('form-guard-confirm', $html, 'Without PRO the layout has no unsaved-changes dialog.');
-        // The menu store comes from the JS runtime; the layout gives it the settings and loads the boot script.
-        self::assertSame('/tercih', $this->runtimeConfig($html)['preferenceUrl']);
-        self::assertMatchesRegularExpression('~<script src="[^"]*/acun-ui/acun-ui-boot\.js\?id=[0-9a-f]{12}" data-acun-ui-boot data-navigate-track></script>~', $html);
-    }
-
-    public function test_sidebar_wordmark_replaces_the_brand_name_and_hides_when_collapsed(): void
-    {
-        $html = Blade::render(<<<'BLADE'
-            <x-ui.layout.sidebar brand-name="Acun Panel" brand-tagline="Yönetim paneli">
-                <x-slot:logo><svg data-mark></svg></x-slot:logo>
-                <x-slot:wordmark><svg data-wordmark></svg></x-slot:wordmark>
-                x
-            </x-ui.layout.sidebar>
-        BLADE);
-
-        self::assertStringContainsString('data-mark', $html);
-        self::assertMatchesRegularExpression('/<span class="collapsed-hidden[^"]*">\s*<svg data-wordmark>/', $html);
-        self::assertStringNotContainsString('>Yönetim paneli</span>', $html, 'The tagline gives way to the wordmark.');
-        self::assertStringNotContainsString('tracking-tight text-gray-900 dark:text-zinc-100">Acun Panel</span>', $html, 'The name gives way to the wordmark.');
-        self::assertStringContainsString('Acun Panel', $html, 'The brand name still titles the mobile drawer.');
-    }
-
-    public function test_sidebar_layout_buttons_and_links_have_accessible_names(): void
-    {
-        $html = Blade::render(<<<'BLADE'
-            <x-ui.layout.sidebar brand-name="Acun UI" customizer>
-                <x-slot:nav><x-ui.nav.item href="/" title="Anasayfa" /></x-slot:nav>
-                <x-slot:search><x-ui.command-palette placeholder="Sayfa ara…" /></x-slot:search>
-                <x-slot:userMenu>
-                    <x-ui.user-menu name="Ayşe Yılmaz"><x-ui.dropdown-item>Çıkış yap</x-ui.dropdown-item></x-ui.user-menu>
-                </x-slot:userMenu>
-                İçerik
-            </x-ui.layout.sidebar>
-        BLADE);
-
-        self::assertSame([], $this->controlsWithoutAccessibleName($html));
-
-        // Below `sm` only the initials are visible, so the trigger needs an explicit name.
-        self::assertStringContainsString('aria-label="Kullanıcı menüsü: Ayşe Yılmaz"', $html);
-    }
-
-    public function test_auth_layout_home_links_have_accessible_names(): void
-    {
-        foreach (['basic', 'cover'] as $variant) {
-            $html = Blade::render(<<<'BLADE'
-                <x-ui.layout.auth :variant="$variant">
-                    <x-slot:logo><svg aria-hidden="true"></svg></x-slot:logo>
-                    Form
-                </x-ui.layout.auth>
-            BLADE, ['variant' => $variant]);
-
-            self::assertSame([], $this->controlsWithoutAccessibleName($html), $variant);
-        }
-    }
-
     public function test_sortable_th_uses_a_keyboard_reachable_button_and_announces_the_sort(): void
     {
         $html = Blade::render('<x-ui.sortable-th field="ad" sort-field="ad" sort-direction="desc">Ad</x-ui.sortable-th>');
@@ -247,62 +164,6 @@ final class PanelComponentsTest extends TestCase
         // The component's own sorting method.
         $own = Blade::render('<x-ui.sortable-th field="ad" sort-field="ad" sort-direction="asc" method="sirala">Ad</x-ui.sortable-th>');
         self::assertMatchesRegularExpression('/wire:click="sirala\(\'ad\'\)"/', $own);
-    }
-
-    /**
-     * Buttons and links with no accessible name: no aria-label/aria-labelledby
-     * and no text outside aria-hidden or base-`hidden` (responsive) elements.
-     *
-     * @return array<int, string>
-     */
-    private function controlsWithoutAccessibleName(string $html): array
-    {
-        $previous = libxml_use_internal_errors(true);
-        $document = new \DOMDocument;
-        $document->loadHTML('<?xml encoding="utf-8"?>'.$html);
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
-
-        $unnamed = [];
-
-        foreach ((new \DOMXPath($document))->query('//button | //a') as $control) {
-            foreach (['aria-label', ':aria-label', 'aria-labelledby', 'x-text'] as $attribute) {
-                if (trim($control->getAttribute($attribute)) !== '') {
-                    continue 2;
-                }
-            }
-
-            if (trim($this->visibleText($control)) === '') {
-                $unnamed[] = preg_replace('/\s+/', ' ', mb_substr($document->saveHTML($control), 0, 200));
-            }
-        }
-
-        return $unnamed;
-    }
-
-    private function visibleText(\DOMNode $node): string
-    {
-        if ($node instanceof \DOMText) {
-            return $node->textContent;
-        }
-
-        if ($node instanceof \DOMElement) {
-            if ($node->getAttribute('aria-hidden') === 'true' || in_array('hidden', preg_split('/\s+/', $node->getAttribute('class')), true)) {
-                return '';
-            }
-
-            if ($node->getAttribute('x-text') !== '') {
-                return 'x-text';
-            }
-        }
-
-        $text = '';
-
-        foreach ($node->childNodes as $child) {
-            $text .= $this->visibleText($child);
-        }
-
-        return $text;
     }
 
     public function test_overlays_share_the_theme_backdrop(): void
@@ -321,40 +182,6 @@ final class PanelComponentsTest extends TestCase
         }
     }
 
-    public function test_horizontal_layout_uses_mobile_nav_in_drawer(): void
-    {
-        $html = Blade::render(<<<'BLADE'
-            <x-ui.layout.horizontal brand-name="Panel">
-                <x-slot:nav><x-ui.nav.horizontal-item href="/" title="Üst Menü" /></x-slot:nav>
-                <x-slot:mobileNav><x-ui.nav.item href="/" title="Mobil Menü" /></x-slot:mobileNav>
-                İçerik
-            </x-ui.layout.horizontal>
-        BLADE);
-
-        self::assertStringContainsString('class="layout-horizontal', $html);
-        self::assertStringContainsString('Üst Menü', $html);
-        self::assertStringContainsString('Mobil Menü', $html);
-        self::assertStringContainsString('panel-sidebar-horizontal', $html);
-    }
-
-    /** footer: below the page content in both panel layouts, never in the mobile drawer. */
-    public function test_panel_layouts_render_the_footer_below_the_content(): void
-    {
-        foreach (['sidebar', 'horizontal'] as $layout) {
-            $html = Blade::render(<<<BLADE
-                <x-ui.layout.{$layout} brand-name="Panel">
-                    <x-slot:footer><x-ui.footer>© Alt bilgi</x-ui.footer></x-slot:footer>
-                    Sayfa içeriği
-                </x-ui.layout.{$layout}>
-            BLADE);
-
-            self::assertMatchesRegularExpression('~Sayfa içeriği.*?</main>\s*<div[^>]*>\s*<div class="panel-container">\s*<footer[^>]*>\s*<div>© Alt bilgi~s', $html, $layout);
-            self::assertSame(1, substr_count($html, '© Alt bilgi'), $layout);
-        }
-
-        self::assertStringNotContainsString('<footer', Blade::render('<x-ui.layout.sidebar>İçerik</x-ui.layout.sidebar>'));
-    }
-
     /** layout.blank: the document and closing scripts only; attributes go on <body>. */
     public function test_blank_layout_is_a_document_around_the_page(): void
     {
@@ -371,68 +198,6 @@ final class PanelComponentsTest extends TestCase
         self::assertMatchesRegularExpression('~<body class="min-h-dvh text-gray-700 dark:text-zinc-200 bg-white" data-page="vitrin">\s*<p>Kendi içeriği</p>~', $html);
         self::assertStringNotContainsString('panel-sidebar', $html);
         self::assertStringContainsString('x-on:toast.window="push($event.detail)"', $html);
-    }
-
-    /** The chrome-less panels work inside any document; the full-page layouts are those panels in acun:layout.blank. */
-    public function test_auth_and_message_panels_render_without_a_document(): void
-    {
-        foreach (['basic', 'cover'] as $variant) {
-            $panel = Blade::render('<x-ui.auth-panel :variant="$variant" home-url="/"><x-slot:logo>LOGO</x-slot:logo> Giriş formu</x-ui.auth-panel>', ['variant' => $variant]);
-
-            self::assertStringNotContainsString('<html', $panel, $variant);
-            // One root element: a Livewire page whose view starts with the panel puts its wire:id on it.
-            self::assertMatchesRegularExpression('~^<div [^>]*>.*</div>$~s', trim($panel), $variant);
-            self::assertSame(1, preg_match_all('~<main\b~', $panel), $variant);
-            self::assertStringContainsString('Giriş formu', $panel, $variant);
-            self::assertStringContainsString('LOGO', $panel, $variant);
-            self::assertStringContainsString('Giriş formu', Blade::render('<x-ui.layout.auth :variant="$variant">Giriş formu</x-ui.layout.auth>', ['variant' => $variant]));
-        }
-
-        $message = Blade::render(<<<'BLADE'
-            <x-ui.message-panel code="404" heading="Sayfa bulunamadı" description="Taşınmış olabilir.">
-                <x-slot:action><a href="/">Anasayfa</a></x-slot:action>
-            </x-ui.message-panel>
-        BLADE);
-
-        self::assertStringNotContainsString('<html', $message);
-        self::assertMatchesRegularExpression('~<p class="[^"]*text-7xl[^"]*">404</p>\s*<h1[^>]*>Sayfa bulunamadı</h1>\s*<p[^>]*>Taşınmış olabilir.</p>~', $message);
-        self::assertStringContainsString('<a href="/">Anasayfa</a>', $message);
-
-        $page = Blade::render('<x-ui.layout.message code="500" heading="Sunucu hatası" />');
-        self::assertStringContainsString('<title>Sunucu hatası</title>', $page);
-        self::assertStringContainsString('>500</p>', $page);
-    }
-
-    public function test_auth_layout_renders_default_illustration(): void
-    {
-        $html = Blade::render(<<<'BLADE'
-            <x-ui.layout.auth>
-                <x-slot:logo>LOGO</x-slot:logo>
-                Giriş formu
-            </x-ui.layout.auth>
-        BLADE);
-
-        self::assertStringContainsString('Giriş formu', $html);
-        self::assertStringContainsString('viewBox="0 0 520 420"', $html);
-        self::assertStringContainsString('LOGO', $html);
-        // The drawing follows the primary colour instead of fixed hex values.
-        self::assertDoesNotMatchRegularExpression('/(fill|stroke)="#/', $html);
-        self::assertStringContainsString('class="fill-brand-600"', $html);
-    }
-
-    /** media: a drawing above the code; the code gets smaller so the page still fits. */
-    public function test_message_layout_shows_media_above_a_smaller_code(): void
-    {
-        $html = Blade::render(<<<'BLADE'
-            <x-ui.layout.message code="404" heading="Sayfa bulunamadı">
-                <x-slot:media><svg data-test="drawing"></svg></x-slot:media>
-            </x-ui.layout.message>
-        BLADE);
-
-        self::assertMatchesRegularExpression('/data-test="drawing".*?<\/div>\s*<p class="[^"]*text-5xl[^"]*">404<\/p>/s', $html);
-
-        $plain = Blade::render('<x-ui.layout.message code="404" heading="Sayfa bulunamadı" />');
-        self::assertMatchesRegularExpression('/<p class="[^"]*text-7xl[^"]*">404<\/p>/', $plain);
     }
 
     public function test_selection_bar_floats_by_default_and_can_stay_in_the_flow(): void
@@ -487,7 +252,7 @@ final class PanelComponentsTest extends TestCase
     /** No inline code: the head prints data and the boot script's tag; keep-in-view, stores and dialogs live in the runtime (tests/js). */
     public function test_head_prints_no_inline_script(): void
     {
-        $html = Blade::render('<x-ui.layout.sidebar brand-name="Panel">İçerik</x-ui.layout.sidebar>');
+        $html = Blade::render('<x-ui.layout.blank title="Panel">İçerik</x-ui.layout.blank>');
 
         preg_match_all('~<script\b([^>]*)>(.*?)</script>~s', $html, $scripts, PREG_SET_ORDER);
         foreach ($scripts as [, $attributes, $body]) {

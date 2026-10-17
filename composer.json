@@ -1,6 +1,6 @@
 {
     "name": "acunsoft/acun-ui",
-    "description": "Acun UI for Laravel, free: Blade and Livewire components (<acun:*>), the Tailwind CSS theme and the Alpine.js runtime in one package. npm takes the CSS and JS from the Composer copy: \"@acunsoft/acun-ui\": \"file:vendor/acunsoft/acun-ui\". The paid components, form modals and e-commerce are in acunsoft/acun-pro.",
+    "description": "Acun UI for Laravel, free: Blade and Livewire components (<acun:*>), the Tailwind CSS theme and the Alpine.js runtime in one package. npm takes the CSS and JS from the Composer copy: \"@acunsoft/acun-ui\": \"file:vendor/acunsoft/acun-ui\". The panel layouts and menu, the paid components, form modals and e-commerce are in acunsoft/acun-pro.",
     "type": "library",
     "license": "MIT",
     "require": {

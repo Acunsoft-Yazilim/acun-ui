@@ -84,11 +84,11 @@ final class PageSourceTest extends TestCase
 
     public function test_a_page_script_is_printed_only_on_the_page_that_pushes_it(): void
     {
-        $withScript = Blade::render("@push('page-scripts')<script src=\"/build/rapor.js\" type=\"module\"></script>@endpush\n<acun:layout.sidebar brand-name=\"Panel\">Rapor</acun:layout.sidebar>");
+        $withScript = Blade::render("@push('page-scripts')<script src=\"/build/rapor.js\" type=\"module\"></script>@endpush\n<acun:layout.blank title=\"Rapor\">Rapor</acun:layout.blank>");
         self::assertMatchesRegularExpression('~<script src="/build/rapor.js" type="module"></script>\s*</body>~', $withScript, 'Last in the body, after Livewire.');
 
         app('view')->flushStacks();
-        $without = Blade::render('<acun:layout.sidebar brand-name="Panel">Pano</acun:layout.sidebar>');
+        $without = Blade::render('<acun:layout.blank title="Pano">Pano</acun:layout.blank>');
         self::assertStringNotContainsString('rapor.js', $without);
     }
 

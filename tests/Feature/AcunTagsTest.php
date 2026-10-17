@@ -43,7 +43,8 @@ final class AcunTagsTest extends TestCase
 
         self::assertContains('button', $names);
         self::assertContains('accordion.heading', $names);
-        self::assertContains('layout.sidebar', $names);
+        self::assertContains('layout.head', $names);
+        self::assertNotContains('layout.sidebar', $names, "The panel layouts are acunsoft/acun-pro's.");
 
         foreach ($names as $name) {
             self::assertSame(Blade::compileString("<x-acun::{$name} />"), Blade::compileString("<acun:{$name} />"), $name);
@@ -85,7 +86,7 @@ final class AcunTagsTest extends TestCase
     }
 
     /**
-     * Component names under a components/ui folder, e.g. 'button', 'accordion.heading', 'layout.sidebar'.
+     * Component names under a components/ui folder, e.g. 'button', 'accordion.heading', 'layout.head'.
      *
      * @return array<int, string>
      */

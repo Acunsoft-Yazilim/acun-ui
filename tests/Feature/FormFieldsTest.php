@@ -30,6 +30,14 @@ final class FormFieldsTest extends TestCase
         $this->app['session.store']->flashInput($input);
     }
 
+    /** The opening tag that starts with the given pattern. */
+    private static function tag(string $html, string $start): string
+    {
+        self::assertSame(1, preg_match('/'.$start.'(?:[^>"]|"[^"]*")*>/s', $html, $match), "No tag starting with $start");
+
+        return $match[0];
+    }
+
     public function test_a_bound_select_without_placeholder_shows_no_value_the_model_does_not_have(): void
     {
         $html = Blade::render('<x-ui.select wire:model="birim" :options="[\'kg\' => \'Kilogram\', \'lt\' => \'Litre\']" />');
@@ -142,12 +150,8 @@ final class FormFieldsTest extends TestCase
         self::assertStringContainsString('href="#"', Blade::render('<x-ui.breadcrumb :items="[[\'label\' => \'Kat\', \'url\' => \'javascript:alert(1)\'], [\'label\' => \'Son\']]" />'));
         self::assertStringContainsString('href="#"', Blade::render('<x-ui.breadcrumb.item href="javascript:alert(1)" :current="false">Kat</x-ui.breadcrumb.item>'));
         self::assertStringContainsString('href="#"', Blade::render('<x-ui.list-group.item href="javascript:alert(1)">Kat</x-ui.list-group.item>'));
-        // Menu and dropdown links (a menu may be stored in the database).
+        // Dropdown links (a menu may be stored in the database).
         self::assertStringContainsString('href="#"', Blade::render('<x-ui.dropdown.item href="javascript:alert(1)">Sil</x-ui.dropdown.item>'));
-        self::assertStringContainsString('href="#"', Blade::render('<x-ui.nav.item href=" javascript:alert(1)" title="Sipariş">Sipariş</x-ui.nav.item>'));
-        self::assertStringContainsString('href="#"', Blade::render('<x-ui.nav.sub-item href="JavaScript:alert(1)" title="Sipariş">Sipariş</x-ui.nav.sub-item>'));
-        self::assertStringContainsString('href="#"', Blade::render('<x-ui.nav.horizontal-item href="javascript:alert(1)" title="Sipariş">Sipariş</x-ui.nav.horizontal-item>'));
-        self::assertStringContainsString('href="/siparisler"', Blade::render('<x-ui.nav.item href="/siparisler" title="Sipariş">Sipariş</x-ui.nav.item>'));
         self::assertStringNotContainsString('javascript:', Blade::render('<x-ui.dropdown.item href="javascript:alert(1)">Sil</x-ui.dropdown.item>'));
         self::assertStringContainsString('href="/siparisler"', Blade::render('<x-ui.button href="/siparisler">Siparişler</x-ui.button>'));
     }
@@ -414,5 +418,27 @@ final class FormFieldsTest extends TestCase
         self::assertSame('size-5', Field::controlClass('h-4 w-4', 'size-5'));
         self::assertSame('rounded-full', Field::controlClass('rounded-sm rounded-s-md', 'rounded-full'));
         self::assertSame('border-0 text-gray-900 font-mono text-lg font-bold!', Field::controlClass('border-0 text-sm text-gray-900 font-semibold', 'font-mono text-lg font-bold!'));
+    }
+
+    public function test_switch_puts_the_layout_on_its_label_and_its_error_beside_the_text(): void
+    {
+        $this->withErrors(['notify' => ['Bildirimleri açın.'], 'channels' => ['Bir kanal seçin.']]);
+        $html = Blade::render('<x-ui.switch wire:model="notify" label="Bildirim" class="mt-1" wire:key="s1" input-class="x-check" data-testid="s" aria-describedby="not" />');
+
+        self::assertStringContainsString('<label for="switch-notify" class="inline-flex cursor-pointer items-start gap-3 select-none has-disabled:cursor-not-allowed has-disabled:opacity-50 mt-1" wire:key="s1">', $html);
+        $input = self::tag($html, '<input\s+id="switch-notify"');
+        self::assertStringContainsString('class="peer sr-only x-check" wire:model="notify" data-testid="s"', $input);
+        self::assertStringContainsString('aria-invalid="true"', $input);
+        self::assertStringContainsString('aria-describedby="not switch-notify-message"', $input);
+        // In the label (the root stays), out of its name (aria-hidden), read as the description.
+        self::assertStringContainsString('<span id="switch-notify-message" class="mt-0.5 block text-red-600 dark:text-red-400" aria-hidden="true">Bildirimleri açın.</span>', $html);
+
+        // A switch of a list only says it is invalid; the list shows the message.
+        $listed = Blade::render('<x-ui.switch wire:model="channels" value="sms" label="SMS" />');
+        self::assertStringContainsString('aria-invalid="true"', $listed);
+        self::assertStringNotContainsString('Bir kanal seçin.', $listed);
+
+        // Without a name the id is the same on every render (it was random).
+        self::assertSame(Blade::render('<x-ui.switch label="Karanlık" />'), Blade::render('<x-ui.switch label="Karanlık" />'));
     }
 }

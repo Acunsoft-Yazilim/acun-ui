@@ -60,8 +60,9 @@
         SAME markup and SAME behaviour in BOTH page layouts (horizontal/vertical).
         The component does not know which layout it is in: its desktop
         position/height (`.filter-panel`) and pushing the content (`.content-area`)
-        are handled in acun-ui panel.css with the CSS variables each layout
-        declares on its own <body> (`layout-horizontal`/`layout-vertical`). The
+        are handled in Acun Pro's panel.css (the panel layouts, acunsoft/acun-pro)
+        with the CSS variables each layout declares on its own <body>
+        (`layout-horizontal`/`layout-vertical`). The
         open/closed state is exposed via the `data-filter-open` attribute and the
         content area reads it with `:has()` - no JS store or event syncing.
 

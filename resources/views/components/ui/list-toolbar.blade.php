@@ -2,12 +2,13 @@
     Top bar of list pages: page size (`start` slot) and search (default slot) on the
     left, actions (`actions` slot: filters, export, a "New" button) on the right. It
     only lays them out; the list's Livewire component owns the state they bind to.
-    php artisan acun:table generates a listing that uses it.
+    Acun Pro's php artisan acun:table generates a listing that uses it, with its
+    acun:filter-button among the actions.
         <acun:list-toolbar>
             <acun:slot:start><acun:per-page-select :options="[10, 25, 50]" /></acun:slot:start>
             <acun:search wire:model.live.debounce.300ms="search" placeholder="Search" />
             <acun:slot:actions>
-                <acun:filter-button drawer="order-filters" :count="count($activeFilters)" icon-only />
+                <acun:button variant="white">Export</acun:button>
                 <acun:button>New</acun:button>
             </acun:slot:actions>
         </acun:list-toolbar>
