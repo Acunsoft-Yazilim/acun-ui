@@ -13,6 +13,9 @@ const onDesktop = () => window.matchMedia?.(DESKTOP)?.matches === true;
 
 export function drawer({ name, docked = false, lockScroll = true } = {}) {
     const stop = [];
+    // The component root. Alpine binds this.$el to the element whose directive runs, so a
+    // method called from a part (the X, acun:drawer.close) would see that part instead.
+    let root = null;
     let closeTimer = null;
 
     return {
@@ -27,13 +30,14 @@ export function drawer({ name, docked = false, lockScroll = true } = {}) {
         overlay: !docked,
 
         init() {
+            root = this.$el;
             stop.push(
                 listen(EVENTS.drawer.open, (event) => isFor(event, name) && this.openPanel()),
                 listen(EVENTS.drawer.toggle, (event) => isFor(event, name) && (this.opened ? this.close() : this.openPanel())),
                 listen(EVENTS.drawer.close, (event) => isFor(event, name, { all: true }) && this.close()),
                 // The dialog (the root, or the docked panel) keeps the name of a header that
                 // a nested Livewire component draws.
-                keepHeaderName(this.$el.matches('[role="dialog"]') ? this.$el : this.$el.querySelector('[role="dialog"]'), this.$el, 'drawer'),
+                keepHeaderName(root.matches('[role="dialog"]') ? root : root.querySelector('[role="dialog"]'), root, 'drawer'),
             );
 
             this.$watch('model', (value) => (value ? this.openPanel() : this.close()));
@@ -48,15 +52,15 @@ export function drawer({ name, docked = false, lockScroll = true } = {}) {
             }
             // Sent when it opens and as soon as it starts closing.
             this.$watch('opened', (open) => {
-                dispatch(open ? EVENTS.drawer.opened : EVENTS.drawer.closed, { name }, this.$el);
-                dispatch('drawer-state-changed', { name, open }, this.$el);
+                dispatch(open ? EVENTS.drawer.opened : EVENTS.drawer.closed, { name }, root);
+                dispatch('drawer-state-changed', { name, open }, root);
             });
         },
 
         destroy() {
             stop.splice(0).forEach((stopListening) => stopListening());
             clearTimeout(closeTimer);
-            overlays.close(this.$el);
+            overlays.close(root);
         },
 
         openPanel() {
@@ -80,7 +84,7 @@ export function drawer({ name, docked = false, lockScroll = true } = {}) {
 
         /** Joins the dialog stack in the current mode: a modal overlay locks the page and keeps Tab in. */
         register() {
-            overlays.open(this.$el, {
+            overlays.open(root, {
                 close: () => this.close(),
                 lockScroll: lockScroll && this.overlay,
                 trap: () => (this.overlay ? this.$refs.panel : null),
@@ -96,7 +100,7 @@ export function drawer({ name, docked = false, lockScroll = true } = {}) {
             this.overlay = overlay;
             if (!this.opened) return;
 
-            overlays.close(this.$el);
+            overlays.close(root);
             this.register();
             if (overlay && !this.$refs.panel.contains(document.activeElement)) focusFirst(this.$refs.panel);
         },
@@ -106,7 +110,7 @@ export function drawer({ name, docked = false, lockScroll = true } = {}) {
 
             this.opened = this.model = false;
             this.entered = false;
-            overlays.close(this.$el);
+            overlays.close(root);
             clearTimeout(closeTimer);
             closeTimer = setTimeout(() => {
                 this.rendered = false;
