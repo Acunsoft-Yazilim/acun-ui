@@ -1,0 +1,48 @@
+{
+  "name": "@acunsoft/acun-ui",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Acun UI: Tailwind CSS theme and Alpine.js components for admin panels.",
+  "keywords": [
+    "tailwindcss",
+    "alpinejs",
+    "livewire",
+    "laravel",
+    "admin",
+    "dashboard",
+    "ui-kit",
+    "components"
+  ],
+  "license": "MIT",
+  "author": "Acunsoft",
+  "type": "module",
+  "style": "./css/panel.css",
+  "exports": {
+    ".": {
+      "style": "./css/panel.css",
+      "default": "./js/index.js"
+    },
+    "./css/*": "./css/*",
+    "./js/*": "./js/*",
+    "./vite": "./vite/index.js"
+  },
+  "files": [
+    "css",
+    "js",
+    "vite"
+  ],
+  "sideEffects": [
+    "**/*.css",
+    "./js/index.js",
+    "./js/boot.js"
+  ],
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,5 @@
+# Kept out of the distributed package (composer archive / dist zips).
+/tests export-ignore
+/examples export-ignore
+/phpunit.xml.dist export-ignore
+/.gitattributes export-ignore

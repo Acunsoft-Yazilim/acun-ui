@@ -1,0 +1,1370 @@
+/*
+ * Acun UI - Tailwind v4 panel layer.
+ *
+ * The acun:* components (layout, sidebar, form controls, modal, drawer...)
+ * are written with Tailwind utilities. Import this in the application's CSS
+ * entry AFTER Tailwind (@acunsoft/acun-ui NPM package):
+ *
+ *     @import 'tailwindcss';
+ *     @plugin '@tailwindcss/forms';
+ *     @import '@acunsoft/acun-ui';
+ *
+ * Add the files that contain the component markup to Tailwind's sources.
+ * Laravel (acunsoft/acun-ui):
+ *
+ *     @source '../../vendor/acunsoft/acun-ui/resources/views';
+ *
+ * The brand palette (--color-brand-*) and fonts can be overridden in the app with @theme.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * acun:icon writes its size from the size prop (size-{n}), so the class is not in the markup
+ * Tailwind scans: the sizes it takes are generated here (Tailwind 4.1 or newer).
+ */
+@source inline("size-{2,2.5,3,3.5,4,4.5,5,5.5,6,7,8,9,10,11,12,14,16,20,24,28,32,40,48}");
+
+/*
+ * ── Acun UI design system ───────────────────────────────────────────────
+ * Colour, typography and shadow values. Components use Tailwind's own scale
+ * names (brand, gray, zinc, emerald, sky, amber, red); here the values of
+ * those scales are replaced with the Acun UI palette.
+ *
+ *   brand    Primary colour (#794dff) · shades derive from --color-brand-600
+ *   accent   Brand accent (blue) · logo mark, small highlighted elements
+ *   gray     Light theme neutrals (zinc grey) · 900 = ink
+ *   zinc     Dark theme neutrals (black) · components use them under dark:
+ *   emerald  Success · sky Info · amber Warning · red Danger · secondary, dark, light
+ */
+@theme {
+    /* Typography: Public Sans (text) + DM Mono (code, numeric labels). Both are
+       SIL OFL; the app loads them (Vite fonts, a font CDN or local files). */
+    --font-sans: var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: var(--font-dm-mono, 'DM Mono'), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --font-brand: var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, sans-serif;
+
+    /* Type scale (with line heights). Body 14px, small 13px, label 12px. */
+    --text-2xs: 0.6875rem;
+    --text-2xs--line-height: 1rem;
+    --text-xs: 0.75rem;
+    --text-xs--line-height: 1.125rem;
+    --text-sm: 0.875rem;
+    --text-sm--line-height: 1.375rem;
+    --text-base: 1rem;
+    --text-base--line-height: 1.5rem;
+    --text-lg: 1.125rem;
+    --text-lg--line-height: 1.625rem;
+    --text-xl: 1.3125rem;
+    --text-xl--line-height: 1.75rem;
+    --text-2xl: 1.625rem;
+    --text-2xl--line-height: 2.125rem;
+    --text-3xl: 2rem;
+    --text-3xl--line-height: 2.5rem;
+    --text-4xl: 2.5rem;
+    --text-4xl--line-height: 3rem;
+
+    /* Primary colour (#794dff). Shades derive from a single variable; setting
+       --color-brand-600 is enough to change the brand colour (see data-brand-color). */
+    --color-brand-600: #794dff;
+    --color-brand-50: color-mix(in srgb, var(--color-brand-600) 6%, white);
+    --color-brand-100: color-mix(in srgb, var(--color-brand-600) 12%, white);
+    --color-brand-200: color-mix(in srgb, var(--color-brand-600) 24%, white);
+    --color-brand-300: color-mix(in srgb, var(--color-brand-600) 42%, white);
+    --color-brand-400: color-mix(in srgb, var(--color-brand-600) 66%, white);
+    --color-brand-500: color-mix(in srgb, var(--color-brand-600) 84%, white);
+    --color-brand-700: color-mix(in srgb, var(--color-brand-600) 86%, black);
+    --color-brand-800: color-mix(in srgb, var(--color-brand-600) 70%, black);
+    --color-brand-900: color-mix(in srgb, var(--color-brand-600) 55%, black);
+    --color-brand-950: color-mix(in srgb, var(--color-brand-600) 38%, black);
+
+    /* Brand accent: blue. */
+    --color-accent-500: #3b82f6;
+    --color-accent-50: color-mix(in srgb, var(--color-accent-500) 8%, white);
+    --color-accent-100: color-mix(in srgb, var(--color-accent-500) 14%, white);
+    --color-accent-600: color-mix(in srgb, var(--color-accent-500) 88%, black);
+
+    /* Light theme neutrals. 50 background · 100 hover · 200 border ·
+       300 strong border · 400 muted text · 500 secondary text · 700 text · 900 ink */
+    --color-gray-50: #fafafa;
+    --color-gray-100: #f4f4f5;
+    --color-gray-200: #e4e4e7;
+    --color-gray-300: #d4d4d8;
+    --color-gray-400: #9f9fa9;
+    --color-gray-500: #71717b;
+    --color-gray-600: #52525c;
+    --color-gray-700: #3f3f46;
+    --color-gray-800: #27272a;
+    --color-gray-900: #18181b;
+    --color-gray-950: #09090b;
+
+    /* Dark theme neutrals: pure black and greys with no blue tint. 950 background ·
+       900 surface (card, menu) · 800 hover/field · 700 border · 400 secondary text ·
+       300 text · 100 ink */
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #787878;
+    --color-zinc-600: #474747;
+    --color-zinc-700: #2e2e2e;
+    --color-zinc-800: #1f1f1f;
+    --color-zinc-900: #141414;
+    --color-zinc-950: #0a0a0a;
+
+    /*
+     * Semantic colours. The palette colour is the 500 shade: the fill of solid
+     * icons, dots and light tints. Solid fills (buttons, badges, toasts) carry white
+     * text of 12-16px, so they need 4.5:1 with white (bold text only counts as large
+     * from 18.66px): success, warning and info are light, so their fill is the -solid
+     * shade, the darkest step that reaches it, and danger's is the 600 shade. Text on
+     * white uses the darker 600+ shades (at least 4.5:1); the dark theme reads the
+     * lighter 300/400.
+     */
+    --color-emerald-500: #00ca4b; /* Success */
+    --color-emerald-50: color-mix(in srgb, var(--color-emerald-500) 8%, white);
+    --color-emerald-100: color-mix(in srgb, var(--color-emerald-500) 14%, white);
+    --color-emerald-200: color-mix(in srgb, var(--color-emerald-500) 28%, white);
+    --color-emerald-300: color-mix(in srgb, var(--color-emerald-500) 48%, white);
+    --color-emerald-400: color-mix(in srgb, var(--color-emerald-500) 72%, white);
+    --color-emerald-600: color-mix(in srgb, var(--color-emerald-500) 67%, black);
+    --color-emerald-700: color-mix(in srgb, var(--color-emerald-500) 54%, black);
+    --color-emerald-800: color-mix(in srgb, var(--color-emerald-500) 43%, black);
+    --color-emerald-900: color-mix(in srgb, var(--color-emerald-500) 33%, black);
+    --color-emerald-950: color-mix(in srgb, var(--color-emerald-500) 24%, black);
+    /* Solid success fill (buttons, badges, toasts): white text reaches 4.5:1 on it. */
+    --color-emerald-solid: color-mix(in srgb, var(--color-emerald-500) 68%, black);
+
+    --color-sky-500: #04b6d4; /* Info */
+    --color-sky-50: color-mix(in srgb, var(--color-sky-500) 8%, white);
+    --color-sky-100: color-mix(in srgb, var(--color-sky-500) 14%, white);
+    --color-sky-200: color-mix(in srgb, var(--color-sky-500) 28%, white);
+    --color-sky-300: color-mix(in srgb, var(--color-sky-500) 48%, white);
+    --color-sky-400: color-mix(in srgb, var(--color-sky-500) 72%, white);
+    --color-sky-600: color-mix(in srgb, var(--color-sky-500) 70%, black);
+    --color-sky-700: color-mix(in srgb, var(--color-sky-500) 56%, black);
+    --color-sky-800: color-mix(in srgb, var(--color-sky-500) 45%, black);
+    --color-sky-900: color-mix(in srgb, var(--color-sky-500) 35%, black);
+    --color-sky-950: color-mix(in srgb, var(--color-sky-500) 25%, black);
+    /* Solid info fill (buttons, badges, toasts): white text reaches 4.5:1 on it. */
+    --color-sky-solid: color-mix(in srgb, var(--color-sky-500) 71%, black);
+
+    --color-amber-500: #fcaa1e; /* Warning */
+    --color-amber-50: color-mix(in srgb, var(--color-amber-500) 10%, white);
+    --color-amber-100: color-mix(in srgb, var(--color-amber-500) 18%, white);
+    --color-amber-200: color-mix(in srgb, var(--color-amber-500) 32%, white);
+    --color-amber-300: color-mix(in srgb, var(--color-amber-500) 52%, white);
+    --color-amber-400: color-mix(in srgb, var(--color-amber-500) 76%, white);
+    --color-amber-600: color-mix(in srgb, var(--color-amber-500) 62%, black);
+    --color-amber-700: color-mix(in srgb, var(--color-amber-500) 50%, black);
+    --color-amber-800: color-mix(in srgb, var(--color-amber-500) 40%, black);
+    --color-amber-900: color-mix(in srgb, var(--color-amber-500) 31%, black);
+    --color-amber-950: color-mix(in srgb, var(--color-amber-500) 22%, black);
+    /* Solid warning fill (buttons, badges, toasts): white text reaches 4.5:1 on it. */
+    --color-amber-solid: color-mix(in srgb, var(--color-amber-500) 63%, black);
+
+    --color-red-500: #fb4141; /* Danger */
+    --color-red-50: color-mix(in srgb, var(--color-red-500) 7%, white);
+    --color-red-100: color-mix(in srgb, var(--color-red-500) 12%, white);
+    --color-red-200: color-mix(in srgb, var(--color-red-500) 26%, white);
+    --color-red-300: color-mix(in srgb, var(--color-red-500) 45%, white);
+    --color-red-400: color-mix(in srgb, var(--color-red-500) 70%, white);
+    --color-red-600: color-mix(in srgb, var(--color-red-500) 86%, black);
+    --color-red-700: color-mix(in srgb, var(--color-red-500) 69%, black);
+    --color-red-800: color-mix(in srgb, var(--color-red-500) 55%, black);
+    --color-red-900: color-mix(in srgb, var(--color-red-500) 43%, black);
+    --color-red-950: color-mix(in srgb, var(--color-red-500) 30%, black);
+
+    /* Secondary (grey-blue): the secondary button and its outline / soft variants. */
+    --color-secondary-500: #6b7280;
+    --color-secondary-50: color-mix(in srgb, var(--color-secondary-500) 8%, white);
+    --color-secondary-100: color-mix(in srgb, var(--color-secondary-500) 16%, white);
+    --color-secondary-200: color-mix(in srgb, var(--color-secondary-500) 30%, white);
+    --color-secondary-300: color-mix(in srgb, var(--color-secondary-500) 50%, white);
+    --color-secondary-400: color-mix(in srgb, var(--color-secondary-500) 74%, white);
+    --color-secondary-600: color-mix(in srgb, var(--color-secondary-500) 85%, black);
+    --color-secondary-700: color-mix(in srgb, var(--color-secondary-500) 72%, black);
+    --color-secondary-800: color-mix(in srgb, var(--color-secondary-500) 58%, black);
+    --color-secondary-900: color-mix(in srgb, var(--color-secondary-500) 45%, black);
+    --color-secondary-950: color-mix(in srgb, var(--color-secondary-500) 32%, black);
+
+    /* Dark and light: the dark and light buttons; light is also the light theme's page colour. */
+    --color-dark: #3f404d;
+    --color-light: #f4f4f5;
+
+    /* Shadows: the first layer is a 1px hairline (card edge), followed by a soft, wide, low-opacity
+       shadow. The colours of the layers are variables (below, after @theme): the dark theme and the
+       bordered skin change them, so the shadow-* utilities stay plain and a page's own shadow-none
+       or dark:shadow-* still wins. */
+    --shadow-xs: 0 0 0 1px var(--shadow-edge-xs, transparent), 0 1px 2px 0 var(--shadow-near-xs, rgb(24 24 27 / 0.06));
+    --shadow-sm: 0 0 0 1px var(--shadow-edge, rgb(24 24 27 / 0.05)), 0 1px 2px 0 var(--shadow-near, rgb(24 24 27 / 0.05)), 0 4px 14px 0 var(--shadow-far, rgb(24 24 27 / 0.04));
+    --shadow: 0 0 0 1px var(--shadow-edge, rgb(24 24 27 / 0.05)), 0 1px 2px 0 var(--shadow-near, rgb(24 24 27 / 0.05)), 0 4px 14px 0 var(--shadow-far, rgb(24 24 27 / 0.04));
+    --shadow-md: 0 0 0 1px var(--shadow-edge, rgb(24 24 27 / 0.05)), 0 6px 20px 0 var(--shadow-far-md, rgb(24 24 27 / 0.08));
+    --shadow-lg: 0 0 0 1px var(--shadow-edge-lg, rgb(24 24 27 / 0.06)), 0 12px 32px 0 var(--shadow-far-lg, rgb(24 24 27 / 0.12)), 0 4px 10px 0 var(--shadow-near-lg, rgb(24 24 27 / 0.05));
+    --shadow-xl: 0 0 0 1px var(--shadow-edge-xl, transparent), 0 24px 70px 0 var(--shadow-far-xl, rgb(24 24 27 / 0.16)), 0 4px 18px 0 var(--shadow-near-xl, rgb(24 24 27 / 0.08));
+
+    /* Corners: a single theme-wide default (4px). Components use rounded-sm;
+       rounded-md / lg / xl in app code produce the same corner. Setting
+       --radius-sm alone is enough to change the whole theme.
+       Round elements (avatar, badge, dot) stay separate with rounded-full. */
+    --radius-sm: 0.25rem;
+    --radius-md: var(--radius-sm);
+    --radius-lg: var(--radius-sm);
+    --radius-xl: var(--radius-sm);
+    --radius-2xl: var(--radius-sm);
+    --radius-3xl: var(--radius-sm);
+}
+
+/* In the dark theme the hairline is light-toned and the soft layers are deep black. */
+.dark {
+    --shadow-edge: var(--color-zinc-800);
+    --shadow-edge-lg: var(--color-zinc-700);
+    --shadow-edge-xl: var(--color-zinc-700);
+    --shadow-near: transparent;
+    --shadow-far: rgb(0 0 0 / 0.22);
+    --shadow-far-md: rgb(0 0 0 / 0.22);
+    --shadow-far-lg: rgb(0 0 0 / 0.45);
+    --shadow-near-lg: transparent;
+    --shadow-far-xl: rgb(0 0 0 / 0.45);
+    --shadow-near-xl: transparent;
+}
+
+/*
+ * Primary colour presets picked in Theme Settings (Acun\Ui\Support\Layout::BRAND_COLORS),
+ * one per palette colour. The primary button is filled with the palette colour and uses
+ * that colour's own button shades (the same values as the success, danger… buttons), and
+ * --color-brand-600 (links, the active menu item, focus frames, small fills; every
+ * brand-* shade derives from it) is that same fill: it reads 4.5:1 on white and carries
+ * white text. Every value derives from the palette tokens above.
+ */
+:root[data-brand-color='green'] {
+    --color-brand-600: var(--color-emerald-solid);
+    --btn-primary-bg: var(--btn-success-bg);
+    --btn-primary-border: var(--btn-success-bg);
+    --btn-primary-hover: var(--btn-success-hover);
+    --btn-primary-hover-border: var(--btn-success-hover);
+    --btn-primary-shadow: var(--btn-success-shadow);
+}
+
+:root[data-brand-color='red'] {
+    --color-brand-600: var(--color-red-600);
+    --btn-primary-bg: var(--btn-danger-bg);
+    --btn-primary-border: var(--btn-danger-bg);
+    --btn-primary-hover: var(--btn-danger-hover);
+    --btn-primary-hover-border: var(--btn-danger-hover);
+    --btn-primary-shadow: var(--btn-danger-shadow);
+}
+
+:root[data-brand-color='yellow'] {
+    --color-brand-600: var(--color-amber-solid);
+    --btn-primary-bg: var(--btn-warning-bg);
+    --btn-primary-border: var(--btn-warning-bg);
+    --btn-primary-hover: var(--btn-warning-hover);
+    --btn-primary-hover-border: var(--btn-warning-hover);
+    --btn-primary-shadow: var(--btn-warning-shadow);
+}
+
+:root[data-brand-color='blue'] {
+    --color-brand-600: var(--color-sky-solid);
+    --btn-primary-bg: var(--btn-info-bg);
+    --btn-primary-border: var(--btn-info-bg);
+    --btn-primary-hover: var(--btn-info-hover);
+    --btn-primary-hover-border: var(--btn-info-hover);
+    --btn-primary-shadow: var(--btn-info-shadow);
+}
+
+:root[data-brand-color='gray'] {
+    --color-brand-600: var(--color-secondary-500);
+    --btn-primary-bg: var(--btn-secondary-bg);
+    --btn-primary-border: var(--btn-secondary-bg);
+    --btn-primary-hover: var(--btn-secondary-hover);
+    --btn-primary-hover-border: var(--btn-secondary-hover);
+    --btn-primary-shadow: var(--btn-secondary-shadow);
+}
+
+:root[data-brand-color='dark'] {
+    --color-brand-600: var(--color-dark);
+    --btn-primary-bg: var(--btn-dark-bg);
+    --btn-primary-border: var(--btn-dark-bg);
+    --btn-primary-hover: var(--btn-dark-hover);
+    --btn-primary-hover-border: var(--btn-dark-hover);
+    --btn-primary-shadow: var(--btn-dark-shadow);
+}
+
+/*
+ * On the black dark theme a dark primary would disappear: there it is a neutral grey, not
+ * another colour. Focus frames in it stand out 3:1 on every dark surface (zinc-800 to 950)
+ * and white text on it reads 4.5:1; the button is the dark theme's grey.
+ */
+:root.dark[data-brand-color='dark'] {
+    --color-brand-600: var(--color-gray-500);
+    --btn-primary-bg: var(--color-zinc-600);
+    --btn-primary-border: var(--color-zinc-600);
+    --btn-primary-hover: color-mix(in srgb, var(--color-zinc-600) 88%, black);
+    --btn-primary-hover-border: color-mix(in srgb, var(--color-zinc-600) 88%, black);
+    --btn-primary-shadow: var(--btn-dark-shadow);
+}
+
+/*
+ * A custom colour (#rrggbb): js/appearance/theme.js measures its shades and writes them
+ * on <html> (the button's fill, hover and text colours too). --brand-custom-600 reaches
+ * 4.5:1 on white (text on white, white text on it); in the dark theme a dark colour gets
+ * a lighter tone that still stands out 3:1 on every dark surface (focus frames, borders).
+ * The rules match only while those shades are on <html> (its style attribute), so markup
+ * that names the custom colour without them keeps the theme's own primary colour.
+ */
+:root[data-brand-color='custom'][style*='--brand-custom-600'] {
+    --color-brand-600: var(--brand-custom-600);
+}
+
+:root.dark[data-brand-color='custom'][style*='--brand-custom-600'] {
+    --color-brand-600: var(--brand-custom-600-dark, var(--brand-custom-600));
+}
+
+/*
+ * Semi-dark (the dark menu in the light theme: .panel-sidebar.dark) takes the dark theme's
+ * --color-brand-600 where it differs: the dark preset and a custom colour. The brand-*
+ * shades derive from it on :root, so the ones the dark menu reads (the active item, the
+ * collapse button's hover) derive again here.
+ */
+:root[data-brand-color='dark'] .panel-sidebar.dark {
+    --color-brand-600: var(--color-gray-500);
+}
+
+:root[data-brand-color='custom'][style*='--brand-custom-600'] .panel-sidebar.dark {
+    --color-brand-600: var(--brand-custom-600-dark, var(--brand-custom-600));
+}
+
+:root[data-brand-color='dark'] .panel-sidebar.dark,
+:root[data-brand-color='custom'][style*='--brand-custom-600'] .panel-sidebar.dark {
+    --color-brand-300: color-mix(in srgb, var(--color-brand-600) 42%, white);
+    --color-brand-400: color-mix(in srgb, var(--color-brand-600) 66%, white);
+    --color-brand-500: color-mix(in srgb, var(--color-brand-600) 84%, white);
+}
+
+/*
+ * Bordered skin: <html data-skin="bordered">. Shadows are removed and replaced
+ * by a 1px border; the page background matches the card colour.
+ */
+:root[data-skin='bordered'] body.bg-gray-50 {
+    background-color: #fff;
+}
+
+/* Every shadow becomes the 1px line. */
+:root[data-skin='bordered'] {
+    --shadow-edge: var(--color-gray-200);
+    --shadow-edge-xs: var(--color-gray-200);
+    --shadow-edge-lg: var(--color-gray-200);
+    --shadow-edge-xl: var(--color-gray-200);
+    --shadow-near: transparent;
+    --shadow-near-xs: transparent;
+    --shadow-far: transparent;
+    --shadow-far-md: transparent;
+    --shadow-far-lg: transparent;
+    --shadow-near-lg: transparent;
+    --shadow-far-xl: transparent;
+    --shadow-near-xl: transparent;
+}
+
+:root.dark[data-skin='bordered'] body.bg-gray-50 {
+    background-color: var(--color-zinc-900);
+}
+
+:root.dark[data-skin='bordered'] {
+    --shadow-edge: var(--color-zinc-700);
+    --shadow-edge-xs: var(--color-zinc-700);
+    --shadow-edge-lg: var(--color-zinc-700);
+    --shadow-edge-xl: var(--color-zinc-700);
+}
+
+/* The package's plain CSS components (form modal, dialogs) use the same corner. */
+:root {
+    --ac-radius-md: var(--radius-sm);
+    --ac-radius-lg: var(--radius-sm);
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+/*
+ * Livewire's own rules (its @livewireStyles block), here in the cached stylesheet instead
+ * of inline in every page: acun:layout.head marks Livewire's styles as printed. The
+ * attribute selectors are doubled as in Livewire, so a later stylesheet does not override
+ * them. The navigation progress bar takes the primary colour.
+ */
+[wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.list-item][wire\:loading\.list-item], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex],
+[wire\:loading\.delay\.none][wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short][wire\:loading\.delay\.short], [wire\:loading\.delay\.default][wire\:loading\.delay\.default], [wire\:loading\.delay\.long][wire\:loading\.delay\.long], [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest],
+[wire\:offline][wire\:offline],
+[wire\:dirty]:not(textarea):not(input):not(select) {
+    display: none;
+}
+
+[wire\:cloak="wire:cloak"],
+[wire\:cloak=""] {
+    display: none !important;
+}
+
+:root {
+    --livewire-progress-bar-color: var(--color-brand-600);
+}
+
+dialog#livewire-error::backdrop {
+    background-color: rgba(0, 0, 0, .6);
+}
+
+/*
+ * The panel container. The top bar, the page and the footer each sit in one, so their edges
+ * line up on every screen: the gutter around them grows with the screen (16 / 24 / 32px) and
+ * the width is either the whole content area (wide, like Bootstrap's container-fluid) or at
+ * most 1440px, centred (boxed, like container-xxl): <html data-content-width="boxed">, the
+ * layouts' content-width prop, config('acun-ui.layout.content_width') or Appearance → Content width.
+ *
+ * Not Tailwind's `container`: its width jumps at the viewport breakpoints and does not know the
+ * side menu's width, so the page would neither fill the space nor line up with the top bar.
+ */
+:root {
+    --panel-gutter: 1rem;
+    --panel-container-width: none;
+}
+
+@media (width >= 40rem) {
+    :root {
+        --panel-gutter: 1.5rem;
+    }
+}
+
+@media (width >= 64rem) {
+    :root {
+        --panel-gutter: 2rem;
+    }
+}
+
+:root[data-content-width='boxed'] {
+    --panel-container-width: 1440px;
+}
+
+@layer components {
+    .panel-gutter {
+        padding-inline: var(--panel-gutter);
+    }
+
+    .panel-container {
+        width: 100%;
+        max-width: var(--panel-container-width);
+        margin-inline: auto;
+    }
+}
+
+/*
+ * Content area geometry + docked "Filtreler" (filters) panel (desktop).
+ *
+ * One component (components/ui/drawer.blade.php, `docked`), two page layouts.
+ * The component does not know the layout; each layout declares the geometry
+ * on its own <body> with CSS variables, and the SINGLE rule set below both
+ * positions the panel and pushes the content. In both layouts the panel is
+ * anchored to the left edge (left: 0) and its width comes from the SAME
+ * source as the side menu (--menu-width):
+ *
+ *   --content-start-padding  left padding of `.content-area` while the panel is closed
+ *   --filter-open-padding    the same padding while the panel is open
+ *   --filter-top/bottom      top/bottom gap of the panel
+ *
+ * The open/closed state is read from the panel's `data-filter-open` attribute
+ * with `:has()` - no JS store or event syncing.
+ */
+/* Width of the side menu (vertical layout) and the docked filter panel - single source. */
+:root {
+    --menu-width: 272px;
+}
+
+/*
+ * Buttons on the menu edge: the side menu's collapse button and the filter
+ * panel's close button share the SAME look/alignment. A small white square
+ * with a hairline border, centred on the menu's right edge; turns the primary
+ * colour on hover. Visibility (display) is not set here - each button handles
+ * it with its own rule.
+ */
+.menu-toggle {
+    --menu-toggle-size: 26px;
+
+    width: var(--menu-toggle-size);
+    height: var(--menu-toggle-size);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    background-color: #fff;
+    color: var(--color-gray-500);
+    box-shadow: 0 1px 2px 0 rgb(24 24 27 / 0.06);
+    opacity: 1;
+    cursor: pointer;
+    inset-inline-start: calc(var(--menu-width) - var(--menu-toggle-size) / 2);
+    transition: color 150ms, border-color 150ms, background-color 150ms;
+}
+
+.menu-toggle:hover {
+    border-color: var(--color-brand-300);
+    color: var(--color-brand-600);
+}
+
+/* Filter panel close button: same geometry, red X on hover. */
+.menu-toggle.menu-toggle-close:hover {
+    border-color: var(--color-red-300);
+    color: var(--color-red-600);
+}
+
+.dark .menu-toggle {
+    border-color: var(--color-zinc-700);
+    background-color: var(--color-zinc-900);
+    color: var(--color-zinc-400);
+}
+
+.dark .menu-toggle:hover {
+    color: var(--color-brand-400);
+}
+
+/*
+ * Menu collapse button: not fixed from the left but tied to the menu's RIGHT
+ * edge - it moves with the edge while the menu width animates (expand/collapse
+ * and expand on hover). When collapsed it fades out instead of display:none,
+ * appearing and disappearing together with the edge. (It used to appear at
+ * its final position before the menu did.)
+ */
+.menu-collapse-button {
+    inset-inline-start: auto;
+    inset-inline-end: calc(var(--menu-toggle-size) / -2);
+    transition: background-color 150ms, opacity 200ms, visibility 200ms;
+}
+
+html[data-sidebar-collapsed='true'] .panel-sidebar:not(.sidebar-hover, :has(:focus-visible)) .menu-collapse-button,
+.panel-sidebar.sidebar-collapsed:not(.sidebar-hover, :has(:focus-visible)) .menu-collapse-button {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* `html` prefix: so it also overrides the .filter-close-button transition rule that comes later in the file. */
+    html .menu-collapse-button,
+    html .filter-close-button {
+        transition: none;
+    }
+}
+
+@media (width >= 64rem) {
+    /* Horizontal: header on top (h-16), content area is <main>; the panel sits below the header. */
+    .layout-horizontal {
+        /* The same gutter as the top bar and the right side (it was 1.5rem against 2rem: the page sat 8px off). */
+        --content-start-padding: var(--panel-gutter);
+        --filter-open-padding: calc(var(--menu-width) + var(--panel-gutter));
+        --filter-top: 96px;
+        --filter-bottom: 15px;
+    }
+
+    /* Vertical: content area is .panel-content; the panel opens in the side
+       menu's position, ON TOP of it (full height, same width as the menu). */
+    .layout-vertical {
+        --content-start-padding: var(--menu-width);
+        --filter-open-padding: var(--menu-width);
+        --filter-top: 0px;
+        --filter-bottom: 0px;
+    }
+
+    /* Collapsed menu - two signals, see the .panel-sidebar note below. */
+    html[data-sidebar-collapsed='true'] .layout-vertical,
+    .layout-vertical.sidebar-collapsed {
+        --content-start-padding: 72px;
+    }
+
+    .content-area {
+        padding-left: var(--content-start-padding);
+    }
+
+    .content-area:has([data-filter-open='true']) {
+        padding-left: var(--filter-open-padding);
+    }
+
+    .filter-panel {
+        top: var(--filter-top);
+        bottom: auto;
+        height: calc(100dvh - var(--filter-top) - var(--filter-bottom));
+    }
+
+    /* Panel close button: same alignment as the menu collapse button (horizontal
+       position from .menu-toggle, vertical position 3rem from the top = the menu's `top-12`). */
+    /* Same behaviour as the menu collapse button: follows the panel's right edge
+       while its width animates (200ms ease-out), appearing and fading together
+       with the edge. While closed it sits invisible at the panel's left edge. */
+    .filter-close-button {
+        top: calc(var(--filter-top) + 3rem);
+        inset-inline-start: calc(var(--menu-toggle-size) / -2);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        /* SAME curve as the panel's width transition (Tailwind ease-out; the CSS ease-out keyword is different and starts slower). */
+        transition: background-color 150ms, inset-inline-start 200ms var(--ease-out, cubic-bezier(0, 0, 0.2, 1)), opacity 200ms var(--ease-out, cubic-bezier(0, 0, 0.2, 1)), visibility 200ms;
+    }
+
+    .filter-panel[data-filter-open='true'] ~ .filter-close-button {
+        inset-inline-start: calc(var(--menu-width) - var(--menu-toggle-size) / 2);
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    /* Vertical: the panel covers the menu and its close button takes the place
+       of the menu collapse button - the two must not appear on top of each other. */
+    .layout-vertical:has([data-filter-open='true']) .menu-collapse-button {
+        visibility: hidden;
+    }
+}
+
+/*
+ * Page scrolling. The page itself scrolls (the window, not an inner <main>):
+ * keyboard scrolling works on load, mobile browsers can hide their address
+ * bar, back/forward restores the position and window scroll listeners work.
+ * The side menu is fixed; the top bar sticks to the top in the "fixed" navbar
+ * mode (vertical layout) and always in the horizontal layout.
+ *
+ * scrollbar-gutter keeps the scrollbar's space reserved, so the layout does not
+ * shift when a page grows past the screen or a dialog locks the scroll.
+ */
+html.panel-layout {
+    scrollbar-gutter: stable;
+}
+
+/*
+ * No elastic "bounce" at the top and bottom of the page with a mouse or
+ * trackpad (macOS): the bounce moved the whole page, sticky top bar included,
+ * so the bar looked loose. Touch screens keep the native behaviour
+ * (pull-to-refresh on phones).
+ */
+@media (pointer: fine) {
+    html.panel-layout {
+        overscroll-behavior-y: none;
+    }
+}
+
+/* Page colour behind the floating top bar (see .panel-topbar::before); follows theme and skin. */
+:root {
+    --panel-page-bg: var(--color-light);
+}
+
+:root.dark {
+    --panel-page-bg: var(--color-zinc-950);
+}
+
+:root[data-skin='bordered'] {
+    --panel-page-bg: #fff;
+}
+
+:root.dark[data-skin='bordered'] {
+    --panel-page-bg: var(--color-zinc-900);
+}
+
+/*
+ * One backdrop for every overlay (modal, drawer, command palette, dialogs, the
+ * PRO form modal and filter drawer). On the black dark theme a light dimming is
+ * invisible, so it is darker there and blurs the page behind the dialog.
+ */
+:root {
+    --ui-backdrop: rgb(10 10 10 / 0.45);
+    --ui-backdrop-blur: 2px;
+}
+
+:root.dark {
+    --ui-backdrop: rgb(0 0 0 / 0.72);
+    --ui-backdrop-blur: 4px;
+}
+
+/*
+ * Focus look of the form fields (input, select, textarea, input group, combobox,
+ * tag input, OTP): the 1px frame takes the brand colour (red on an invalid field),
+ * without a shadow. A theme can add one for every field here, e.g.
+ *     --ui-focus-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-600) 12%, transparent);
+ */
+:root {
+    --ui-focus-shadow: 0 0 #0000;
+    --ui-focus-shadow-error: 0 0 #0000;
+}
+
+/*
+ * Focus ring: the keyboard focus frame of buttons, links, tabs, menus and form fields, drawn
+ * with the outline-focus and ring-focus utilities. It is the primary colour (--color-brand-600;
+ * the dark theme's in the dark theme and in the semi-dark menu). A theme sets another colour
+ * with --ui-focus-ring, e.g.
+ *     :root { --ui-focus-ring: var(--color-accent-600); }
+ * It has no value here on purpose: one set on :root would carry the light primary colour into
+ * the semi-dark menu, which takes the dark theme's on its own element.
+ */
+@theme inline {
+    --color-focus: var(--ui-focus-ring, var(--color-brand-600));
+}
+
+/* The frame of a checkbox and a radio: 3:1 against the page, as a control's edge must be. */
+:root {
+    --ui-control-border: color-mix(in srgb, var(--color-gray-500) 80%, white);
+}
+
+/* .dark: the dark theme on <html> and the semi-dark menu (.panel-sidebar.dark). */
+.dark {
+    --ui-control-border: var(--color-zinc-500);
+}
+
+/*
+ * Solid buttons (acun:button primary, secondary, success, danger, warning, info,
+ * dark, light): fill, 1px border and hover colours per variant, white text (dark grey
+ * on light). With shadow, a shadow in the button's colour sits under it and goes
+ * away on hover. Change a variant here for every button, e.g. --btn-success-bg.
+ *
+ * The primary button follows the brand colour: fill, border, hover and shadow derive
+ * from --color-brand-600, so a theme's own @theme value changes them all (for the
+ * default #794dff: border #794dff, hover #6a44e0, shadow rgb(121 77 255 / 90%)).
+ * The presets above and a custom colour (js/appearance/theme.js) set their own; a custom
+ * colour also sets the text colour on the fill, which stays the same on the hover
+ * (--btn-primary-color, --btn-primary-hover-color). Every variant derives from the
+ * palette tokens; a hover is the fill with 12% black.
+ */
+:root {
+    --btn-primary-bg: var(--color-brand-600);
+    --btn-primary-border: var(--color-brand-600);
+    --btn-primary-hover: color-mix(in srgb, var(--color-brand-600) 88%, black);
+    --btn-primary-hover-border: var(--btn-primary-hover);
+    --btn-primary-shadow: color-mix(in srgb, var(--color-brand-600) 90%, transparent);
+
+    --btn-success-bg: var(--color-emerald-solid);
+    --btn-success-hover: color-mix(in srgb, var(--color-emerald-solid) 88%, black);
+    --btn-success-shadow: color-mix(in srgb, var(--color-emerald-solid) 90%, transparent);
+    --btn-success-color: #fff;
+
+    --btn-danger-bg: var(--color-red-600);
+    --btn-danger-hover: color-mix(in srgb, var(--color-red-600) 88%, black);
+    --btn-danger-shadow: color-mix(in srgb, var(--color-red-500) 90%, transparent);
+
+    --btn-warning-bg: var(--color-amber-solid);
+    --btn-warning-hover: color-mix(in srgb, var(--color-amber-solid) 88%, black);
+    --btn-warning-shadow: color-mix(in srgb, var(--color-amber-solid) 90%, transparent);
+    --btn-warning-color: #fff;
+
+    --btn-info-bg: var(--color-sky-solid);
+    --btn-info-hover: color-mix(in srgb, var(--color-sky-solid) 88%, black);
+    --btn-info-shadow: color-mix(in srgb, var(--color-sky-solid) 90%, transparent);
+    --btn-info-color: #fff;
+
+    --btn-secondary-bg: var(--color-secondary-500);
+    --btn-secondary-hover: color-mix(in srgb, var(--color-secondary-500) 88%, black);
+    --btn-secondary-shadow: color-mix(in srgb, var(--color-secondary-500) 90%, transparent);
+
+    --btn-dark-bg: var(--color-dark);
+    --btn-dark-hover: color-mix(in srgb, var(--color-dark) 88%, black);
+    --btn-dark-shadow: color-mix(in srgb, var(--color-dark) 75%, transparent);
+
+    --btn-light-bg: var(--color-light);
+    --btn-light-border: var(--color-gray-200);
+    --btn-light-hover: var(--color-gray-200);
+    --btn-light-hover-border: var(--color-gray-300);
+    --btn-light-color: var(--color-gray-600);
+    --btn-light-shadow: color-mix(in srgb, var(--color-secondary-600) 18%, transparent);
+}
+
+/* The black dark theme has no navy: there the dark button is a neutral dark grey (the semi-dark menu's too). */
+.dark {
+    --btn-dark-bg: var(--color-zinc-700);
+    --btn-dark-hover: var(--color-zinc-600);
+    --btn-dark-shadow: rgb(0 0 0 / 60%);
+}
+
+@layer components {
+    .ui-btn {
+        background-color: var(--btn-bg);
+        border-color: var(--btn-border, var(--btn-bg));
+        color: var(--btn-color, #fff);
+    }
+
+    /* Hover and press (the press also nudges the button down 1px, see acun:button). */
+    .ui-btn:not(:disabled, [aria-disabled='true']):is(:hover, :active) {
+        background-color: var(--btn-hover);
+        border-color: var(--btn-hover-border, var(--btn-hover));
+        color: var(--btn-hover-color, var(--btn-color, #fff));
+    }
+
+    .ui-btn-shadow {
+        box-shadow: 0 0.5rem 1.125rem -0.5rem var(--btn-shadow);
+    }
+
+    .ui-btn-shadow:is(:hover, :active, :disabled, [aria-disabled='true']) {
+        box-shadow: none;
+    }
+
+    .ui-btn-primary { --btn-bg: var(--btn-primary-bg); --btn-border: var(--btn-primary-border); --btn-hover: var(--btn-primary-hover); --btn-hover-border: var(--btn-primary-hover-border); --btn-shadow: var(--btn-primary-shadow); --btn-color: var(--btn-primary-color, #fff); --btn-hover-color: var(--btn-primary-hover-color, var(--btn-primary-color, #fff)); }
+    .ui-btn-success { --btn-bg: var(--btn-success-bg); --btn-hover: var(--btn-success-hover); --btn-shadow: var(--btn-success-shadow); --btn-color: var(--btn-success-color); }
+    .ui-btn-danger { --btn-bg: var(--btn-danger-bg); --btn-hover: var(--btn-danger-hover); --btn-shadow: var(--btn-danger-shadow); }
+    .ui-btn-warning { --btn-bg: var(--btn-warning-bg); --btn-hover: var(--btn-warning-hover); --btn-shadow: var(--btn-warning-shadow); --btn-color: var(--btn-warning-color); }
+    .ui-btn-info { --btn-bg: var(--btn-info-bg); --btn-hover: var(--btn-info-hover); --btn-shadow: var(--btn-info-shadow); --btn-color: var(--btn-info-color); }
+    .ui-btn-secondary { --btn-bg: var(--btn-secondary-bg); --btn-hover: var(--btn-secondary-hover); --btn-shadow: var(--btn-secondary-shadow); }
+    .ui-btn-dark { --btn-bg: var(--btn-dark-bg); --btn-hover: var(--btn-dark-hover); --btn-shadow: var(--btn-dark-shadow); }
+    .ui-btn-light { --btn-bg: var(--btn-light-bg); --btn-border: var(--btn-light-border); --btn-hover: var(--btn-light-hover); --btn-hover-border: var(--btn-light-hover-border); --btn-color: var(--btn-light-color); --btn-shadow: var(--btn-light-shadow); }
+}
+
+.ui-backdrop {
+    background-color: var(--ui-backdrop);
+    backdrop-filter: blur(var(--ui-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--ui-backdrop-blur));
+}
+
+/*
+ * The PRO package's plain CSS components (form modal, unsaved changes
+ * dialog) read --ac-* tokens; map them to the theme so they follow the brand
+ * colour and the dark theme.
+ */
+:root {
+    --ac-surface: #fff;
+    --ac-surface-subtle: var(--color-gray-50);
+    --ac-border: var(--color-gray-200);
+    --ac-border-strong: var(--color-gray-300);
+    --ac-text: var(--color-gray-900);
+    --ac-text-muted: var(--color-gray-500);
+    --ac-primary: var(--color-brand-600);
+    --ac-secondary: var(--color-gray-500);
+    --ac-danger: var(--color-red-600);
+    --ac-shadow-sm: var(--shadow-sm);
+    --ac-shadow-lg: var(--shadow-lg);
+    --ac-shadow-xl: var(--shadow-xl);
+}
+
+/* .dark: the dark theme and the semi-dark menu. The primary fill carries white text, so it is brand-600 there too. */
+.dark {
+    --ac-surface: var(--color-zinc-900);
+    --ac-surface-subtle: var(--color-zinc-800);
+    --ac-border: var(--color-zinc-700);
+    --ac-border-strong: var(--color-zinc-600);
+    --ac-text: var(--color-zinc-100);
+    --ac-text-muted: var(--color-zinc-400);
+    --ac-primary: var(--color-brand-600);
+    --ac-secondary: var(--color-zinc-600);
+    --ac-danger: var(--color-red-500);
+    --ac-shadow-sm: 0 0 0 1px var(--color-zinc-800), 0 4px 14px 0 rgb(0 0 0 / 0.22);
+    --ac-shadow-lg: 0 0 0 1px var(--color-zinc-700), 0 16px 40px 0 rgb(0 0 0 / 0.45);
+    --ac-shadow-xl: 0 0 0 1px var(--color-zinc-700), 0 24px 64px 0 rgb(0 0 0 / 0.6);
+}
+
+/* Set by window.acunScrollLock (acun:layout.head) while a modal, drawer or the command palette is open. */
+html.scroll-locked {
+    overflow: hidden;
+}
+
+/*
+ * Sticky top bar. The page scrolls UNDER the floating bar; a strip in the page
+ * colour, blurred and fading out downwards, keeps the content from showing
+ * sharply in the gap above and around the bar.
+ */
+.layout-horizontal .panel-topbar,
+.panel-content[data-navbar='fixed'] > .panel-topbar {
+    position: sticky;
+    top: 0;
+    isolation: isolate;
+}
+
+.layout-horizontal .panel-topbar::before,
+.panel-content[data-navbar='fixed'] > .panel-topbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, var(--panel-page-bg) 40%, color-mix(in srgb, var(--panel-page-bg) 55%, transparent) 75%, transparent);
+    backdrop-filter: saturate(1.5) blur(8px);
+    -webkit-backdrop-filter: saturate(1.5) blur(8px);
+    mask-image: linear-gradient(to bottom, #000 65%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 65%, transparent);
+}
+
+/* In-page links (#section) stop below the sticky top bar instead of under it. */
+html:has(.panel-content[data-navbar='fixed']),
+html:has(body.layout-horizontal) {
+    scroll-padding-top: 6.5rem;
+}
+
+@media (width >= 64rem) {
+    .panel-sidebar {
+        width: var(--menu-width);
+    }
+
+    /* While keyboard focus is inside the menu (:focus-visible) the collapsed
+       menu also expands as if hovered - users navigating with Tab can see the
+       labels and submenus. Mouse clicks do not produce :focus-visible. */
+    /* The two separate signals are intentional: 'html[data-sidebar-collapsed]'
+       exists ONLY to give the correct width instantly on the first real page
+       load (before Alpine is ready); otherwise there is a "FOUC" moment. The
+       actual persistent source is the '.sidebar-collapsed' class - it comes
+       from the Alpine store (via :class), and since the aside/body are never
+       destroyed it stays correct WITHOUT INTERRUPTION across wire:navigate
+       page transitions. The html attribute can be removed during a transition
+       (Livewire's own <html> merge does not protect it) - so it cannot be
+       relied on alone. */
+    html[data-sidebar-collapsed='true'] .panel-sidebar:not(.sidebar-hover, :has(:focus-visible)),
+    .panel-sidebar.sidebar-collapsed:not(.sidebar-hover, :has(:focus-visible)) {
+        width: 72px;
+    }
+
+    /*
+     * Collapsed menu (without hover): labels, badges, chevrons and the logo
+     * text FADE but keep their space; section headings keep their height and
+     * are replaced by a thin line; submenus close with a height transition.
+     * This way icons do not shift and nothing jumps while expanding/collapsing.
+     * Bound to the SAME two signals as the width - correct even on the first
+     * frame before Alpine.
+     */
+    .panel-sidebar .collapsed-hidden {
+        transition: opacity 150ms ease 70ms;
+    }
+
+    .panel-sidebar .menu-heading {
+        position: relative;
+        transition: color 150ms ease 70ms;
+    }
+
+    .panel-sidebar .menu-heading::after {
+        content: '';
+        position: absolute;
+        left: 0.875rem;
+        width: 1.25rem;
+        bottom: 1rem;
+        height: 1px;
+        background-color: var(--color-gray-200);
+        opacity: 0;
+        transition: opacity 100ms ease;
+    }
+
+    .dark .panel-sidebar .menu-heading::after,
+    .panel-sidebar.dark .menu-heading::after {
+        background-color: var(--color-zinc-700);
+    }
+
+    .panel-sidebar .submenu {
+        overflow: hidden;
+        max-height: 40rem;
+        transition: max-height 220ms ease, opacity 150ms ease, margin 220ms ease;
+    }
+
+    html[data-sidebar-collapsed='true'] .panel-sidebar:not(.sidebar-hover, :has(:focus-visible)) .collapsed-hidden,
+    .panel-sidebar.sidebar-collapsed:not(.sidebar-hover, :has(:focus-visible)) .collapsed-hidden {
+        opacity: 0;
+        pointer-events: none;
+        transition-delay: 0ms;
+        transition-duration: 80ms;
+    }
+
+    html[data-sidebar-collapsed='true'] .panel-sidebar:not(.sidebar-hover, :has(:focus-visible)) .menu-heading,
+    .panel-sidebar.sidebar-collapsed:not(.sidebar-hover, :has(:focus-visible)) .menu-heading {
+        color: transparent;
+        transition-delay: 0ms;
+    }
+
+    html[data-sidebar-collapsed='true'] .panel-sidebar:not(.sidebar-hover, :has(:focus-visible)) .menu-heading::after,
+    .panel-sidebar.sidebar-collapsed:not(.sidebar-hover, :has(:focus-visible)) .menu-heading::after {
+        opacity: 1;
+    }
+
+    html[data-sidebar-collapsed='true'] .panel-sidebar:not(.sidebar-hover, :has(:focus-visible)) .submenu,
+    .panel-sidebar.sidebar-collapsed:not(.sidebar-hover, :has(:focus-visible)) .submenu {
+        max-height: 0;
+        opacity: 0;
+        margin-block: 0;
+    }
+}
+
+/* The menu's scrollbar: invisible at rest, a hairline (2px) rounded bar while the
+   pointer is over the side menu, 6px while it is over the bar itself. The bar takes 8px; a
+   transparent border around the thumb shows 2px of it until the thumb is hovered.
+   The thumb's colour is a custom property of the scrolling element, set while the element
+   or its parent (the whole side menu) is hovered: the element's own style then changes, so
+   Chrome repaints the bar however the pointer comes in. With only a ":hover" rule on the
+   thumb, Chrome repaints it just when the pointer crosses the bar (e.g. coming from the page
+   content), not when it enters from the logo or the window edge.
+   Chrome ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color is set,
+   so the standard properties are only for browsers without it (Firefox, whose
+   thinnest bar is "thin"). */
+.sidebar-scrollbar {
+    --sidebar-scrollbar-thumb: transparent;
+}
+.sidebar-scrollbar:hover,
+:hover > .sidebar-scrollbar {
+    --sidebar-scrollbar-thumb: var(--color-gray-200);
+}
+.dark .sidebar-scrollbar:hover,
+.dark :hover > .sidebar-scrollbar,
+.dark:hover > .sidebar-scrollbar {
+    --sidebar-scrollbar-thumb: var(--color-zinc-800);
+}
+.sidebar-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.sidebar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-color: var(--sidebar-scrollbar-thumb);
+    background-clip: padding-box;
+}
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    border-width: 1px;
+    background-color: var(--color-gray-300);
+}
+.dark .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-zinc-700);
+}
+@supports not selector(::-webkit-scrollbar) {
+    .sidebar-scrollbar {
+        scrollbar-color: var(--sidebar-scrollbar-thumb) transparent;
+        scrollbar-width: thin;
+    }
+}
+
+@layer base {
+    /* Public Sans keeps the system's text rendering on light backgrounds; light
+       text on the dark theme is smoothed so it does not look heavier than it is. */
+    html.dark {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* The browser's own parts follow the theme: native select lists, date pickers,
+       scrollbars and autofill colours are dark in the dark theme. */
+    html {
+        color-scheme: light;
+    }
+
+    html.dark {
+        color-scheme: dark;
+    }
+
+    body {
+        color: var(--color-gray-700);
+    }
+
+    .dark body {
+        color: var(--color-zinc-300);
+    }
+
+    :is(h1, h2, h3, h4, h5, h6) {
+        color: var(--color-gray-900);
+        letter-spacing: -0.011em;
+    }
+
+    .dark :is(h1, h2, h3, h4, h5, h6) {
+        color: var(--color-zinc-100);
+    }
+
+    code, kbd, samp, pre {
+        font-family: var(--font-mono);
+    }
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+
+    /* Tailwind v4 sets the cursor to `default` on buttons; use the pointer cursor on everything clickable. */
+    a[href],
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    summary,
+    label[for],
+    select:not(:disabled),
+    input:is([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='file']):not(:disabled),
+    ::file-selector-button {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    input:disabled,
+    select:disabled,
+    [aria-disabled='true'] {
+        cursor: not-allowed;
+    }
+}
+
+/* ---------------------------------------------------------------------
+ * UI Kit — base element styling.
+ * Component files live under acunsoft/acun-ui resources/views/components/ui.
+ * This layer only holds default styles applied to raw HTML tags (table,
+ * th, td); components carry their own classes.
+ * --------------------------------------------------------------------- */
+@layer components {
+    .ui-table {
+        @apply w-full text-sm text-left border-collapse;
+    }
+    .ui-table thead th {
+        @apply px-4 py-3 text-2xs font-semibold tracking-[0.06em] text-gray-500 uppercase whitespace-nowrap border-b border-gray-200 bg-gray-50/70 dark:bg-zinc-800/40 dark:text-zinc-400 dark:border-zinc-800;
+    }
+    .ui-table tbody td {
+        @apply px-4 py-3 text-gray-700 whitespace-nowrap border-t border-gray-100 dark:text-zinc-300 dark:border-zinc-800;
+    }
+    .ui-table tbody tr {
+        @apply transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/60;
+    }
+    .ui-table tfoot td {
+        @apply px-4 py-3 font-semibold text-gray-900 whitespace-nowrap border-t-2 border-gray-300 bg-gray-100 dark:text-zinc-100 dark:border-zinc-600 dark:bg-zinc-800;
+    }
+
+    /* A cell across the whole row (a "no records" message, an empty state) wraps its text. */
+    .ui-table tbody td[colspan] {
+        white-space: normal;
+    }
+
+    /* Phones: a little less room around the cells, so more of the table fits. */
+    @media (width < 40rem) {
+        .ui-table :is(thead th, tbody td, tfoot td) {
+            padding-inline: 0.75rem;
+        }
+    }
+
+    /*
+     * The scroll box of acun:table: a shadow on the edge that has more columns behind it, so a
+     * table wider than the screen says it scrolls. Pure CSS: the covers (local) move with the
+     * content and hide the shadows (scroll) at the start and the end.
+     */
+    .ui-table-box {
+        --ui-table-box-bg: #fff;
+        --ui-table-box-shadow: rgb(24 24 27 / 0.16);
+
+        background-image:
+            linear-gradient(to right, var(--ui-table-box-bg) 30%, transparent),
+            linear-gradient(to left, var(--ui-table-box-bg) 30%, transparent),
+            radial-gradient(farthest-side at 0 50%, var(--ui-table-box-shadow), transparent),
+            radial-gradient(farthest-side at 100% 50%, var(--ui-table-box-shadow), transparent);
+        background-position: left center, right center, left center, right center;
+        background-repeat: no-repeat;
+        background-size: 2.5rem 100%, 2.5rem 100%, 0.875rem 100%, 0.875rem 100%;
+        background-attachment: local, local, scroll, scroll;
+    }
+
+    .dark .ui-table-box {
+        --ui-table-box-bg: var(--color-zinc-900);
+        --ui-table-box-shadow: rgb(0 0 0 / 0.7);
+    }
+}
+
+/*
+ * acun:table stack: when the table's box is narrower than its breakpoint (sm 40rem, md 48rem),
+ * every row is a card. The first cell is the card's title on a line of its own; the other cells
+ * follow side by side, an end-aligned cell (the amount) on the end; a cell with data-label (the
+ * cell's label prop) is a "Label ……… value" line. The headings stay for screen readers.
+ * A container query: a table in a narrow column of a wide screen stacks too.
+ */
+[data-table-stack] {
+    container-type: inline-size;
+}
+
+@container (width < 40rem) {        [data-table-stack='sm'] > .ui-table > thead {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+
+        [data-table-stack='sm'] > .ui-table,
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) {
+            display: block;
+        }
+
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.375rem 0.75rem;
+            padding: 0.875rem 1rem;
+            border-top: 1px solid var(--color-gray-100);
+        }
+
+        [data-table-stack='sm'] > .ui-table > tbody > tr:first-child {
+            border-top-width: 0;
+        }
+
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr > td {
+            display: block;
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            background: none;
+            white-space: normal;
+        }
+
+        /* The title line: the first cell, and an end-aligned cell (the amount, the date) on its end. */
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr > td {
+            order: 1;
+        }
+
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr > td:first-child {
+            flex: 1 1 0%;
+            order: -1;
+        }
+
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr > td:is(.text-end, .text-right):not(:first-child, [data-label]) {
+            flex: none;
+            order: -1;
+            margin-inline-start: auto;
+        }
+
+        /* The line break after the title line; the negative margin takes back its extra row gap. */
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr::after {
+            content: '';
+            flex-basis: 100%;
+            order: 0;
+            height: 0;
+            margin-top: -0.375rem;
+        }
+
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr > td[data-label] {
+            display: flex;
+            flex: 1 0 100%;
+            order: 2;
+            justify-content: space-between;
+            gap: 1rem;
+            text-align: end;
+        }
+
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr > td[data-label]::before {
+            content: attr(data-label);
+            color: var(--color-gray-500);
+            text-align: start;
+        }
+
+        [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr > td:empty {
+            display: none;
+        }
+
+        :where(.dark) [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr {
+            border-top-color: var(--color-zinc-800);
+        }
+
+        :where(.dark) [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr > td[data-label]::before {
+            color: var(--color-zinc-400);
+        }
+}
+
+@container (width < 48rem) {        [data-table-stack='md'] > .ui-table > thead {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+
+        [data-table-stack='md'] > .ui-table,
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) {
+            display: block;
+        }
+
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.375rem 0.75rem;
+            padding: 0.875rem 1rem;
+            border-top: 1px solid var(--color-gray-100);
+        }
+
+        [data-table-stack='md'] > .ui-table > tbody > tr:first-child {
+            border-top-width: 0;
+        }
+
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr > td {
+            display: block;
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            background: none;
+            white-space: normal;
+        }
+
+        /* The title line: the first cell, and an end-aligned cell (the amount, the date) on its end. */
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr > td {
+            order: 1;
+        }
+
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr > td:first-child {
+            flex: 1 1 0%;
+            order: -1;
+        }
+
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr > td:is(.text-end, .text-right):not(:first-child, [data-label]) {
+            flex: none;
+            order: -1;
+            margin-inline-start: auto;
+        }
+
+        /* The line break after the title line; the negative margin takes back its extra row gap. */
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr::after {
+            content: '';
+            flex-basis: 100%;
+            order: 0;
+            height: 0;
+            margin-top: -0.375rem;
+        }
+
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr > td[data-label] {
+            display: flex;
+            flex: 1 0 100%;
+            order: 2;
+            justify-content: space-between;
+            gap: 1rem;
+            text-align: end;
+        }
+
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr > td[data-label]::before {
+            content: attr(data-label);
+            color: var(--color-gray-500);
+            text-align: start;
+        }
+
+        [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr > td:empty {
+            display: none;
+        }
+
+        :where(.dark) [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr {
+            border-top-color: var(--color-zinc-800);
+        }
+
+        :where(.dark) [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr > td[data-label]::before {
+            color: var(--color-zinc-400);
+        }
+}
+
+/* acun:progress: striped / animated progress bar. */
+.progress-striped {
+    background-image: linear-gradient(45deg, rgb(255 255 255 / 0.18) 25%, transparent 25%, transparent 50%, rgb(255 255 255 / 0.18) 50%, rgb(255 255 255 / 0.18) 75%, transparent 75%, transparent);
+    background-size: 1rem 1rem;
+}
+
+.progress-animated {
+    animation: progress-stripes 1s linear infinite;
+}
+
+@keyframes progress-stripes {
+    from {
+        background-position: 1rem 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .progress-animated {
+        animation: none;
+    }
+}
