@@ -28,9 +28,12 @@ const TONES = ['primary', 'secondary', 'success', 'info', 'warning', 'danger', '
 const roles = (tone) => [tone, `${tone}-hover`, `on-${tone}`, `${tone}-ink`, `${tone}-line`, `${tone}-tint`, `${tone}-soft`, `${tone}-tint-ink`];
 const NEUTRALS = ['page', 'surface', 'field', 'field-hover', 'field-disabled', 'sunken', 'hover', 'track', 'inverse', 'on-inverse', 'line', 'line-soft', 'line-strong', 'line-hover', 'control', 'ink', 'body', 'dim', 'muted', 'faint'];
 const COLOUR_ROLES = [...NEUTRALS, ...TONES.flatMap(roles), 'focus'];
+/** The layers each shadow composes (a 1px edge, then soft near and far layers), in the utility's order. */
+const SHADOW_LAYERS = { xs: ['edge', 'near'], sm: ['edge', 'near', 'far'], md: ['edge', 'far'], lg: ['edge', 'far', 'near'], xl: ['edge', 'far', 'near'] };
+const SHADOW_TOKENS = Object.entries(SHADOW_LAYERS).flatMap(([size, layers]) => [`shadow-${size}`, ...layers.map((layer) => `shadow-${size}-${layer}`)]);
 const OTHER_TOKENS = [
     ...TONES.map((tone) => `tone-${tone}`), 'p', 'page-pattern', 'page-pattern-size', 'focus-shadow', 'focus-shadow-danger', 'backdrop', 'backdrop-blur',
-    'radius', 'radius-check', 'font-sans', 'font-mono', 'font-display', 'font-brand', 'shadow-xs', 'shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-xl',
+    'radius', 'radius-check', 'font-sans', 'font-mono', 'font-display', 'font-brand', ...SHADOW_TOKENS,
 ];
 
 /** Every innermost {…} block of a stylesheet: its selector (or at-rule) and its declarations in order. */
@@ -78,9 +81,10 @@ const scopes = {
 };
 
 // The 1.x kit's variables, as each theme and skin cascaded them on <html>: what is left of them in
-// panel.css (the palette scales, the shadows), and, frozen here, the ones the runtime pipeline
-// replaced (the brand palette mixed from --color-brand-600, the primary fill, the backdrop, the
-// fields' focus shadow, the corner and the fonts; --color-dark is the dark tone of tokens.css now).
+// panel.css (the palette scales), and, frozen here, the ones the token pipeline replaced (the brand
+// palette mixed from --color-brand-600, the primary fill, the backdrop, the fields' focus shadow,
+// the checkbox frame, the shadows with their dark and bordered layer colours, the corner and the
+// fonts; --color-dark is the dark tone of tokens.css now).
 const panelRules = rules(panelCss);
 const brand = (share, toward) => `color-mix(in srgb, var(--color-brand-600) ${share}%, ${toward})`;
 const LEGACY = new Map([
@@ -98,14 +102,34 @@ const LEGACY = new Map([
     ['--font-sans', "var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"],
     ['--font-mono', "var(--font-dm-mono, 'DM Mono'), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"],
     ['--font-brand', "var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, sans-serif"],
+    ['--ui-control-border', 'color-mix(in srgb, var(--color-gray-500) 80%, white)'],
+    // 1.x panel.css @theme: the shadow utilities, their layer colours in variables with the light values as fallbacks.
+    ['--shadow-xs', '0 0 0 1px var(--shadow-edge-xs, transparent), 0 1px 2px 0 var(--shadow-near-xs, rgb(24 24 27 / 0.06))'],
+    ['--shadow-sm', '0 0 0 1px var(--shadow-edge, rgb(24 24 27 / 0.05)), 0 1px 2px 0 var(--shadow-near, rgb(24 24 27 / 0.05)), 0 4px 14px 0 var(--shadow-far, rgb(24 24 27 / 0.04))'],
+    ['--shadow-md', '0 0 0 1px var(--shadow-edge, rgb(24 24 27 / 0.05)), 0 6px 20px 0 var(--shadow-far-md, rgb(24 24 27 / 0.08))'],
+    ['--shadow-lg', '0 0 0 1px var(--shadow-edge-lg, rgb(24 24 27 / 0.06)), 0 12px 32px 0 var(--shadow-far-lg, rgb(24 24 27 / 0.12)), 0 4px 10px 0 var(--shadow-near-lg, rgb(24 24 27 / 0.05))'],
+    ['--shadow-xl', '0 0 0 1px var(--shadow-edge-xl, transparent), 0 24px 70px 0 var(--shadow-far-xl, rgb(24 24 27 / 0.16)), 0 4px 18px 0 var(--shadow-near-xl, rgb(24 24 27 / 0.08))'],
 ]);
-const LEGACY_DARK = new Map([['--ui-backdrop', 'rgb(0 0 0 / 0.72)'], ['--ui-backdrop-blur', '4px']]);
-const legacy = (dark, ...selectors) => overlay(LEGACY, ...selectors.flatMap((selector) => panelRules.filter((rule) => rule.selectors.length === 1 && rule.selectors[0] === selector).map((rule) => rule.declarations)), dark ? LEGACY_DARK : new Map());
+// 1.x .dark: a light-toned hairline and deep black layers; the dark checkbox frame and backdrop.
+const LEGACY_DARK = new Map([
+    ['--ui-backdrop', 'rgb(0 0 0 / 0.72)'], ['--ui-backdrop-blur', '4px'], ['--ui-control-border', 'var(--color-zinc-500)'],
+    ['--shadow-edge', 'var(--color-zinc-800)'], ['--shadow-edge-lg', 'var(--color-zinc-700)'], ['--shadow-edge-xl', 'var(--color-zinc-700)'],
+    ['--shadow-near', 'transparent'], ['--shadow-far', 'rgb(0 0 0 / 0.22)'], ['--shadow-far-md', 'rgb(0 0 0 / 0.22)'], ['--shadow-far-lg', 'rgb(0 0 0 / 0.45)'],
+    ['--shadow-near-lg', 'transparent'], ['--shadow-far-xl', 'rgb(0 0 0 / 0.45)'], ['--shadow-near-xl', 'transparent'],
+]);
+// 1.x :root[data-skin='bordered'] (and :root.dark[data-skin='bordered']): every shadow the 1px line.
+const bordered = (edge) => new Map([
+    ...['--shadow-edge', '--shadow-edge-xs', '--shadow-edge-lg', '--shadow-edge-xl'].map((name) => [name, edge]),
+    ...['--shadow-near', '--shadow-near-xs', '--shadow-far', '--shadow-far-md', '--shadow-far-lg', '--shadow-near-lg', '--shadow-far-xl', '--shadow-near-xl'].map((name) => [name, 'transparent']),
+]);
+const palette = overlay(...['@theme', ':root'].flatMap((selector) => panelRules.filter((rule) => rule.selectors.length === 1 && rule.selectors[0] === selector).map((rule) => rule.declarations)));
+// The palette scales of panel.css, then the frozen 1.x values over them (panel.css's own shadows read the tokens now).
+const legacy = (...maps) => overlay(palette, LEGACY, ...maps);
 const legacyScopes = {
-    light: legacy(false, '@theme', ':root'),
-    dark: legacy(true, '@theme', ':root', '.dark', ':root.dark'),
-    'bordered light': legacy(false, '@theme', ':root', ":root[data-skin='bordered']"),
-    'bordered dark': legacy(true, '@theme', ':root', '.dark', ':root.dark', ":root[data-skin='bordered']", ":root.dark[data-skin='bordered']"),
+    light: legacy(),
+    dark: legacy(LEGACY_DARK),
+    'bordered light': legacy(bordered('var(--color-gray-200)')),
+    'bordered dark': legacy(LEGACY_DARK, bordered('var(--color-zinc-700)')),
 };
 
 /** The text between the parentheses that open at index open, and the index after them. */
@@ -196,7 +220,7 @@ test('every token is set in the light theme and resolves in the dark theme', () 
         }
     }
     // What changes in the dark theme is declared there; the rest is the same colour in both.
-    for (const name of ['page', 'surface', 'field', 'line', 'ink', 'body', 'muted', 'p', 'primary', 'primary-ink', 'backdrop', 'shadow-sm', 'shadow-xl', ...TONES.filter((tone) => tone !== 'primary').flatMap((tone) => [`${tone}-ink`, `${tone}-tint`])]) {
+    for (const name of ['page', 'surface', 'field', 'line', 'ink', 'body', 'muted', 'p', 'primary', 'primary-ink', 'backdrop', 'shadow-sm-edge', 'shadow-sm-far', 'shadow-xl-edge', 'shadow-xl-far', ...TONES.filter((tone) => tone !== 'primary').flatMap((tone) => [`${tone}-ink`, `${tone}-tint`])]) {
         assert.ok(darkBlock.has(`--ac-${name}`), `--ac-${name} in the dark block`);
     }
 });
@@ -343,6 +367,29 @@ test('the shadows, backdrop, focus shadow, corner and fonts are the 1.x values',
     }
 });
 
+/**
+ * One source for the shadows: the shadow-* utilities (panel.css @theme) and --ac-shadow-* compose the
+ * same layer tokens, so a theme, a dark section and the bordered skin change both by setting the
+ * layers' colours. The utilities stay composed in place (not var(--ac-shadow-sm)), so Tailwind can
+ * colour each layer for a colour modifier (shadow-black/40).
+ */
+test('the shadow utilities compose the theme\'s shadow layers, as --ac-shadow-* does', () => {
+    const theme = panelRules.find((rule) => rule.selectors[0] === '@theme').declarations;
+    for (const [mode, scope] of Object.entries(scopes)) {
+        for (const size of Object.keys(SHADOW_LAYERS)) {
+            assert.equal(substitute(theme.get(`--shadow-${size}`), scope), substitute(`var(--ac-shadow-${size})`, scope), `${mode} shadow-${size}`);
+        }
+    }
+    assert.equal(theme.get('--shadow'), theme.get('--shadow-sm'));
+    for (const [size, layers] of Object.entries(SHADOW_LAYERS)) {
+        assert.deepEqual([...theme.get(`--shadow-${size}`).matchAll(/var\((--[\w-]+)\)/g)].map(([, name]) => name), layers.map((layer) => `--ac-shadow-${size}-${layer}`), `shadow-${size}`);
+    }
+    // The dark theme and the bordered skin set layers, not whole shadows.
+    for (const block of [darkBlock, borderedBlock]) {
+        assert.ok(![...block.keys()].some((name) => /^--ac-shadow-(?:xs|sm|md|lg|xl)$/.test(name)));
+    }
+});
+
 /** The user's colour as js/appearance/theme.js writes it on <html> (applyColor). */
 const userVariables = (color, dark = null) => {
     const shades = brandShades(color);
@@ -426,8 +473,8 @@ test('the PRO stylesheet reads the tokens, without fallbacks of its own', () => 
 
 /**
  * Tailwind writes a shadow utility whose theme value is a variable as --tw-shadow: var(…); a
- * shadow colour (shadow-black/40) then has nothing to colour. That is why shadow-* keeps its
- * composed panel.css values while the colour modifiers are in use.
+ * shadow colour (shadow-black/40) then has nothing to colour. That is why shadow-* composes its
+ * layers in panel.css (each layer's colour a token) while the colour modifiers are in use.
  */
 test('a shadow utility can read a token, without its colour modifier', async () => {
     const { compile } = await import('@tailwindcss/node');

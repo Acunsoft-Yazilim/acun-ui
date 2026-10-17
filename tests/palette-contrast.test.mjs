@@ -23,16 +23,6 @@ for (const [, name, value] of `${rootBlock}\n${tokens}`.matchAll(/(--[\w-]+):\s*
     if (!declarations.has(name)) declarations.set(name, value.trim());
 }
 
-/** The declarations of the first rule whose selector is exactly selector and that sets name. */
-function block(selector, name = '') {
-    for (let start = css.indexOf(`\n${selector} {\n`); start >= 0; start = css.indexOf(`\n${selector} {\n`, start + 1)) {
-        const body = css.slice(css.indexOf('{', start) + 1, css.indexOf('\n}', start));
-        if (body.includes(`${name}:`)) return new Map([...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map(([, key, value]) => [key, value.trim()]));
-    }
-
-    assert.fail(`panel.css has no ${selector} rule that sets ${name}`);
-}
-
 const hex = (value) => value.match(/^#([0-9a-f]{6})$/i) && [0, 2, 4].map((i) => Number.parseInt(value.slice(1 + i, 3 + i), 16));
 
 function resolve(value, depth = 0, scope = declarations) {
@@ -86,7 +76,7 @@ const pairs = [
     ['muted text in the dark theme', 'var(--color-zinc-900)', 'var(--color-zinc-400)', 4.5],
     // The placeholder of the dark theme's fields (zinc-800) and of the command palette (zinc-900): YENİ-O2.
     ['placeholder of a dark theme field', 'var(--color-zinc-800)', 'var(--color-zinc-400)', 4.5],
-    ['checkbox and radio frame', 'white', 'var(--ui-control-border)', 3],
+    ['checkbox and radio frame', 'white', 'var(--ac-control)', 3],
 ];
 
 for (const [what, fill, text, minimum] of pairs) {
@@ -183,12 +173,14 @@ test('the solid buttons and the presets derive from the palette tokens', () => {
 /**
  * TEMA-15: the dark theme's values are set on every element whose data-theme ends in "dark", so the
  * semi-dark menu (data-theme="dark") takes them too: the dark tone's grey (--ac-dark, --ac-dark-hover)
- * in the dark block of themes.css. The 1.x checkbox frame variable (--ui-control-border, panel.css)
- * still follows the .dark class the runtime writes next to data-theme.
+ * and the checkbox and radio frame (--ac-control, 1.x's zinc-500) in the dark block of themes.css.
+ * panel.css has no .dark rule left: class="dark" selects nothing (it stays on <html> for application
+ * code until 3.0), and the 1.x frame variable (--ui-control-border) is gone.
  */
 test('the dark theme tokens are set on every dark data-theme, the semi-dark menu too', () => {
-    assert.ok(block('.dark', '--ui-control-border').has('--ui-control-border'));
     const dark = tokens.slice(tokens.indexOf("[data-theme$='dark'] {"));
-    assert.match(dark, /^\[data-theme\$='dark'\] \{[^}]*--ac-dark: #2e2e2e;[^}]*--ac-dark-hover: #474747;/);
-    assert.doesNotMatch(css, /\n:root\.dark \{\n[^}]*--ui-control-border:/, 'Not on :root.dark alone.');
+    assert.match(dark, /^\[data-theme\$='dark'\] \{[^}]*--ac-control: #787878;[^}]*--ac-dark: #2e2e2e;[^}]*--ac-dark-hover: #474747;/);
+    assert.equal(toHex(resolve('var(--color-zinc-500)')), '#787878');
+    const rules = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.doesNotMatch(rules, /\.dark\b|--ui-/);
 });

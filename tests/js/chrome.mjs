@@ -52,14 +52,14 @@ const hex = (color) => '#' + rgba(color).slice(0, 3).map((v) => v.toString(16).p
 
 /**
  * Opens a page in headless Chrome (transitions off: measure may switch the theme and read at once) and returns what measure (the body of a function run in the page,
- * with the helpers above) returns, as JSON. htmlAttributes go on <html> (class="dark", data-brand-color…).
+ * with the helpers above) returns, as JSON. htmlAttributes go on <html> (data-theme, the user's --ac-user-* colour…).
  */
 export function inChrome({ css, body, measure, htmlAttributes = '' }) {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'acun-chrome-'));
     try {
         const page = path.join(directory, 'page.html');
         fs.writeFileSync(path.join(directory, 'panel.css'), css);
-        fs.writeFileSync(page, `<!doctype html><html ${htmlAttributes}><head><meta charset="utf-8"><link rel="stylesheet" href="panel.css"><style>*, ::before, ::after { transition: none !important; }</style></head><body class="bg-gray-50 dark:bg-zinc-950">${body}<pre id="acun-result"></pre><script>${helpers}\ndocument.getElementById('acun-result').textContent = JSON.stringify((() => { ${measure} })());</script></body></html>`);
+        fs.writeFileSync(page, `<!doctype html><html ${htmlAttributes}><head><meta charset="utf-8"><link rel="stylesheet" href="panel.css"><style>*, ::before, ::after { transition: none !important; }</style></head><body class="bg-page">${body}<pre id="acun-result"></pre><script>${helpers}\ndocument.getElementById('acun-result').textContent = JSON.stringify((() => { ${measure} })());</script></body></html>`);
         const dom = execFileSync(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${path.join(directory, 'profile')}`, '--dump-dom', `file://${page}`], { stdio: ['ignore', 'pipe', 'ignore'], timeout: 60000 }).toString();
         const result = dom.match(/<pre id="acun-result">([\s\S]*?)<\/pre>/)[1];
 

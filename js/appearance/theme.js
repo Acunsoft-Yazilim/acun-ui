@@ -169,7 +169,8 @@ export function isDark(element = document.documentElement) {
 
 /**
  * <html data-theme>: the theme's dark member in the dark mode (a theme without one stays light),
- * else its light member. class="dark" goes with it for application code until 3.0.
+ * else its light member. class="dark" goes with it for application CSS or JS that reads .dark,
+ * until 3.0 (dark: classes follow data-theme).
  */
 export function applyMode(mode, theme = DEFAULT_THEME) {
     const root = document.documentElement;
@@ -241,8 +242,9 @@ export const applyContentWidth = (width) => setRoot('contentWidth', width === 'b
 export const applySidebar = (collapsed) => setRoot('sidebarCollapsed', collapsed ? 'true' : 'false');
 
 /**
- * Semi-dark: the theme's dark member on the menu (data-theme), or none. The dark class goes with
- * it for application code's dark: classes until 3.0.
+ * Semi-dark: the theme's dark member on the menu (data-theme), or none: the menu's tokens and
+ * application code's dark: classes follow it. The dark class goes with it for application CSS or
+ * JS that reads .dark, until 3.0.
  */
 export function applySemiDark(element, on, theme = DEFAULT_THEME) {
     const dark = on && theme.dark ? theme.dark : null;

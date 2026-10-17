@@ -14,6 +14,9 @@
 // The allowlist is for data colours, the same in every theme: acun:file-icon, the file kinds of
 // acun:file-upload, the black scrims of acun:media-player's video (plan 6.1: also shapes/*, .pv and
 // the chart series, which live outside these views).
+//
+// The stylesheets have the same rule (cssViolations): they read the tokens (var(--ac-line)), never a
+// palette variable, a hex colour, a .dark rule or a 1.x kit variable.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -89,4 +92,27 @@ export function scan(files, base, allowlist = {}) {
     }
 
     return report;
+}
+
+/**
+ * What the guard finds in a stylesheet: ["line: what", …]. Comments are skipped (an example in one
+ * may name the old way). Found:
+ *   - a palette or Tailwind colour variable in use: var(--color-gray-200), var(--color-brand-600)
+ *   - a hex colour (hex: false allows them, for a theme's own token values)
+ *   - a .dark selector: the dark theme is [data-theme$='dark'] (or @variant dark), which follows a
+ *     section; class="dark" stays on <html> for application code only
+ *   - a 1.x kit variable: --ui-*, --btn-*
+ */
+export function cssViolations(css, { hex = true } = {}) {
+    const found = [];
+    const source = css.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ''));
+    source.split('\n').forEach((line, i) => {
+        const at = (what) => found.push(`${i + 1}: ${what}`);
+        for (const [match] of line.matchAll(/var\(--color-[\w-]+/g)) at(`palette variable ${match})`);
+        if (hex) for (const [match] of line.matchAll(/(?<=[\s(:,])#[0-9a-f]{3,8}\b/gi)) at(`hex ${match}`);
+        if (/\.dark(?![\w-])/.test(line)) at(`.dark selector: ${line.trim()}`);
+        for (const [match] of line.matchAll(/--(?:ui|btn)-[\w-]+/g)) at(`kit variable ${match}`);
+    });
+
+    return found;
 }

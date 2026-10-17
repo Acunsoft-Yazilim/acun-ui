@@ -171,12 +171,29 @@
         --ac-font-display: var(--ac-font-sans);
         --ac-font-brand: var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, sans-serif;
 
-        /* Shadows: a 1px hairline (the card edge), then a soft, wide, low-opacity shadow. */
-        --ac-shadow-xs: 0 0 0 1px transparent, 0 1px 2px 0 rgb(24 24 27 / 0.06);
-        --ac-shadow-sm: 0 0 0 1px rgb(24 24 27 / 0.05), 0 1px 2px 0 rgb(24 24 27 / 0.05), 0 4px 14px 0 rgb(24 24 27 / 0.04);
-        --ac-shadow-md: 0 0 0 1px rgb(24 24 27 / 0.05), 0 6px 20px 0 rgb(24 24 27 / 0.08);
-        --ac-shadow-lg: 0 0 0 1px rgb(24 24 27 / 0.06), 0 12px 32px 0 rgb(24 24 27 / 0.12), 0 4px 10px 0 rgb(24 24 27 / 0.05);
-        --ac-shadow-xl: 0 0 0 1px transparent, 0 24px 70px 0 rgb(24 24 27 / 0.16), 0 4px 18px 0 rgb(24 24 27 / 0.08);
+        /*
+         * Shadows: a 1px hairline (the edge), then soft, wide, low-opacity layers (near, far). A theme
+         * sets the layers' colours: the shadow-xs … shadow-xl utilities (panel.css) and --ac-shadow-*
+         * (for CSS that reads a whole shadow) compose the same layers.
+         */
+        --ac-shadow-xs-edge: transparent;
+        --ac-shadow-xs-near: rgb(24 24 27 / 0.06);
+        --ac-shadow-sm-edge: rgb(24 24 27 / 0.05);
+        --ac-shadow-sm-near: rgb(24 24 27 / 0.05);
+        --ac-shadow-sm-far: rgb(24 24 27 / 0.04);
+        --ac-shadow-md-edge: rgb(24 24 27 / 0.05);
+        --ac-shadow-md-far: rgb(24 24 27 / 0.08);
+        --ac-shadow-lg-edge: rgb(24 24 27 / 0.06);
+        --ac-shadow-lg-far: rgb(24 24 27 / 0.12);
+        --ac-shadow-lg-near: rgb(24 24 27 / 0.05);
+        --ac-shadow-xl-edge: transparent;
+        --ac-shadow-xl-far: rgb(24 24 27 / 0.16);
+        --ac-shadow-xl-near: rgb(24 24 27 / 0.08);
+        --ac-shadow-xs: 0 0 0 1px var(--ac-shadow-xs-edge), 0 1px 2px 0 var(--ac-shadow-xs-near);
+        --ac-shadow-sm: 0 0 0 1px var(--ac-shadow-sm-edge), 0 1px 2px 0 var(--ac-shadow-sm-near), 0 4px 14px 0 var(--ac-shadow-sm-far);
+        --ac-shadow-md: 0 0 0 1px var(--ac-shadow-md-edge), 0 6px 20px 0 var(--ac-shadow-md-far);
+        --ac-shadow-lg: 0 0 0 1px var(--ac-shadow-lg-edge), 0 12px 32px 0 var(--ac-shadow-lg-far), 0 4px 10px 0 var(--ac-shadow-lg-near);
+        --ac-shadow-xl: 0 0 0 1px var(--ac-shadow-xl-edge), 0 24px 70px 0 var(--ac-shadow-xl-far), 0 4px 18px 0 var(--ac-shadow-xl-near);
     }
 
     /* The dark theme: every theme name that ends in "dark". Black with neutral greys. */
@@ -262,21 +279,39 @@
         --ac-backdrop-blur: 4px;
 
         /* A light hairline and deep black layers. */
-        --ac-shadow-sm: 0 0 0 1px var(--ac-line-soft), 0 1px 2px 0 transparent, 0 4px 14px 0 rgb(0 0 0 / 0.22);
-        --ac-shadow-md: 0 0 0 1px var(--ac-line-soft), 0 6px 20px 0 rgb(0 0 0 / 0.22);
-        --ac-shadow-lg: 0 0 0 1px var(--ac-line), 0 12px 32px 0 rgb(0 0 0 / 0.45), 0 4px 10px 0 transparent;
-        --ac-shadow-xl: 0 0 0 1px var(--ac-line), 0 24px 70px 0 rgb(0 0 0 / 0.45), 0 4px 18px 0 transparent;
+        --ac-shadow-sm-edge: var(--ac-line-soft);
+        --ac-shadow-sm-near: transparent;
+        --ac-shadow-sm-far: rgb(0 0 0 / 0.22);
+        --ac-shadow-md-edge: var(--ac-line-soft);
+        --ac-shadow-md-far: rgb(0 0 0 / 0.22);
+        --ac-shadow-lg-edge: var(--ac-line);
+        --ac-shadow-lg-far: rgb(0 0 0 / 0.45);
+        --ac-shadow-lg-near: transparent;
+        --ac-shadow-xl-edge: var(--ac-line);
+        --ac-shadow-xl-far: rgb(0 0 0 / 0.45);
+        --ac-shadow-xl-near: transparent;
     }
 
-    /* Bordered skin (<html data-skin="bordered">): every shadow is the 1px line; the page is the surface. */
+    /*
+     * Bordered skin (<html data-skin="bordered">): every shadow is the 1px line and the page is the
+     * surface colour, in every theme and section.
+     */
     :root[data-skin='bordered'],
     :root[data-skin='bordered'] [data-theme] {
         --ac-page: var(--ac-surface);
-        --ac-shadow-xs: 0 0 0 1px var(--ac-line);
-        --ac-shadow-sm: 0 0 0 1px var(--ac-line);
-        --ac-shadow-md: 0 0 0 1px var(--ac-line);
-        --ac-shadow-lg: 0 0 0 1px var(--ac-line);
-        --ac-shadow-xl: 0 0 0 1px var(--ac-line);
+        --ac-shadow-xs-edge: var(--ac-line);
+        --ac-shadow-xs-near: transparent;
+        --ac-shadow-sm-edge: var(--ac-line);
+        --ac-shadow-sm-near: transparent;
+        --ac-shadow-sm-far: transparent;
+        --ac-shadow-md-edge: var(--ac-line);
+        --ac-shadow-md-far: transparent;
+        --ac-shadow-lg-edge: var(--ac-line);
+        --ac-shadow-lg-far: transparent;
+        --ac-shadow-lg-near: transparent;
+        --ac-shadow-xl-edge: var(--ac-line);
+        --ac-shadow-xl-far: transparent;
+        --ac-shadow-xl-near: transparent;
     }
 
     /* The browser's own parts (scrollbars, native pickers, autofill) and inherited text follow the theme. */

@@ -22,7 +22,15 @@
 @import './tokens.css';
 @import './themes.css';
 
-@custom-variant dark (&:where(.dark, .dark *));
+/*
+ * dark: (application code, until 3.0; the kit's components paint with the tokens) follows the
+ * nearest data-theme: an element is dark inside a theme whose name ends in "dark" (data-theme="dark"
+ * on <html>, the semi-dark menu, a dark section), unless a light theme sits between them (a light
+ * island in a dark page: data-theme="light"). Two levels deep; the tokens follow any depth.
+ * class="dark" (still written on <html> and on the semi-dark menu for application code) no longer
+ * selects it.
+ */
+@custom-variant dark (&:where([data-theme$='dark'], [data-theme$='dark'] *):not(:where([data-theme$='dark'] [data-theme]:not([data-theme$='dark']), [data-theme$='dark'] [data-theme]:not([data-theme$='dark']) *)));
 
 /*
  * acun:icon writes its size from the size prop (size-{n}), so the class is not in the markup
@@ -38,7 +46,7 @@
  *
  *   accent   Brand accent (blue) · logo mark, small highlighted elements
  *   gray     Light theme neutrals (zinc grey) · 900 = ink
- *   zinc     Dark theme neutrals (black) · components use them under dark:
+ *   zinc     Dark theme neutrals (black) · application code uses them under dark:
  *   emerald  Success · sky Info · amber Warning · red Danger · secondary, dark, light
  */
 @theme {
@@ -176,72 +184,30 @@
     --color-secondary-900: color-mix(in srgb, var(--color-secondary-500) 45%, black);
     --color-secondary-950: color-mix(in srgb, var(--color-secondary-500) 32%, black);
 
-    /* Light: the light button and the light theme's page colour. The dark button's colour,
-       --color-dark (bg-dark, text-dark…), is the dark tone of tokens.css (--ac-dark). */
+    /* Light (bg-light…, application code). The dark button's colour, --color-dark (bg-dark,
+       text-dark…), is the dark tone of tokens.css (--ac-dark). */
     --color-light: #f4f4f5;
 
-    /* Shadows: the first layer is a 1px hairline (card edge), followed by a soft, wide, low-opacity
-       shadow. The colours of the layers are variables (below, after @theme): the dark theme and the
-       bordered skin change them, so the shadow-* utilities stay plain and a page's own shadow-none
-       or dark:shadow-* still wins. */
-    --shadow-xs: 0 0 0 1px var(--shadow-edge-xs, transparent), 0 1px 2px 0 var(--shadow-near-xs, rgb(24 24 27 / 0.06));
-    --shadow-sm: 0 0 0 1px var(--shadow-edge, rgb(24 24 27 / 0.05)), 0 1px 2px 0 var(--shadow-near, rgb(24 24 27 / 0.05)), 0 4px 14px 0 var(--shadow-far, rgb(24 24 27 / 0.04));
-    --shadow: 0 0 0 1px var(--shadow-edge, rgb(24 24 27 / 0.05)), 0 1px 2px 0 var(--shadow-near, rgb(24 24 27 / 0.05)), 0 4px 14px 0 var(--shadow-far, rgb(24 24 27 / 0.04));
-    --shadow-md: 0 0 0 1px var(--shadow-edge, rgb(24 24 27 / 0.05)), 0 6px 20px 0 var(--shadow-far-md, rgb(24 24 27 / 0.08));
-    --shadow-lg: 0 0 0 1px var(--shadow-edge-lg, rgb(24 24 27 / 0.06)), 0 12px 32px 0 var(--shadow-far-lg, rgb(24 24 27 / 0.12)), 0 4px 10px 0 var(--shadow-near-lg, rgb(24 24 27 / 0.05));
-    --shadow-xl: 0 0 0 1px var(--shadow-edge-xl, transparent), 0 24px 70px 0 var(--shadow-far-xl, rgb(24 24 27 / 0.16)), 0 4px 18px 0 var(--shadow-near-xl, rgb(24 24 27 / 0.08));
+    /*
+     * Shadows: a 1px hairline (the card edge), then soft, wide, low-opacity layers. Each layer's
+     * colour is a token of the theme (themes.css: --ac-shadow-sm-edge …), so the dark theme, a dark
+     * section and the bordered skin change them; the values stay composed here, so a colour modifier
+     * (shadow-black/40) still colours them and a page's own shadow-none or dark:shadow-* still wins.
+     */
+    --shadow-xs: 0 0 0 1px var(--ac-shadow-xs-edge), 0 1px 2px 0 var(--ac-shadow-xs-near);
+    --shadow-sm: 0 0 0 1px var(--ac-shadow-sm-edge), 0 1px 2px 0 var(--ac-shadow-sm-near), 0 4px 14px 0 var(--ac-shadow-sm-far);
+    --shadow: 0 0 0 1px var(--ac-shadow-sm-edge), 0 1px 2px 0 var(--ac-shadow-sm-near), 0 4px 14px 0 var(--ac-shadow-sm-far);
+    --shadow-md: 0 0 0 1px var(--ac-shadow-md-edge), 0 6px 20px 0 var(--ac-shadow-md-far);
+    --shadow-lg: 0 0 0 1px var(--ac-shadow-lg-edge), 0 12px 32px 0 var(--ac-shadow-lg-far), 0 4px 10px 0 var(--ac-shadow-lg-near);
+    --shadow-xl: 0 0 0 1px var(--ac-shadow-xl-edge), 0 24px 70px 0 var(--ac-shadow-xl-far), 0 4px 18px 0 var(--ac-shadow-xl-near);
 
     /* Corners: one radius, the --ac-radius token (4px), which rounded-sm … rounded-3xl read (tokens.css). */
 }
 
-/* In the dark theme the hairline is light-toned and the soft layers are deep black. */
-.dark {
-    --shadow-edge: var(--color-zinc-800);
-    --shadow-edge-lg: var(--color-zinc-700);
-    --shadow-edge-xl: var(--color-zinc-700);
-    --shadow-near: transparent;
-    --shadow-far: rgb(0 0 0 / 0.22);
-    --shadow-far-md: rgb(0 0 0 / 0.22);
-    --shadow-far-lg: rgb(0 0 0 / 0.45);
-    --shadow-near-lg: transparent;
-    --shadow-far-xl: rgb(0 0 0 / 0.45);
-    --shadow-near-xl: transparent;
-}
-
 /*
- * Bordered skin: <html data-skin="bordered">. Shadows are removed and replaced
- * by a 1px border; the page background matches the card colour.
+ * The bordered skin (<html data-skin="bordered">: every shadow the 1px line, the page the surface
+ * colour) and the dark theme's shadows are token blocks of themes.css.
  */
-:root[data-skin='bordered'] body.bg-gray-50 {
-    background-color: #fff;
-}
-
-/* Every shadow becomes the 1px line. */
-:root[data-skin='bordered'] {
-    --shadow-edge: var(--color-gray-200);
-    --shadow-edge-xs: var(--color-gray-200);
-    --shadow-edge-lg: var(--color-gray-200);
-    --shadow-edge-xl: var(--color-gray-200);
-    --shadow-near: transparent;
-    --shadow-near-xs: transparent;
-    --shadow-far: transparent;
-    --shadow-far-md: transparent;
-    --shadow-far-lg: transparent;
-    --shadow-near-lg: transparent;
-    --shadow-far-xl: transparent;
-    --shadow-near-xl: transparent;
-}
-
-:root.dark[data-skin='bordered'] body.bg-gray-50 {
-    background-color: var(--color-zinc-900);
-}
-
-:root.dark[data-skin='bordered'] {
-    --shadow-edge: var(--color-zinc-700);
-    --shadow-edge-xs: var(--color-zinc-700);
-    --shadow-edge-lg: var(--color-zinc-700);
-    --shadow-edge-xl: var(--color-zinc-700);
-}
 
 [x-cloak] {
     display: none !important;
@@ -270,7 +236,8 @@
 }
 
 dialog#livewire-error::backdrop {
-    background-color: rgba(0, 0, 0, .6);
+    background-color: var(--ac-backdrop);
+    backdrop-filter: blur(var(--ac-backdrop-blur));
 }
 
 /*
@@ -324,16 +291,6 @@ dialog#livewire-error::backdrop {
  *     :root, [data-theme] { --ac-focus-shadow: 0 0 0 3px color-mix(in srgb, var(--ac-p) 12%, transparent); }
  */
 
-/* The frame of a checkbox and a radio: 3:1 against the page, as a control's edge must be. */
-:root {
-    --ui-control-border: color-mix(in srgb, var(--color-gray-500) 80%, white);
-}
-
-/* .dark: the dark theme on <html> and the semi-dark menu (.panel-sidebar.dark). */
-.dark {
-    --ui-control-border: var(--color-zinc-500);
-}
-
 .ui-backdrop {
     background-color: var(--ac-backdrop);
     backdrop-filter: blur(var(--ac-backdrop-blur));
@@ -346,50 +303,37 @@ html.scroll-locked {
 }
 
 @layer base {
-    /* Public Sans keeps the system's text rendering on light backgrounds; light
-       text on the dark theme is smoothed so it does not look heavier than it is. */
-    html.dark {
+    /*
+     * The text colour, the headings' colour, the browser's own parts (color-scheme) and the page's
+     * font follow each element's theme (themes.css). Public Sans keeps the system's text rendering
+     * on light backgrounds; light text in a dark theme (the page or a section) is smoothed so it
+     * does not look heavier than it is.
+     */
+    [data-theme$='dark'] {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
 
-    /* The browser's own parts follow the theme: native select lists, date pickers,
-       scrollbars and autofill colours are dark in the dark theme. */
-    html {
-        color-scheme: light;
-    }
-
-    html.dark {
-        color-scheme: dark;
-    }
-
-    body {
-        color: var(--color-gray-700);
-    }
-
-    .dark body {
-        color: var(--color-zinc-300);
+    [data-theme$='dark'] [data-theme]:not([data-theme$='dark']) {
+        -webkit-font-smoothing: auto;
+        -moz-osx-font-smoothing: auto;
     }
 
     :is(h1, h2, h3, h4, h5, h6) {
-        color: var(--color-gray-900);
         letter-spacing: -0.011em;
-    }
-
-    .dark :is(h1, h2, h3, h4, h5, h6) {
-        color: var(--color-zinc-100);
     }
 
     code, kbd, samp, pre {
         font-family: var(--ac-font-mono);
     }
 
+    /* A border without a colour class is the theme's line. */
     *,
     ::after,
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--ac-line, currentColor);
     }
 
     /* Tailwind v4 sets the cursor to `default` on buttons; use the pointer cursor on everything clickable. */
@@ -454,22 +398,22 @@ html.scroll-locked {
      * content and hide the shadows (scroll) at the start and the end.
      */
     .ui-table-box {
-        --ui-table-box-bg: var(--ac-surface);
-        --ui-table-box-shadow: rgb(24 24 27 / 0.16);
+        --table-box-shadow: rgb(24 24 27 / 0.16);
 
         background-image:
-            linear-gradient(to right, var(--ui-table-box-bg) 30%, transparent),
-            linear-gradient(to left, var(--ui-table-box-bg) 30%, transparent),
-            radial-gradient(farthest-side at 0 50%, var(--ui-table-box-shadow), transparent),
-            radial-gradient(farthest-side at 100% 50%, var(--ui-table-box-shadow), transparent);
+            linear-gradient(to right, var(--ac-surface) 30%, transparent),
+            linear-gradient(to left, var(--ac-surface) 30%, transparent),
+            radial-gradient(farthest-side at 0 50%, var(--table-box-shadow), transparent),
+            radial-gradient(farthest-side at 100% 50%, var(--table-box-shadow), transparent);
         background-position: left center, right center, left center, right center;
         background-repeat: no-repeat;
         background-size: 2.5rem 100%, 2.5rem 100%, 0.875rem 100%, 0.875rem 100%;
         background-attachment: local, local, scroll, scroll;
-    }
 
-    .dark .ui-table-box {
-        --ui-table-box-shadow: rgb(0 0 0 / 0.7);
+        /* On black a soft shadow does not show: deeper in a dark theme or section. */
+        @variant dark {
+            --table-box-shadow: rgb(0 0 0 / 0.7);
+        }
     }
 }
 
