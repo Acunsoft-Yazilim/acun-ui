@@ -15,7 +15,12 @@
  *     @source '../../vendor/acunsoft/acun-ui/resources/views';
  *
  * The brand palette (--color-brand-*) and fonts can be overridden in the app with @theme.
+ *
+ * The design tokens: the --ac-* roles of the built-in light and dark themes (themes.css) and
+ * their Tailwind utilities (tokens.css: bg-surface, text-muted, bg-primary text-on-primary…).
  */
+@import './tokens.css';
+@import './themes.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -189,8 +194,8 @@
     --color-secondary-900: color-mix(in srgb, var(--color-secondary-500) 45%, black);
     --color-secondary-950: color-mix(in srgb, var(--color-secondary-500) 32%, black);
 
-    /* Dark and light: the dark and light buttons; light is also the light theme's page colour. */
-    --color-dark: #3f404d;
+    /* Light: the light button and the light theme's page colour. The dark button's colour,
+       --color-dark (bg-dark, text-dark…), is the dark tone of tokens.css (--ac-dark). */
     --color-light: #f4f4f5;
 
     /* Shadows: the first layer is a 1px hairline (card edge), followed by a soft, wide, low-opacity
@@ -378,12 +383,6 @@
     --shadow-edge-xl: var(--color-zinc-700);
 }
 
-/* The package's plain CSS components (form modal, dialogs) use the same corner. */
-:root {
-    --ac-radius-md: var(--radius-sm);
-    --ac-radius-lg: var(--radius-sm);
-}
-
 [x-cloak] {
     display: none !important;
 }
@@ -485,16 +484,11 @@ dialog#livewire-error::backdrop {
 
 /*
  * Focus ring: the keyboard focus frame of buttons, links, tabs, menus and form fields, drawn
- * with the outline-focus and ring-focus utilities. It is the primary colour (--color-brand-600;
- * the dark theme's in the dark theme and in the semi-dark menu). A theme sets another colour
- * with --ui-focus-ring, e.g.
+ * with the outline-focus and ring-focus utilities (--color-focus in tokens.css: --ac-focus). It is
+ * the primary colour (--color-brand-600; the dark theme's in the dark theme and in the semi-dark
+ * menu). A theme sets another colour with --ui-focus-ring, e.g.
  *     :root { --ui-focus-ring: var(--color-accent-600); }
- * It has no value here on purpose: one set on :root would carry the light primary colour into
- * the semi-dark menu, which takes the dark theme's on its own element.
  */
-@theme inline {
-    --color-focus: var(--ui-focus-ring, var(--color-brand-600));
-}
 
 /* The frame of a checkbox and a radio: 3:1 against the page, as a control's edge must be. */
 :root {
@@ -605,42 +599,6 @@ dialog#livewire-error::backdrop {
     background-color: var(--ui-backdrop);
     backdrop-filter: blur(var(--ui-backdrop-blur));
     -webkit-backdrop-filter: blur(var(--ui-backdrop-blur));
-}
-
-/*
- * The PRO package's plain CSS components (form modal, unsaved changes
- * dialog) read --ac-* tokens; map them to the theme so they follow the brand
- * colour and the dark theme.
- */
-:root {
-    --ac-surface: #fff;
-    --ac-surface-subtle: var(--color-gray-50);
-    --ac-border: var(--color-gray-200);
-    --ac-border-strong: var(--color-gray-300);
-    --ac-text: var(--color-gray-900);
-    --ac-text-muted: var(--color-gray-500);
-    --ac-primary: var(--color-brand-600);
-    --ac-secondary: var(--color-gray-500);
-    --ac-danger: var(--color-red-600);
-    --ac-shadow-sm: var(--shadow-sm);
-    --ac-shadow-lg: var(--shadow-lg);
-    --ac-shadow-xl: var(--shadow-xl);
-}
-
-/* .dark: the dark theme and the semi-dark menu. The primary fill carries white text, so it is brand-600 there too. */
-.dark {
-    --ac-surface: var(--color-zinc-900);
-    --ac-surface-subtle: var(--color-zinc-800);
-    --ac-border: var(--color-zinc-700);
-    --ac-border-strong: var(--color-zinc-600);
-    --ac-text: var(--color-zinc-100);
-    --ac-text-muted: var(--color-zinc-400);
-    --ac-primary: var(--color-brand-600);
-    --ac-secondary: var(--color-zinc-600);
-    --ac-danger: var(--color-red-500);
-    --ac-shadow-sm: 0 0 0 1px var(--color-zinc-800), 0 4px 14px 0 rgb(0 0 0 / 0.22);
-    --ac-shadow-lg: 0 0 0 1px var(--color-zinc-700), 0 16px 40px 0 rgb(0 0 0 / 0.45);
-    --ac-shadow-xl: 0 0 0 1px var(--color-zinc-700), 0 24px 64px 0 rgb(0 0 0 / 0.6);
 }
 
 /* Set by window.acunScrollLock (acun:layout.head) while a modal, drawer or the command palette is open. */

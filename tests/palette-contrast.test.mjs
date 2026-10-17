@@ -9,11 +9,15 @@ import { fileURLToPath } from 'node:url';
 // normal text: the components' text is 12-16px, and bold text only counts as large from
 // 18.66px); text on white reaches 4.5:1. Values are #rrggbb or
 // color-mix(in srgb, <value> N%, black|white), resolved the way the browser mixes them.
-const css = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../css/panel.css'), 'utf8');
+const cssDirectory = path.join(path.dirname(fileURLToPath(import.meta.url)), '../css');
+const css = fs.readFileSync(path.join(cssDirectory, 'panel.css'), 'utf8');
 const rootBlock = css.slice(css.indexOf('@theme'));
 const declarations = new Map();
 
-for (const [, name, value] of rootBlock.matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
+// panel.css first; then the tokens (--color-dark is the dark tone of tokens.css, --ac-dark, whose
+// first value in themes.css is the light theme's).
+const tokens = ['tokens.css', 'themes.css'].map((file) => fs.readFileSync(path.join(cssDirectory, file), 'utf8')).join('\n');
+for (const [, name, value] of `${rootBlock}\n${tokens}`.matchAll(/(--[\w-]+):\s*([^;]+);/g)) {
     if (!declarations.has(name)) declarations.set(name, value.trim());
 }
 
@@ -248,20 +252,13 @@ test('the solid buttons and the presets derive from the palette tokens', () => {
 });
 
 /**
- * TEMA-15: the dark theme values of the checkbox frame, the dark button and the PRO --ac-* tokens
- * are set on .dark, so the semi-dark menu (.panel-sidebar.dark) takes them too.
+ * TEMA-15: the dark theme values of the checkbox frame and the dark button are set on .dark, so
+ * the semi-dark menu (.panel-sidebar.dark) takes them too. The --ac-* tokens the PRO dialogs read
+ * (themes.css) are checked in tokens.test.mjs, TEMA-7 (their primary fill carries its text) too.
  */
 test('the dark theme tokens are set on every .dark element, the semi-dark menu too', () => {
-    for (const name of ['--ui-control-border', '--btn-dark-bg', '--btn-dark-hover', '--btn-dark-shadow', '--ac-surface', '--ac-text', '--ac-primary']) {
+    for (const name of ['--ui-control-border', '--btn-dark-bg', '--btn-dark-hover', '--btn-dark-shadow']) {
         assert.ok(block('.dark', name).has(name), name);
     }
-    assert.doesNotMatch(css, /\n:root\.dark \{\n[^}]*--(?:ui-control-border|btn-dark-bg|ac-surface):/, 'Not on :root.dark alone.');
-});
-
-/** TEMA-7: --ac-primary fills the PRO buttons under white text; brand-500 gave 3.52-3.72 in the dark theme. */
-test('the PRO --ac-primary carries white text in both themes', () => {
-    for (const [what, scope] of [['light', block(':root', '--ac-primary')], ['dark', block('.dark', '--ac-primary')]]) {
-        const ratio = contrast(resolve('var(--ac-primary)', 0, scope), [255, 255, 255]);
-        assert.ok(ratio >= 4.5, `${what}: ${ratio.toFixed(2)}:1`);
-    }
+    assert.doesNotMatch(css, /\n:root\.dark \{\n[^}]*--(?:ui-control-border|btn-dark-bg):/, 'Not on :root.dark alone.');
 });

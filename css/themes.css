@@ -1,0 +1,316 @@
+/*
+ * Acun UI themes: the --ac-* tokens of the built-in light and dark themes.
+ *
+ * A theme is one block of variables, selected with data-theme on <html> or on any element; the
+ * nearest one wins. Every themed element declares every role itself, computed from its own
+ * inputs, so the children of a section follow that section. A section paints its own
+ * background (bg-surface, bg-page): data-theme sets colours, not paint.
+ *
+ *   inputs   what a theme sets: --ac-tone-{tone}, the neutrals, radius, fonts and shadows
+ *   roles    what components use (css/tokens.css turns them into utilities); derived here, and
+ *            a theme may override any of them
+ *
+ * A named theme is a pair whose dark member's name ends in "dark" (atelier, atelier-dark). Its
+ * file uses the same specificity, loads after this one and declares only what differs.
+ *
+ * The primary colour reads the user's colour first (--ac-user-*, written on <html> by the
+ * runtime) and then the theme's own (--ac-tone-primary, optionally --ac-tone-primary-dark and
+ * --ac-tone-on-primary).
+ *
+ * Bridge: until the runtime writes data-theme, the dark theme is the .dark class on <html>
+ * and on the semi-dark menu, and the primary colour, the focus ring, the backdrop, the corner
+ * and the sans font come from the kit's current variables (the last block below). Both parts
+ * go when the runtime moves to data-theme and the user variables.
+ */
+@layer base {
+    /* The light theme: the full set, on every themed element (.dark too while the bridge is on; the dark block overrides it there). */
+    :root,
+    [data-theme],
+    .dark {
+        /* Tone inputs: the "500" shade of each colour (primary: its "600"). */
+        --ac-tone-primary: #794dff;
+        --ac-tone-secondary: #6b7280;
+        --ac-tone-success: #00ca4b;
+        --ac-tone-info: #04b6d4;
+        --ac-tone-warning: #fcaa1e;
+        --ac-tone-danger: #fb4141;
+        --ac-tone-dark: #3f404d;
+        --ac-tone-accent: #3b82f6;
+
+        /* Neutrals. */
+        --ac-page: #fafafa;
+        --ac-page-pattern: none;
+        --ac-page-pattern-size: auto;
+        --ac-surface: #ffffff;
+        --ac-field: #ffffff;
+        --ac-field-hover: #fafafa;
+        --ac-field-disabled: #fafafa;
+        --ac-sunken: #f4f4f5;
+        --ac-hover: #f4f4f5;
+        --ac-track: #e4e4e7;
+        --ac-inverse: #18181b;
+        --ac-on-inverse: #ffffff;
+        --ac-line: #e4e4e7;
+        --ac-line-soft: #f4f4f5;
+        --ac-line-strong: #d4d4d8;
+        --ac-line-hover: #9f9fa9;
+        /* 3:1 against the surface and the field, as a control's edge must be. */
+        --ac-control: color-mix(in srgb, #71717b 80%, white);
+        --ac-ink: #18181b;
+        --ac-body: #3f3f46;
+        --ac-dim: #52525c;
+        /* 4.5:1 on the page, the surface, the field and on sunken and hover areas. */
+        --ac-muted: #6f6f79;
+        /* Decorative icons only, never text. */
+        --ac-faint: #9f9fa9;
+
+        /*
+         * Primary. --ac-p is its text tone (links, the focus ring, tints); the fill is the user's
+         * fill or the tone. Hover is the fill with 12% black.
+         */
+        --ac-p: var(--ac-user-tone, var(--ac-tone-primary));
+        --ac-primary: var(--ac-user-fill, var(--ac-p));
+        --ac-primary-hover: var(--ac-user-fill-hover, color-mix(in srgb, var(--ac-primary) 88%, black));
+        --ac-on-primary: var(--ac-user-on-fill, var(--ac-tone-on-primary, #fff));
+        --ac-primary-ink: var(--ac-p);
+        --ac-primary-line: color-mix(in srgb, var(--ac-p) 84%, white);
+        --ac-primary-tint: color-mix(in srgb, var(--ac-p) 6%, white);
+        --ac-primary-soft: color-mix(in srgb, var(--ac-p) 12%, white);
+        --ac-primary-tint-ink: color-mix(in srgb, var(--ac-p) 86%, black);
+
+        /* Secondary (grey-blue). */
+        --ac-secondary: var(--ac-tone-secondary);
+        --ac-secondary-hover: color-mix(in srgb, var(--ac-secondary) 88%, black);
+        --ac-on-secondary: #fff;
+        --ac-secondary-ink: color-mix(in srgb, var(--ac-tone-secondary) 85%, black);
+        --ac-secondary-line: var(--ac-tone-secondary);
+        --ac-secondary-tint: color-mix(in srgb, var(--ac-tone-secondary) 16%, white);
+        --ac-secondary-soft: color-mix(in srgb, var(--ac-tone-secondary) 16%, white);
+        --ac-secondary-tint-ink: color-mix(in srgb, var(--ac-tone-secondary) 72%, black);
+
+        /*
+         * Success, info, warning and danger. The fill is the darkest shade that carries white text
+         * at 4.5:1 (danger's is its "600"); the ink reads 4.5:1 on the page, the surface and the field.
+         */
+        --ac-success: color-mix(in srgb, var(--ac-tone-success) 68%, black);
+        --ac-success-hover: color-mix(in srgb, var(--ac-success) 88%, black);
+        --ac-on-success: #fff;
+        --ac-success-ink: color-mix(in srgb, var(--ac-tone-success) 66%, black);
+        --ac-success-line: var(--ac-tone-success);
+        --ac-success-tint: color-mix(in srgb, var(--ac-tone-success) 8%, white);
+        --ac-success-soft: color-mix(in srgb, var(--ac-tone-success) 14%, white);
+        --ac-success-tint-ink: color-mix(in srgb, var(--ac-tone-success) 54%, black);
+
+        --ac-info: color-mix(in srgb, var(--ac-tone-info) 71%, black);
+        --ac-info-hover: color-mix(in srgb, var(--ac-info) 88%, black);
+        --ac-on-info: #fff;
+        --ac-info-ink: color-mix(in srgb, var(--ac-tone-info) 70%, black);
+        --ac-info-line: var(--ac-tone-info);
+        --ac-info-tint: color-mix(in srgb, var(--ac-tone-info) 8%, white);
+        --ac-info-soft: color-mix(in srgb, var(--ac-tone-info) 14%, white);
+        --ac-info-tint-ink: color-mix(in srgb, var(--ac-tone-info) 56%, black);
+
+        --ac-warning: color-mix(in srgb, var(--ac-tone-warning) 63%, black);
+        --ac-warning-hover: color-mix(in srgb, var(--ac-warning) 88%, black);
+        --ac-on-warning: #fff;
+        --ac-warning-ink: color-mix(in srgb, var(--ac-tone-warning) 62%, black);
+        --ac-warning-line: var(--ac-tone-warning);
+        --ac-warning-tint: color-mix(in srgb, var(--ac-tone-warning) 10%, white);
+        --ac-warning-soft: color-mix(in srgb, var(--ac-tone-warning) 18%, white);
+        --ac-warning-tint-ink: color-mix(in srgb, var(--ac-tone-warning) 50%, black);
+
+        --ac-danger: color-mix(in srgb, var(--ac-tone-danger) 86%, black);
+        --ac-danger-hover: color-mix(in srgb, var(--ac-danger) 88%, black);
+        --ac-on-danger: #fff;
+        --ac-danger-ink: color-mix(in srgb, var(--ac-tone-danger) 85%, black);
+        --ac-danger-line: var(--ac-tone-danger);
+        --ac-danger-tint: color-mix(in srgb, var(--ac-tone-danger) 7%, white);
+        --ac-danger-soft: color-mix(in srgb, var(--ac-tone-danger) 12%, white);
+        --ac-danger-tint-ink: color-mix(in srgb, var(--ac-tone-danger) 69%, black);
+
+        /* Dark (navy grey): the dark button, badge and alert. */
+        --ac-dark: var(--ac-tone-dark);
+        --ac-dark-hover: color-mix(in srgb, var(--ac-dark) 88%, black);
+        --ac-on-dark: #fff;
+        --ac-dark-ink: var(--ac-tone-dark);
+        --ac-dark-line: var(--ac-tone-dark);
+        --ac-dark-tint: color-mix(in oklab, var(--ac-tone-dark) 10%, transparent);
+        --ac-dark-soft: color-mix(in oklab, var(--ac-tone-dark) 10%, transparent);
+        --ac-dark-tint-ink: var(--ac-tone-dark);
+
+        /* Accent (blue): the logo mark and small highlights. */
+        --ac-accent: color-mix(in srgb, var(--ac-tone-accent) 88%, black);
+        --ac-accent-hover: color-mix(in srgb, var(--ac-accent) 88%, black);
+        --ac-on-accent: #fff;
+        --ac-accent-ink: color-mix(in srgb, var(--ac-tone-accent) 86%, black);
+        --ac-accent-line: var(--ac-tone-accent);
+        --ac-accent-tint: color-mix(in srgb, var(--ac-tone-accent) 8%, white);
+        --ac-accent-soft: color-mix(in srgb, var(--ac-tone-accent) 14%, white);
+        --ac-accent-tint-ink: color-mix(in srgb, var(--ac-tone-accent) 54%, black);
+
+        /* Focus: the frame of the focused field, button or link (3:1 on every surface). */
+        --ac-focus: var(--ac-p);
+        --ac-focus-shadow: 0 0 #0000;
+        --ac-focus-shadow-danger: 0 0 #0000;
+
+        /* The dimming behind every overlay. */
+        --ac-backdrop: rgb(10 10 10 / 0.45);
+        --ac-backdrop-blur: 2px;
+
+        /* Corners: one radius for every rounded-* step; checkboxes keep a small one. */
+        --ac-radius: 0.25rem;
+        --ac-radius-check: 0.25rem;
+
+        /* Fonts: Public Sans (text) and DM Mono (code, numeric labels), both SIL OFL. */
+        --ac-font-sans: var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+        --ac-font-mono: var(--font-dm-mono, 'DM Mono'), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --ac-font-display: var(--ac-font-sans);
+        --ac-font-brand: var(--font-public-sans, 'Public Sans'), ui-sans-serif, system-ui, sans-serif;
+
+        /* Shadows: a 1px hairline (the card edge), then a soft, wide, low-opacity shadow. */
+        --ac-shadow-xs: 0 0 0 1px transparent, 0 1px 2px 0 rgb(24 24 27 / 0.06);
+        --ac-shadow-sm: 0 0 0 1px rgb(24 24 27 / 0.05), 0 1px 2px 0 rgb(24 24 27 / 0.05), 0 4px 14px 0 rgb(24 24 27 / 0.04);
+        --ac-shadow-md: 0 0 0 1px rgb(24 24 27 / 0.05), 0 6px 20px 0 rgb(24 24 27 / 0.08);
+        --ac-shadow-lg: 0 0 0 1px rgb(24 24 27 / 0.06), 0 12px 32px 0 rgb(24 24 27 / 0.12), 0 4px 10px 0 rgb(24 24 27 / 0.05);
+        --ac-shadow-xl: 0 0 0 1px transparent, 0 24px 70px 0 rgb(24 24 27 / 0.16), 0 4px 18px 0 rgb(24 24 27 / 0.08);
+    }
+
+    /* The dark theme: every theme name that ends in "dark" (and .dark while the bridge is on). Black with neutral greys. */
+    [data-theme$='dark'],
+    .dark {
+        --ac-page: #0a0a0a;
+        --ac-surface: #141414;
+        --ac-field: #1f1f1f;
+        --ac-field-hover: #2e2e2e;
+        --ac-field-disabled: #141414;
+        --ac-sunken: #1f1f1f;
+        --ac-hover: #1f1f1f;
+        --ac-track: #2e2e2e;
+        --ac-inverse: #2e2e2e;
+        --ac-line: #2e2e2e;
+        --ac-line-soft: #1f1f1f;
+        --ac-line-strong: #474747;
+        --ac-line-hover: #787878;
+        --ac-control: #787878;
+        --ac-ink: #f5f5f5;
+        --ac-body: #d4d4d4;
+        --ac-dim: #a3a3a3;
+        --ac-muted: #a3a3a3;
+        --ac-faint: #787878;
+
+        /* The text tone may be lighter here (3:1 on every dark surface); the fill stays the same. */
+        --ac-p: var(--ac-user-tone-dark, var(--ac-tone-primary-dark, var(--ac-tone-primary)));
+        --ac-primary: var(--ac-user-fill-dark, var(--ac-user-fill, var(--ac-tone-primary)));
+        --ac-primary-hover: var(--ac-user-fill-hover-dark, var(--ac-user-fill-hover, color-mix(in srgb, var(--ac-primary) 88%, black)));
+        --ac-on-primary: var(--ac-user-on-fill-dark, var(--ac-user-on-fill, var(--ac-tone-on-primary, #fff)));
+        --ac-primary-ink: color-mix(in srgb, var(--ac-p) 66%, white);
+        --ac-primary-line: color-mix(in srgb, var(--ac-p) 66%, white);
+        --ac-primary-tint: color-mix(in oklab, color-mix(in srgb, var(--ac-p) 84%, white) 10%, transparent);
+        --ac-primary-soft: color-mix(in oklab, color-mix(in srgb, var(--ac-p) 84%, white) 15%, transparent);
+        --ac-primary-tint-ink: color-mix(in srgb, var(--ac-p) 42%, white);
+
+        --ac-secondary-ink: color-mix(in srgb, var(--ac-tone-secondary) 50%, white);
+        --ac-secondary-line: color-mix(in srgb, var(--ac-tone-secondary) 74%, white);
+        --ac-secondary-tint: color-mix(in oklab, var(--ac-tone-secondary) 15%, transparent);
+        --ac-secondary-soft: color-mix(in oklab, var(--ac-tone-secondary) 15%, transparent);
+        --ac-secondary-tint-ink: color-mix(in srgb, var(--ac-tone-secondary) 50%, white);
+
+        --ac-success-ink: color-mix(in srgb, var(--ac-tone-success) 72%, white);
+        --ac-success-line: color-mix(in srgb, var(--ac-tone-success) 72%, white);
+        --ac-success-tint: color-mix(in oklab, var(--ac-tone-success) 10%, transparent);
+        --ac-success-soft: color-mix(in oklab, var(--ac-tone-success) 15%, transparent);
+        --ac-success-tint-ink: color-mix(in srgb, var(--ac-tone-success) 48%, white);
+
+        --ac-info-ink: color-mix(in srgb, var(--ac-tone-info) 72%, white);
+        --ac-info-line: color-mix(in srgb, var(--ac-tone-info) 72%, white);
+        --ac-info-tint: color-mix(in oklab, var(--ac-tone-info) 10%, transparent);
+        --ac-info-soft: color-mix(in oklab, var(--ac-tone-info) 15%, transparent);
+        --ac-info-tint-ink: color-mix(in srgb, var(--ac-tone-info) 48%, white);
+
+        --ac-warning-ink: color-mix(in srgb, var(--ac-tone-warning) 76%, white);
+        --ac-warning-line: color-mix(in srgb, var(--ac-tone-warning) 76%, white);
+        --ac-warning-tint: color-mix(in oklab, var(--ac-tone-warning) 10%, transparent);
+        --ac-warning-soft: color-mix(in oklab, var(--ac-tone-warning) 15%, transparent);
+        --ac-warning-tint-ink: color-mix(in srgb, var(--ac-tone-warning) 52%, white);
+
+        --ac-danger-ink: color-mix(in srgb, var(--ac-tone-danger) 70%, white);
+        --ac-danger-line: color-mix(in srgb, var(--ac-tone-danger) 70%, white);
+        --ac-danger-tint: color-mix(in oklab, var(--ac-tone-danger) 10%, transparent);
+        --ac-danger-soft: color-mix(in oklab, var(--ac-tone-danger) 15%, transparent);
+        --ac-danger-tint-ink: color-mix(in srgb, var(--ac-tone-danger) 45%, white);
+
+        /* No navy on black: the dark tone is a neutral grey. */
+        --ac-dark: #2e2e2e;
+        --ac-dark-hover: #474747;
+        --ac-dark-ink: #d4d4d4;
+        --ac-dark-line: #d4d4d4;
+        --ac-dark-tint: #1f1f1f;
+        --ac-dark-soft: #2e2e2e;
+        --ac-dark-tint-ink: #e5e5e5;
+
+        --ac-accent-ink: color-mix(in srgb, var(--ac-tone-accent) 96%, white);
+        --ac-accent-line: color-mix(in srgb, var(--ac-tone-accent) 96%, white);
+        --ac-accent-tint: color-mix(in oklab, var(--ac-tone-accent) 10%, transparent);
+        --ac-accent-soft: color-mix(in oklab, var(--ac-tone-accent) 15%, transparent);
+        --ac-accent-tint-ink: color-mix(in srgb, var(--ac-tone-accent) 48%, white);
+
+        /* On black a light dimming is invisible: darker, and the page behind blurs. */
+        --ac-backdrop: rgb(0 0 0 / 0.72);
+        --ac-backdrop-blur: 4px;
+
+        /* A light hairline and deep black layers. */
+        --ac-shadow-sm: 0 0 0 1px var(--ac-line-soft), 0 1px 2px 0 transparent, 0 4px 14px 0 rgb(0 0 0 / 0.22);
+        --ac-shadow-md: 0 0 0 1px var(--ac-line-soft), 0 6px 20px 0 rgb(0 0 0 / 0.22);
+        --ac-shadow-lg: 0 0 0 1px var(--ac-line), 0 12px 32px 0 rgb(0 0 0 / 0.45), 0 4px 10px 0 transparent;
+        --ac-shadow-xl: 0 0 0 1px var(--ac-line), 0 24px 70px 0 rgb(0 0 0 / 0.45), 0 4px 18px 0 transparent;
+    }
+
+    /* Bordered skin (<html data-skin="bordered">): every shadow is the 1px line; the page is the surface. */
+    :root[data-skin='bordered'],
+    :root[data-skin='bordered'] [data-theme],
+    :root[data-skin='bordered'] .dark {
+        --ac-page: var(--ac-surface);
+        --ac-shadow-xs: 0 0 0 1px var(--ac-line);
+        --ac-shadow-sm: 0 0 0 1px var(--ac-line);
+        --ac-shadow-md: 0 0 0 1px var(--ac-line);
+        --ac-shadow-lg: 0 0 0 1px var(--ac-line);
+        --ac-shadow-xl: 0 0 0 1px var(--ac-line);
+    }
+
+    /* The browser's own parts (scrollbars, native pickers, autofill) and inherited text follow the theme. */
+    :root,
+    [data-theme] {
+        color-scheme: light;
+        color: var(--ac-body);
+        font-family: var(--ac-font-sans);
+    }
+
+    [data-theme$='dark'] {
+        color-scheme: dark;
+    }
+
+    :where(h1, h2, h3, h4, h5, h6) {
+        color: var(--ac-ink);
+    }
+
+    /*
+     * Bridge: the kit's current runtime drives the tokens. The primary colour is
+     * --color-brand-600 (the presets, a custom colour and the semi-dark menu set it), its fill
+     * the primary button's (--btn-primary-*, which also carry a custom colour's measured text);
+     * the focus ring keeps --ui-focus-ring; the backdrop, the corner and the sans font are the
+     * kit's current values. Read on every themed element, so the semi-dark menu takes its own.
+     */
+    :root,
+    [data-theme],
+    .dark {
+        --ac-tone-primary: var(--color-brand-600);
+        --ac-primary: var(--btn-primary-bg);
+        --ac-primary-hover: var(--btn-primary-hover);
+        --ac-on-primary: var(--btn-primary-color, #fff);
+        --ac-focus: var(--ui-focus-ring, var(--ac-p));
+        --ac-backdrop: var(--ui-backdrop);
+        --ac-backdrop-blur: var(--ui-backdrop-blur);
+        --ac-radius: var(--radius-sm);
+        --ac-font-sans: var(--font-sans);
+    }
+}

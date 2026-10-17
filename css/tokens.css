@@ -1,0 +1,151 @@
+/*
+ * Acun UI tokens as Tailwind utilities.
+ *
+ * Every colour role is an --ac-* variable (css/themes.css sets them per theme: the built-in
+ * light and dark blocks, and any [data-theme] block after them). Here each role becomes a
+ * Tailwind colour without a prefix: --ac-surface is bg-surface, --ac-muted is text-muted,
+ * --ac-primary with --ac-on-primary is bg-primary text-on-primary, --ac-line is border-line.
+ *
+ * `inline` makes a utility write var(--ac-…) itself, so the value is read on the element: a
+ * section with its own data-theme (a dark menu in a light page, a light island in a dark one)
+ * gets its own colours. Opacity modifiers keep working: border-line/80 is
+ * color-mix(in oklab, var(--ac-line) 80%, transparent).
+ *
+ * Neutral roles:
+ *   page            the page background
+ *   surface         cards, menus, the top bar, popovers, modals, drawers
+ *   field           form fields and the white button; field-hover, field-disabled
+ *   sunken          a recessed area: segmented track, table head, kbd, chip
+ *   hover           row and menu item hover
+ *   track           progress and skeleton tracks
+ *   inverse         tooltip and toast background, on-inverse its text
+ *   line            borders and dividers; line-soft (inner dividers), line-strong (field
+ *                   frame, switch off), line-hover (field frame on hover)
+ *   control         the edge of a checkbox and a radio (3:1)
+ *   ink             headings and titles
+ *   body            body text
+ *   dim             secondary text
+ *   muted           hints, labels and placeholders (4.5:1)
+ *   faint           decorative icons only, never text
+ *
+ * Tones: primary, secondary, success, info, warning, danger, dark and accent. Each has the
+ * same eight roles (t = the tone):
+ *   t               the fill (bg-t, border-t)
+ *   t-hover         the fill on hover
+ *   on-t            text on the fill and on its hover
+ *   t-ink           text and links on a surface
+ *   t-line          outline borders, the invalid frame, icons
+ *   t-tint          a light tinted background (badge, alert, selected row)
+ *   t-soft          a stronger tint (soft button, active menu item)
+ *   t-tint-ink      text on t-tint and t-soft
+ *
+ * focus is the keyboard focus ring (outline-focus, ring-focus).
+ *
+ * The gray-*, zinc-* and status palette scales and brand-* stay in panel.css for application
+ * code and data colours. The radius, font and shadow utilities also keep their panel.css
+ * values for now; --ac-radius, --ac-font-* and --ac-shadow-* already carry the same values.
+ */
+@theme inline {
+    --color-page: var(--ac-page);
+    --color-surface: var(--ac-surface);
+    --color-field: var(--ac-field);
+    --color-field-hover: var(--ac-field-hover);
+    --color-field-disabled: var(--ac-field-disabled);
+    --color-sunken: var(--ac-sunken);
+    --color-hover: var(--ac-hover);
+    --color-track: var(--ac-track);
+    --color-inverse: var(--ac-inverse);
+    --color-on-inverse: var(--ac-on-inverse);
+    --color-line: var(--ac-line);
+    --color-line-soft: var(--ac-line-soft);
+    --color-line-strong: var(--ac-line-strong);
+    --color-line-hover: var(--ac-line-hover);
+    --color-control: var(--ac-control);
+    --color-ink: var(--ac-ink);
+    --color-body: var(--ac-body);
+    --color-dim: var(--ac-dim);
+    --color-muted: var(--ac-muted);
+    --color-faint: var(--ac-faint);
+
+    --color-primary: var(--ac-primary);
+    --color-primary-hover: var(--ac-primary-hover);
+    --color-on-primary: var(--ac-on-primary);
+    --color-primary-ink: var(--ac-primary-ink);
+    --color-primary-line: var(--ac-primary-line);
+    --color-primary-tint: var(--ac-primary-tint);
+    --color-primary-soft: var(--ac-primary-soft);
+    --color-primary-tint-ink: var(--ac-primary-tint-ink);
+
+    --color-secondary: var(--ac-secondary);
+    --color-secondary-hover: var(--ac-secondary-hover);
+    --color-on-secondary: var(--ac-on-secondary);
+    --color-secondary-ink: var(--ac-secondary-ink);
+    --color-secondary-line: var(--ac-secondary-line);
+    --color-secondary-tint: var(--ac-secondary-tint);
+    --color-secondary-soft: var(--ac-secondary-soft);
+    --color-secondary-tint-ink: var(--ac-secondary-tint-ink);
+
+    --color-success: var(--ac-success);
+    --color-success-hover: var(--ac-success-hover);
+    --color-on-success: var(--ac-on-success);
+    --color-success-ink: var(--ac-success-ink);
+    --color-success-line: var(--ac-success-line);
+    --color-success-tint: var(--ac-success-tint);
+    --color-success-soft: var(--ac-success-soft);
+    --color-success-tint-ink: var(--ac-success-tint-ink);
+
+    --color-info: var(--ac-info);
+    --color-info-hover: var(--ac-info-hover);
+    --color-on-info: var(--ac-on-info);
+    --color-info-ink: var(--ac-info-ink);
+    --color-info-line: var(--ac-info-line);
+    --color-info-tint: var(--ac-info-tint);
+    --color-info-soft: var(--ac-info-soft);
+    --color-info-tint-ink: var(--ac-info-tint-ink);
+
+    --color-warning: var(--ac-warning);
+    --color-warning-hover: var(--ac-warning-hover);
+    --color-on-warning: var(--ac-on-warning);
+    --color-warning-ink: var(--ac-warning-ink);
+    --color-warning-line: var(--ac-warning-line);
+    --color-warning-tint: var(--ac-warning-tint);
+    --color-warning-soft: var(--ac-warning-soft);
+    --color-warning-tint-ink: var(--ac-warning-tint-ink);
+
+    --color-danger: var(--ac-danger);
+    --color-danger-hover: var(--ac-danger-hover);
+    --color-on-danger: var(--ac-on-danger);
+    --color-danger-ink: var(--ac-danger-ink);
+    --color-danger-line: var(--ac-danger-line);
+    --color-danger-tint: var(--ac-danger-tint);
+    --color-danger-soft: var(--ac-danger-soft);
+    --color-danger-tint-ink: var(--ac-danger-tint-ink);
+
+    /* bg-dark, text-dark… are the dark tone (#3f404d; a neutral grey in the dark theme). */
+    --color-dark: var(--ac-dark);
+    --color-dark-hover: var(--ac-dark-hover);
+    --color-on-dark: var(--ac-on-dark);
+    --color-dark-ink: var(--ac-dark-ink);
+    --color-dark-line: var(--ac-dark-line);
+    --color-dark-tint: var(--ac-dark-tint);
+    --color-dark-soft: var(--ac-dark-soft);
+    --color-dark-tint-ink: var(--ac-dark-tint-ink);
+
+    --color-accent: var(--ac-accent);
+    --color-accent-hover: var(--ac-accent-hover);
+    --color-on-accent: var(--ac-on-accent);
+    --color-accent-ink: var(--ac-accent-ink);
+    --color-accent-line: var(--ac-accent-line);
+    --color-accent-tint: var(--ac-accent-tint);
+    --color-accent-soft: var(--ac-accent-soft);
+    --color-accent-tint-ink: var(--ac-accent-tint-ink);
+
+    /*
+     * The keyboard focus ring of buttons, links, tabs, menus and form fields: the primary
+     * colour of the element's theme (the dark theme's in a dark section).
+     */
+    --color-focus: var(--ac-focus);
+
+    /* The headings' font (font-display); the sans font unless a theme sets --ac-font-display. */
+    --font-display: var(--ac-font-display);
+}
