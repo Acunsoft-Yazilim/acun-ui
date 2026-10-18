@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1 (2026-10-18)
+
+- npm: the package now ships the browser builds (`dist/acun-ui.js`, `dist/acun-ui-boot.js`), so the runtime loads from a CDN without a bundler (`https://cdn.jsdelivr.net/npm/@acunsoft/acun-ui@2/dist/acun-ui.js`, also the package's default file on jsDelivr and unpkg). The npm page links to https://ui.acunsoft.com.
+- README: install with `npm install @acunsoft/acun-ui` outside Laravel; the release archive is no longer needed.
+- `npm publish` stops when `dist/` is older than `js/` or carries another version.
+
 ## 2.0.0 (2026-10-18)
 
 Details, with who is affected and how to fix each change: https://ui.acunsoft.com/upgrade.html

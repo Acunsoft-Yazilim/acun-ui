@@ -33,11 +33,13 @@ Point npm at the copy in `vendor/`, so the CSS and JavaScript always match the i
 }
 ```
 
-Without Composer, install the npm archive from the release (the CSS, `js/` and `vite/` only):
+Without Composer (any Tailwind CSS 4 project), install it from npm (the CSS, `js/`, `dist/` and `vite/` only):
 
 ```bash
-npm install ./acunsoft-acun-ui-<version>.tgz
+npm install @acunsoft/acun-ui @tailwindcss/forms
 ```
+
+In a Laravel app keep the `file:` line above instead: an npm copy of another version would not match the Blade components.
 
 ### CSS
 
@@ -84,6 +86,15 @@ This is the Acun UI runtime; panel pages need it. It sets up one global, `window
 - the Livewire fixes: `<select>` values after morphs, no morphs into detached components, lists kept in view, a full page load when leaving a page that forces its layout.
 
 Without Vite, `@acunUiScripts` loads a browser build of the same code (`dist/`). The mode, the theme (`data-theme`) and the user's colour are applied before the first paint by a small blocking script that `acun:layout.head` loads (`js/boot.js`).
+
+Without a bundler the browser build also comes from a CDN. Load it before Alpine:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@acunsoft/acun-ui@2/dist/acun-ui.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+```
+
+The modals, drawers and the scroll lock work this way. The CSS still goes through Tailwind (the `@import` above), and the theme switcher needs `acun:layout.head` (it prints the settings and loads `dist/acun-ui-boot.js`).
 
 The API: `AcunUI.modal.open(name)` / `close(name?)`, `AcunUI.drawer.open(name)` / `close(name?)` / `toggle(name)`, `AcunUI.scrollLock.lock()` / `unlock()`, and `AcunUI.overlays.open(element, { close, trap })` / `close(element)` for a dialog of your own (scroll lock, Escape, Tab trap and focus restore together). The same commands as events on `window`, with `{ name }`: `acun:modal:open`, `acun:modal:close`, `acun:drawer:open`, `acun:drawer:close`, `acun:drawer:toggle` (close without a name closes every open one). Notifications: `acun:modal:opened`, `acun:modal:closed`, `acun:drawer:opened`, `acun:drawer:closed`. The first names (`open-modal`, `close-drawer`, `drawer-state-changed`, `modal-closed`…) and `window.acunScrollLock` (with a console warning) still work.
 
