@@ -319,6 +319,15 @@ html.scroll-locked {
         -moz-osx-font-smoothing: auto;
     }
 
+    /*
+     * The page's texture: a theme's --ac-page-pattern (none in the built-in themes; a paper texture in
+     * Acun Pro's Atelier) over the body's colour (the layouts paint bg-page).
+     */
+    body {
+        background-image: var(--ac-page-pattern);
+        background-size: var(--ac-page-pattern-size);
+    }
+
     :is(h1, h2, h3, h4, h5, h6) {
         letter-spacing: -0.011em;
     }

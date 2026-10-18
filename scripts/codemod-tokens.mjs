@@ -173,6 +173,11 @@ export function pairToken(base, twin) {
             const name = pick(token, base.variants);
             if (name && !name.includes('/')) return `${name}/${base.alpha}`;
         }
+        // A line softened in the light theme only (border-gray-200/80 dark:border-zinc-800) keeps its opacity on the token.
+        if (family === 'line' && colour === base.colour && base.alpha && !twin.alpha && twins.includes(twin.colour)) {
+            const name = pick(token, base.variants);
+            if (name && !name.includes('/')) return `${name}/${base.alpha}`;
+        }
         if (colour === light && twins.includes(dark)) {
             const name = pick(token, base.variants);
             if (name) return name;
