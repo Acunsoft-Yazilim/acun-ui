@@ -3,6 +3,7 @@
 namespace Acun\Ui\Tests\Feature;
 
 use Acun\Ui\Support\Appearance;
+use Acun\Ui\Support\Contrast;
 use Acun\Ui\Support\Layout;
 use Acun\Ui\Tests\TestCase;
 use Illuminate\Support\Facades\Blade;
@@ -92,8 +93,8 @@ final class LayoutSettingsTest extends TestCase
         self::assertSame(Appearance::COLORS, Layout::BRAND_COLORS, 'The 1.x name is kept until 3.0.');
 
         $picker = Blade::render('<x-ui.brand-color-picker />');
-        self::assertMatchesRegularExpression('/title="Sarı"[^>]*style="background: #9f6b13"\s*>\s*<svg[^>]*text-surface/', $picker);
-        self::assertMatchesRegularExpression('/title="Koyu"[^>]*style="background: #3f404d"\s*>\s*<svg[^>]*text-surface/', $picker);
+        self::assertMatchesRegularExpression('/title="Sarı">\s*<input type="radio"[^>]*>\s*<span[^>]*style="background: #9f6b13"[^>]*><\/span>\s*<svg[^>]*text-surface/', $picker);
+        self::assertMatchesRegularExpression('/title="Koyu">\s*<input type="radio"[^>]*>\s*<span[^>]*style="background: #3f404d"[^>]*><\/span>\s*<svg[^>]*text-surface/', $picker);
 
         // The theme's own colour (default) is no colour of the runtime: it removes the user's.
         self::assertSame(
@@ -111,13 +112,18 @@ final class LayoutSettingsTest extends TestCase
     {
         $picker = Blade::render('<x-ui.brand-color-picker />');
 
+        $swatch = fn (string $name, string $tick): string => '/title="'.$name.'">\s*<input type="radio"[^>]*>\s*<span[^>]*><\/span>\s*<svg[^>]*\b'.$tick.'\b/';
+
         foreach (['Varsayılan', 'Yeşil', 'Kırmızı', 'Sarı', 'Turkuaz', 'Gri', 'Koyu'] as $name) {
-            self::assertMatchesRegularExpression('/title="'.$name.'"[^>]*>\s*<svg[^>]*\btext-surface\b/', $picker, $name);
+            self::assertMatchesRegularExpression($swatch($name, 'text-surface'), $picker, $name);
         }
 
         $light = Blade::render('<x-ui.brand-color-picker :presets="[\'acik\' => [\'#04b6d4\', \'Açık\'], \'sari\' => [\'#fcaa1e\', \'Sarı\']]" :custom="false" />');
-        self::assertMatchesRegularExpression('/title="Açık"[^>]*>\s*<svg[^>]*\btext-ink\b/', $light);
-        self::assertMatchesRegularExpression('/title="Sarı"[^>]*>\s*<svg[^>]*\btext-ink\b/', $light);
+        self::assertMatchesRegularExpression($swatch('Açık', 'text-ink'), $light);
+        self::assertMatchesRegularExpression($swatch('Sarı', 'text-ink'), $light);
+        // One helper decides: white while it stands out 3:1 (Contrast, the runtime's maths).
+        self::assertFalse(Contrast::whiteReads('#04b6d4'));
+        self::assertTrue(Contrast::whiteReads('#9f6b13'));
     }
 
     /** Presets can come from a tenant or a user: only #rrggbb values reach the style attribute. */
@@ -133,7 +139,7 @@ final class LayoutSettingsTest extends TestCase
         ]]);
 
         self::assertStringContainsString('style="background: #0f766e"', $picker);
-        self::assertSame(1, substr_count($picker, 'role="radio"'), 'Only the valid preset is drawn.');
+        self::assertSame(1, substr_count($picker, 'type="radio"'), 'Only the valid preset is drawn.');
         foreach (['evil.example', 'Kötü', 'Kısa', 'Adlı', 'Boş', '#123456'] as $skipped) {
             self::assertStringNotContainsString($skipped, $picker);
         }
@@ -149,7 +155,7 @@ final class LayoutSettingsTest extends TestCase
             'satir' => ["#aabbcc\n", 'Satır'],
         ]]);
 
-        self::assertSame(1, substr_count($picker, 'role="radio"'));
+        self::assertSame(1, substr_count($picker, 'type="radio"'));
         self::assertStringNotContainsString('Satır', $picker);
         self::assertStringNotContainsString('#aabbcc', $picker);
     }

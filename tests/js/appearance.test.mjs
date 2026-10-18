@@ -361,7 +361,7 @@ test('the picker\'s default swatch shows the theme\'s own primary colour', async
     Alpine.store('brand').set('green');
 
     await mount(render({ picker: '<acun:brand-color-picker />' }).picker);
-    const swatch = document.querySelector('[role="radio"][title="Varsayılan"]');
+    const swatch = document.querySelector('label[title="Varsayılan"] input[type="radio"] + span');
     assert.match(swatch.getAttribute('style'), /background: (#0f766e|rgb\(15, 118, 110\))/);
     assert.equal(user()['--ac-user-fill'], '#008933', 'The chosen preset stays on <html>.');
 

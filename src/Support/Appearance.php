@@ -2,6 +2,7 @@
 
 namespace Acun\Ui\Support;
 
+use Closure;
 use InvalidArgumentException;
 
 /**
@@ -22,6 +23,11 @@ use InvalidArgumentException;
  *
  * The keys light, dark, system and default are reserved, so a 1.x theme value (light | dark |
  * system, read as the mode until 3.0) never names a theme.
+ *
+ * <acun:theme-switcher> draws its own sections (mode, color, theme); a package adds more
+ * (Appearance::section(): the panel's skin, width, sidebar and navbar, the storefront's header,
+ * footer, language and links) and offers the themes a visitor may switch to on a request
+ * (Appearance::offerThemes(); Appearance::switchable() reads them).
  */
 final class Appearance
 {
@@ -63,8 +69,20 @@ final class Appearance
 
     private const SCOPE_ATTRIBUTE = 'acun-ui.appearance.scope';
 
+    /** The sections <acun:theme-switcher> draws itself; a package cannot register these names. */
+    public const SWITCHER_SECTIONS = ['mode', 'color', 'theme'];
+
+    /** The looks of a theme's miniature in the switcher: its header and logo. */
+    public const LOOKS = ['default', 'modern', 'classic'];
+
     /** @var array<string, array{light: string, dark: ?string, targets: array{light: string, dark: string}}> */
     private array $themes = [];
+
+    /** @var array<string, string> The switcher sections packages add: name => view. */
+    private array $sections = [];
+
+    /** @var (Closure(): array<int, mixed>)|null The themes a switcher offers on a request (offerThemes()). */
+    private ?Closure $offer = null;
 
     /**
      * Registers a theme pair: its light member (default: the key) and its dark member (null: a
@@ -261,6 +279,97 @@ final class Appearance
         return $presets;
     }
 
+    /**
+     * Adds a section to <acun:theme-switcher>: the switcher includes the view (with $section, the
+     * name) where its sections prop names it. One view may draw several sections. A later
+     * registration of the same name replaces the earlier one.
+     *
+     *   Appearance::section('skin', 'acun-pro::panel.switcher-sections');
+     *   <acun:theme-switcher as="drawer" :sections="['mode', 'color', 'skin']" />
+     */
+    public static function section(string $name, string $view): void
+    {
+        if (! preg_match('/^[a-z][a-z0-9-]*\z/', $name)) {
+            throw new InvalidArgumentException("Switcher section [{$name}]: use lowercase letters, digits and dashes.");
+        }
+
+        if (in_array($name, self::SWITCHER_SECTIONS, true)) {
+            throw new InvalidArgumentException("Switcher section [{$name}] is the switcher's own (".implode(', ', self::SWITCHER_SECTIONS).').');
+        }
+
+        app(self::class)->sections[$name] = $view;
+    }
+
+    /**
+     * The sections packages added to the switcher: name => view.
+     *
+     * @return array<string, string>
+     */
+    public static function sections(): array
+    {
+        return app(self::class)->sections;
+    }
+
+    /**
+     * Sets what the switcher's theme section offers when its themes prop is null: a closure that
+     * returns this request's switchable themes, in the shape of self::themeItems() (acunsoft/acun-pro
+     * offers the current product's enabled themes while its theme switching is on). Null: none.
+     *
+     * @param  (Closure(): array<int, mixed>)|null  $themes
+     */
+    public static function offerThemes(?Closure $themes): void
+    {
+        app(self::class)->offer = $themes;
+    }
+
+    /**
+     * The themes a visitor may switch to on this request (the switcher's theme section): none
+     * unless a package offers them (offerThemes()).
+     *
+     * @return list<array{key: string, name: string, style: string, description: string, light: string, url: string, active: bool, look: string}>
+     */
+    public static function switchable(): array
+    {
+        $offer = app(self::class)->offer;
+
+        return $offer === null ? [] : self::themeItems((array) $offer());
+    }
+
+    /**
+     * Theme items for the switcher, cleaned: each needs a key and a switch link (url); the name
+     * defaults to the key, the miniature's data-theme (light) to the key, the look to "default".
+     * Unsafe links (javascript:, another host's //host) become "#".
+     *
+     * @param  array<int|string, mixed>  $items
+     * @return list<array{key: string, name: string, style: string, description: string, light: string, url: string, active: bool, look: string}>
+     */
+    public static function themeItems(array $items): array
+    {
+        $clean = [];
+
+        foreach ($items as $item) {
+            if (! is_array($item) || ! is_string($item['key'] ?? null) || $item['key'] === '' || ! is_string($item['url'] ?? null)) {
+                continue;
+            }
+
+            $text = fn (string $field, string $default = ''): string => is_scalar($item[$field] ?? null) ? (string) $item[$field] : $default;
+            $light = $text('light', $item['key']);
+
+            $clean[] = [
+                'key' => $item['key'],
+                'name' => $text('name', $item['key']),
+                'style' => $text('style'),
+                'description' => $text('description'),
+                'light' => preg_match('/^[a-z][a-z0-9-]*\z/', $light) ? $light : $item['key'],
+                'url' => Url::safe($item['url']) ?? '#',
+                'active' => (bool) ($item['active'] ?? false),
+                'look' => in_array($item['look'] ?? null, self::LOOKS, true) ? $item['look'] : 'default',
+            ];
+        }
+
+        return $clean;
+    }
+
     public static function isMode(mixed $value): bool
     {
         return in_array($value, self::MODES, true);
@@ -299,14 +408,6 @@ final class Appearance
     /** WCAG relative luminance of #rrggbb, as js/appearance/theme.js measures it. */
     private static function luminance(string $hex): float
     {
-        $weights = [0.2126, 0.7152, 0.0722];
-        $sum = 0.0;
-
-        foreach (str_split(substr($hex, 1), 2) as $i => $channel) {
-            $c = hexdec($channel) / 255;
-            $sum += $weights[$i] * ($c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4);
-        }
-
-        return $sum;
+        return Contrast::luminance($hex);
     }
 }

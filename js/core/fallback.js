@@ -21,7 +21,7 @@ export function fallbackStores(config) {
         navbar: { mode: start.navbarMode, set: noop },
         customizer: { skin: start.skin, contentWidth: start.contentWidth, semiDark: start.semiDark, setSkin: noop, setContentWidth: noop, setSemiDark: noop, apply: noop, reset: noop },
         brand: { color: start.brandColor, set: noop, forget: noop },
-        appearance: { value: start.mode, set: noop, toggle: noop, apply: noop },
+        appearance: { value: start.mode, scope: config?.scope || 'app', set: noop, toggle: noop, apply: noop },
     };
 }
 

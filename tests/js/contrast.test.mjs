@@ -195,7 +195,9 @@ test('every focus ring stands out 3:1 on the page, a surface, a field and a sunk
         collapse: ['<acun:collapse label="Ayrıntı">-</acun:collapse>', 'button'],
         'sortable column': ['<table><thead><tr><acun:sortable-th field="ad" sort-field="ad" sort-direction="asc">Ad</acun:sortable-th></tr></thead></table>', 'button'],
         'theme toggle': ['<acun:theme-toggle />', 'button'],
-        'colour swatch': ['<acun:brand-color-picker />', 'button[role="radio"]'],
+        'colour swatch': ['<acun:brand-color-picker />', 'input[type="radio"]', 'next'],
+        'custom colour': ['<acun:brand-color-picker />', 'input[type="color"]', 'parent'],
+        'mode choice': ['<acun:theme-switcher as="inline" sections="mode" :reset="false" />', 'input[type="radio"]', 'next'],
     };
     const html = render(Object.fromEntries(Object.entries(controls).map(([name, [template]]) => [name, template])));
     const block = Object.entries(controls).map(([name, [, target, drawer = 'self']]) => `<div data-case="${name}" data-target='${target}' data-drawer="${drawer}">${html[name]}</div>`).join('\n');

@@ -169,6 +169,11 @@ export function registerStores(Alpine, config) {
         // The mode: light, dark or system.
         value: start.mode,
 
+        // The page's storage scope (localStorage 'acun-ui:{scope}'): panel, shop, app…
+        get scope() {
+            return scope() || 'app';
+        },
+
         init() {
             this.apply();
             // "system" follows the operating system switching while the page is open.

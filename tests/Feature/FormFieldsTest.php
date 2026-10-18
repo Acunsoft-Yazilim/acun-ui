@@ -176,11 +176,11 @@ final class FormFieldsTest extends TestCase
         self::assertSame(Blade::render('<x-ui.badge variant="success">Tamam</x-ui.badge>'), Blade::render('<x-ui.badge color="success">Tamam</x-ui.badge>'));
         self::assertSame(Blade::render('<x-ui.progress :value="40" color="danger" />'), Blade::render('<x-ui.progress :value="40" variant="danger" />'));
 
-        // The customizer's choices say which one is on.
+        // The customizer's choices are native radios: the checked one is the one that is on.
         $customizer = Blade::render('<x-ui.theme-customizer />');
-        $choices = preg_match_all('/x-on:click="\$store\.(appearance\.set|customizer\.setSkin|customizer\.setContentWidth|sidebar\.set|navbar\.set)\(/', $customizer);
-        self::assertGreaterThan(0, $choices);
-        self::assertSame($choices, substr_count($customizer, ':aria-pressed="'));
+        self::assertGreaterThan(0, substr_count($customizer, 'type="radio"'));
+        self::assertSame(substr_count($customizer, 'type="radio"'), substr_count($customizer, 'x-bind:checked="'));
+        self::assertStringNotContainsString('aria-pressed', $customizer);
     }
     public function test_the_same_field_twice_on_a_page_gets_its_own_id(): void
     {

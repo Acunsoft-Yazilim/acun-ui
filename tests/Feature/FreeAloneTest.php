@@ -89,6 +89,7 @@ final class FreeAloneTest extends TestCase
             'tabs' => ["<acun:tabs :tabs=\"['genel' => 'Genel']\"><acun:tab-panel value=\"genel\">G</acun:tab-panel></acun:tabs><acun:tabs><acun:tabs.list><acun:tabs.trigger value=\"a\">A</acun:tabs.trigger></acun:tabs.list><acun:tabs.panel value=\"a\">x</acun:tabs.panel></acun:tabs>"],
             'textarea' => ['<acun:textarea name="not" label="Not" />'],
             'theme' => ['<acun:theme-toggle /><acun:theme-customizer /><acun:brand-color-picker label="Ana renk" />'],
+            'theme-switcher' => ['<acun:theme-switcher /><acun:theme-switcher as="drawer" trigger="button"><acun:theme-switcher.section name="yogunluk" title="Yoğunluk" :options="[\'rahat\' => \'Rahat\', \'sik\' => \'Sık\']" value="$store.yogunluk.deger" change="$store.yogunluk.sec" /></acun:theme-switcher><acun:theme-switcher as="inline" :sections="[\'color\']" />'],
             'toast-container' => ['<acun:toast-container />'],
             'tooltip' => ['<acun:tooltip text="İpucu">?</acun:tooltip>'],
             'two-factor-qr' => ['<acun:two-factor-qr secret="JBSWY3DPEHPK3PXP"><svg viewBox="0 0 10 10"></svg></acun:two-factor-qr>'],
