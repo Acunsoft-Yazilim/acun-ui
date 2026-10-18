@@ -1,0 +1,25 @@
+{{--
+    php artisan acun:install ile gelen örnek sayfa. Açmak için routes/web.php dosyasına bu rotayı ekleyin:
+        Route::view('/acun-example', 'acun.example');
+    İşiniz bitince sayfayı ve rotayı silin.
+--}}
+<acun:layout.blank title="Siparişler" class="bg-page">
+    <acun:slot:head>
+        {{ vite }}
+    </acun:slot:head>
+
+    <main class="mx-auto max-w-3xl space-y-6 p-6">
+        <acun:page-header title="Siparişler" description="Mağazanızın bugünkü siparişleri.">
+            <acun:slot:actions><acun:theme-switcher /></acun:slot:actions>
+        </acun:page-header>
+
+        <acun:card title="Sipariş #1042" subtitle="2 ürün · 84,90 ₺">
+            <acun:slot:actions><acun:badge variant="success">Ödendi</acun:badge></acun:slot:actions>
+            <p class="text-sm text-dim">Yarın standart kargoyla gönderilir.</p>
+            <acun:slot:footer>
+                <acun:button>Kargoya ver</acun:button>
+                <acun:button variant="light">Faturayı gör</acun:button>
+            </acun:slot:footer>
+        </acun:card>
+    </main>
+</acun:layout.blank>

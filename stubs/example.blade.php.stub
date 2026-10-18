@@ -1,0 +1,25 @@
+{{--
+    An example page from php artisan acun:install. To open it, add this route to routes/web.php:
+        Route::view('/acun-example', 'acun.example');
+    Delete the page and the route when you no longer need them.
+--}}
+<acun:layout.blank title="Orders" class="bg-page">
+    <acun:slot:head>
+        {{ vite }}
+    </acun:slot:head>
+
+    <main class="mx-auto max-w-3xl space-y-6 p-6">
+        <acun:page-header title="Orders" description="Today's orders from your store.">
+            <acun:slot:actions><acun:theme-switcher /></acun:slot:actions>
+        </acun:page-header>
+
+        <acun:card title="Order #1042" subtitle="2 items · $84.90">
+            <acun:slot:actions><acun:badge variant="success">Paid</acun:badge></acun:slot:actions>
+            <p class="text-sm text-dim">Ships tomorrow with standard delivery.</p>
+            <acun:slot:footer>
+                <acun:button>Ship order</acun:button>
+                <acun:button variant="light">View invoice</acun:button>
+            </acun:slot:footer>
+        </acun:card>
+    </main>
+</acun:layout.blank>

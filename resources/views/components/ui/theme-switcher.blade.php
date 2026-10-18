@@ -77,8 +77,8 @@
     data-test="theme-toggle"
     {{ $attributes->merge(['class' => 'flex size-9 flex-none cursor-pointer items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus']) }}
 >
-    <span class="sr-only dark:hidden">{{ __('Switch to the dark theme') }}</span>
-    <span class="sr-only hidden dark:inline">{{ __('Switch to the light theme') }}</span>
+    <span class="sr-only dark:hidden">{{ __('Switch to dark mode') }}</span>
+    <span class="sr-only hidden dark:inline">{{ __('Switch to light mode') }}</span>
 
     {{-- Moon in the light theme (switch to dark), sun in the dark theme (switch to light). --}}
     <svg class="size-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

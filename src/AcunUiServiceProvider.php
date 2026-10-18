@@ -2,6 +2,7 @@
 
 namespace Acun\Ui;
 
+use Acun\Ui\Console\InstallCommand;
 use Acun\Ui\Support\AcunTagCompiler;
 use Acun\Ui\Support\Appearance;
 use Acun\Ui\Support\Assets;
@@ -60,6 +61,11 @@ final class AcunUiServiceProvider extends ServiceProvider
 
             return BladeComments::strip(AcunTagCompiler::compile($template));
         });
+
+        // php artisan acun:install: package.json and the CSS and JS entries (src/Console).
+        if ($this->app->runningInConsole()) {
+            $this->commands([InstallCommand::class]);
+        }
 
         $this->publishes([
             __DIR__.'/../config/acun-ui.php' => config_path('acun-ui.php'),

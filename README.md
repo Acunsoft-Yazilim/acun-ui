@@ -16,22 +16,22 @@ A package of components can join the `acun` tag prefix with `Acun\Ui\AcunUi::add
 
 ## Install
 
-In a Laravel app the package comes with Composer:
+In a Laravel app, two commands:
 
 ```bash
 composer require acunsoft/acun-ui
+php artisan acun:install
 ```
 
-Point npm at the copy in `vendor/`, so the CSS and JavaScript always match the installed Blade components. In `package.json`, then `npm install`:
+`acun:install` adds only the lines that are missing and changes nothing else:
 
-```json
-"dependencies": {
-    "@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui"
-},
-"devDependencies": {
-    "@tailwindcss/forms": "^0.5.11"
-}
-```
+- `package.json`: `"@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui"`, so npm takes the CSS and JavaScript from the copy in `vendor/` and they always match the installed Blade components, and `"@tailwindcss/forms"`;
+- `resources/css/app.css`: `@plugin '@tailwindcss/forms';`, `@import '@acunsoft/acun-ui';` and `@source '../../vendor/acunsoft/acun-ui/resources/views';` after `@import 'tailwindcss';` (an `@theme` block that sets `--font-sans` is left alone, with a warning);
+- `resources/js/app.js`: `import '@acunsoft/acun-ui';`.
+
+It offers to run `npm install` and `npm run build` (`--npm`, `--no-npm`; pnpm, yarn and bun by their lock file), copies an example page with `--example`, adds Acun Pro's lines when `acunsoft/acun-pro` is installed, and asks nothing with `--no-interaction` (CI). A second run changes nothing. `php artisan acun:install --check` changes nothing: it lists what is set up and what is missing, and exits with 1 when something is. Then put `<acun:layout.blank>` on a page (or `<acun:layout.head>` in your own layout) and run `npm run dev`.
+
+The same lines by hand: https://ui.acunsoft.com/installation.html#manual
 
 Without Composer (any Tailwind CSS 4 project), install it from npm (the CSS, `js/`, `dist/` and `vite/` only):
 
@@ -43,7 +43,7 @@ In a Laravel app keep the `file:` line above instead: an npm copy of another ver
 
 ### CSS
 
-Import it after Tailwind and tell Tailwind where your markup lives (in `resources/css/app.css`):
+Import it after Tailwind and tell Tailwind where your markup lives (in `resources/css/app.css`; `acun:install` writes these lines):
 
 ```css
 @import 'tailwindcss';
@@ -112,7 +112,7 @@ The JS of the PRO components (charts, maps, date ranges, the unsaved-changes gua
 
 ## Türkçe
 
-Acun UI'nin ücretsiz sürümü: Laravel için Blade ve Livewire bileşenleri, `acun:layout.head` ve `acun:layout.blank` belge düzenleri, CSS ve JavaScript çekirdeği tek pakette (Composer `acunsoft/acun-ui`, npm `@acunsoft/acun-ui`). Panel düzenleri, JSON menü ve PRO bileşenler ücretli `acunsoft/acun-pro` paketindedir; o paket ve HTML sürümü bu paketi kullanır. Kurulum yukarıdaki adımlarla aynıdır; Türkçe doküman ürün sitesindedir.
+Acun UI'nin ücretsiz sürümü: Laravel için Blade ve Livewire bileşenleri, `acun:layout.head` ve `acun:layout.blank` belge düzenleri, CSS ve JavaScript çekirdeği tek pakette (Composer `acunsoft/acun-ui`, npm `@acunsoft/acun-ui`). Panel düzenleri, JSON menü ve PRO bileşenler ücretli `acunsoft/acun-pro` paketindedir; o paket ve HTML sürümü bu paketi kullanır. Kurulum iki komuttur: `composer require acunsoft/acun-ui`, ardından `php artisan acun:install`. Türkçe doküman ürün sitesindedir.
 
 ## License
 

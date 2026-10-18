@@ -43,7 +43,7 @@ final class ThemeSwitcherTest extends TestCase
         self::assertStringContainsString('x-on:click="$store.appearance.toggle();', $html);
         self::assertStringContainsString('data-test="theme-toggle"', $html);
         self::assertMatchesRegularExpression('~class="flex size-9 [^"]*\bms-auto"~', $html, 'Attributes go on the button.');
-        self::assertStringContainsString('Koyu temaya geç', $html);
+        self::assertStringContainsString('Koyu moda geç', $html);
         self::assertMatchesRegularExpression('~</button><span class="sr-only" role="status" data-theme-switcher-status></span>~', $html, 'A status says the new mode.');
         self::assertStringNotContainsString('data-switcher-section', $html, 'No sections: the button only switches.');
 
