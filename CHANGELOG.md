@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (2.0)
+## 2.0.0 (2026-10-18)
 
 Details, with who is affected and how to fix each change: https://ui.acunsoft.com/upgrade.html
 

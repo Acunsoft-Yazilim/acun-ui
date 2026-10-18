@@ -1,7 +1,6 @@
 {
   "name": "@acunsoft/acun-ui",
-  "version": "1.1.0",
-  "private": true,
+  "version": "2.0.0",
   "description": "Acun UI: Tailwind CSS theme and Alpine.js components for admin panels.",
   "keywords": [
     "tailwindcss",
@@ -29,7 +28,8 @@
   "files": [
     "css",
     "js",
-    "vite"
+    "vite",
+    "CHANGELOG.md"
   ],
   "sideEffects": [
     "**/*.css",
