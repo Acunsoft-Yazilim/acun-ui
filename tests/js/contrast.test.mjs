@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { brandShades } from '../../js/appearance/theme.js';
-import { chrome, inChrome, stylesheet } from './chrome.mjs';
+import { chrome, componentSources, inChrome, stylesheet } from './chrome.mjs';
 
 // Contrast as Chrome paints it (see chrome.mjs): the placeholders of the fields and of the command
-// palette, the counter on a button, the focus ring token and the user's colour in a theme of
-// another colour. The mode is data-theme on <html>; the semi-dark menu is data-theme="dark"; the
+// palette, the counter on a button, the focus ring token, every component's focus ring and the
+// user's colour in a theme of another colour. The mode is data-theme on <html>; the semi-dark menu is data-theme="dark"; the
 // user's colour is the --ac-user-* variables js/appearance/theme.js writes on <html>.
 // Text needs 4.5:1, a focus frame 3:1 (WCAG AA).
 
@@ -160,4 +160,79 @@ test('the presets and the custom colour never show the default purple in a teal 
         custom: ['#1e3a8a', navyDark],
         customDarkTheme: [ink(navyDark), navyDark],
     });
+});
+
+/**
+ * WCAG 2.2 (non-text contrast, focus appearance): the keyboard focus ring of every button variant
+ * and of the kit's other controls stands out 3:1 on what it sits on (the page, a surface, a field,
+ * a sunken area: the ring is drawn around the control), in the light and the dark theme, in a dark
+ * section of a light page and a light island of a dark page, with the theme's colour and two custom
+ * ones (a yellow that needs dark text, a navy that needs a lighter tone in the dark theme). Before:
+ * the success, warning and info buttons' rings (their -line shade) gave 1.75-2.21:1, the white,
+ * ghost and light buttons' (line-hover) 2.39-2.62:1, and the checkbox drew none (its outline-none
+ * cancelled the ring).
+ */
+test('every focus ring stands out 3:1 on the page, a surface, a field and a sunken area, in every theme and section', { skip }, async () => {
+    // [case, the element that takes the focus, the element that draws the ring (a peer's or the parent's) or none].
+    const controls = {
+        ...Object.fromEntries(variants.map((variant) => [`button ${variant}`, [`<acun:button variant="${variant}">Sepet</acun:button>`, 'button']])),
+        'link button': ['<acun:button href="/sepet" variant="outline-success">Sepet</acun:button>', 'a'],
+        'tab (underline)': [`<acun:tabs :tabs="['ozet' => 'Özet', 'kargo' => 'Kargo']"><acun:tab-panel value="ozet">-</acun:tab-panel><acun:tab-panel value="kargo">-</acun:tab-panel></acun:tabs>`, '[role="tab"]'],
+        'tab (pills)': [`<acun:tabs variant="pills" :tabs="['ozet' => 'Özet', 'kargo' => 'Kargo']"><acun:tab-panel value="ozet">-</acun:tab-panel><acun:tab-panel value="kargo">-</acun:tab-panel></acun:tabs>`, '[role="tab"]'],
+        'tab (cards)': [`<acun:tabs variant="cards" :tabs="['ozet' => 'Özet', 'kargo' => 'Kargo']"><acun:tab-panel value="ozet">-</acun:tab-panel><acun:tab-panel value="kargo">-</acun:tab-panel></acun:tabs>`, '[role="tab"]'],
+        chip: [`<acun:chip-group name="durum" :options="['hepsi' => 'Tümü', 'bekliyor' => 'Bekleyen']" value="hepsi" />`, 'input', 'next'],
+        segmented: [`<acun:segmented name="donem" :options="['gun' => 'Gün', 'hafta' => 'Hafta']" value="gun" />`, 'input', 'next'],
+        switch: ['<acun:switch name="bildirim" label="Bildirim" />', 'input', 'next'],
+        checkbox: ['<acun:checkbox name="kabul" label="Kabul" />', 'input'],
+        radio: ['<acun:radio name="odeme" value="kart" label="Kart" />', 'input'],
+        input: ['<acun:input name="ad" />', 'input'],
+        'invalid input': ['<acun:input name="eposta" error="Geçersiz" />', 'input'],
+        select: [`<acun:select name="sehir" :options="['ist' => 'İstanbul']" />`, 'select'],
+        textarea: ['<acun:textarea name="not" />', 'textarea'],
+        'input group': ['<acun:input-group name="tutar"><x-slot:prefix>₺</x-slot:prefix></acun:input-group>', 'input', 'parent'],
+        'search button': ['<acun:search name="q" button="Ara" />', 'button[type="submit"]'],
+        accordion: ['<acun:accordion><acun:accordion.item name="kargo" title="Kargo">-</acun:accordion.item></acun:accordion>', 'button'],
+        collapse: ['<acun:collapse label="Ayrıntı">-</acun:collapse>', 'button'],
+        'sortable column': ['<table><thead><tr><acun:sortable-th field="ad" sort-field="ad" sort-direction="asc">Ad</acun:sortable-th></tr></thead></table>', 'button'],
+        'theme toggle': ['<acun:theme-toggle />', 'button'],
+        'colour swatch': ['<acun:brand-color-picker />', 'button[role="radio"]'],
+    };
+    const html = render(Object.fromEntries(Object.entries(controls).map(([name, [template]]) => [name, template])));
+    const block = Object.entries(controls).map(([name, [, target, drawer = 'self']]) => `<div data-case="${name}" data-target='${target}' data-drawer="${drawer}">${html[name]}</div>`).join('\n');
+    // One copy on the page, one in a section; the script paints their wrapper with each background in turn.
+    const body = `<i hidden class="bg-page bg-surface bg-field bg-sunken"></i><main data-ground class="p-4">${block}</main><div id="section"><div data-ground class="p-4">${block}</div></div>`;
+    const css = await stylesheet(body, componentSources('acun-ui'));
+    const colours = { theme: {}, yellow: userVariables('#ffd400'), navy: userVariables('#1e3a8a') };
+    const result = inChrome({ css, body, htmlAttributes: 'data-theme="light"', measure: `try {
+        const colours = ${JSON.stringify(colours)};
+        const html = document.documentElement;
+        const section = document.getElementById('section');
+        const rows = [];
+        for (const [colour, variables] of Object.entries(colours)) {
+            html.removeAttribute('style');
+            Object.entries(variables).forEach(([name, value]) => html.style.setProperty(name, value));
+            for (const mode of ['light', 'dark']) {
+                html.dataset.theme = mode;
+                section.dataset.theme = mode === 'light' ? 'dark' : 'light';
+                for (const [where, ground] of [[mode + ' page', document.querySelector('main')], [mode === 'light' ? 'dark section' : 'light island', section.firstElementChild]]) {
+                    for (const background of ['page', 'surface', 'field', 'sunken']) {
+                        ground.className = 'p-4 bg-' + background;
+                        ground.querySelectorAll('[data-case]').forEach((wrapper) => {
+                            const target = wrapper.querySelector(wrapper.dataset.target);
+                            const drawer = { self: target, next: target.nextElementSibling, parent: target.parentElement }[wrapper.dataset.drawer];
+                            rows.push({ at: colour + ' / ' + where + ' / ' + background, control: wrapper.dataset.case, rings: focusRings(target, drawer) });
+                        });
+                    }
+                }
+            }
+        }
+        return { rows };
+    } catch (error) { return { error: error.stack }; }` });
+    assert.equal(result.error, undefined);
+
+    // 3 colours × 2 modes × (page + section) × 4 backgrounds, every control.
+    assert.equal(result.rows.length, 3 * 2 * 2 * 4 * Object.keys(controls).length);
+    const missing = result.rows.filter(({ rings }) => !rings.length).map(({ at, control }) => `${at}: ${control} draws no focus ring`);
+    const failing = result.rows.flatMap(({ at, control, rings }) => rings.filter(({ ratio }) => !(ratio >= 3)).map(({ kind, colour, ratio }) => `${at}: ${control} ${kind} ${colour} ${ratio}:1`));
+    assert.deepEqual([...missing, ...failing].slice(0, 20), [], `${missing.length} without a ring, ${failing.length} below 3:1`);
 });

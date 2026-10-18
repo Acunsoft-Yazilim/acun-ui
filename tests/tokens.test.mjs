@@ -259,6 +259,8 @@ test('the token contrast table holds in light, dark and the bordered skin', () =
             check(`on-${tone} on ${tone}`, get(`on-${tone}`), get(tone), 4.5);
             check(`on-${tone} on ${tone}-hover`, get(`on-${tone}`), get(`${tone}-hover`), 4.5);
             for (const background of ['page', 'surface', 'field']) check(`${tone}-ink on ${background}`, get(`${tone}-ink`), get(background), 4.5);
+            // The ink is the focus ring of the tone's buttons, which may sit on a sunken toolbar.
+            check(`${tone}-ink on sunken`, get(`${tone}-ink`), get('sunken'), 3);
             for (const background of ['tint', 'soft']) check(`${tone}-tint-ink on ${tone}-${background}`, get(`${tone}-tint-ink`), get(`${tone}-${background}`), 4.5);
         }
         check('on-inverse on inverse', get('on-inverse'), get('inverse'), 4.5);
@@ -268,6 +270,33 @@ test('the token contrast table holds in light, dark and the bordered skin', () =
         check('primary-line on surface', get('primary-line'), get('surface'), 3);
     }
 
+    assert.deepEqual(failures, []);
+});
+
+/**
+ * The focus ring of every acun:button variant (2px, 2px off its edge, so on whatever the button
+ * sits on) is a token the table above promises 3:1 on the page, a surface, a field and a sunken
+ * area: the focus token, or the ink of the variant's colour. The -line shades are decoration, not
+ * a frame: the success, warning and info buttons' rings gave 1.75-2.21:1 and the white, ghost and
+ * light buttons' line-hover 2.39-2.62:1 in the light theme.
+ */
+test('every button variant\'s focus ring is a token that stands out 3:1', () => {
+    const view = read('../resources/views/components/ui/button.blade.php');
+    const variants = Object.fromEntries([...view.slice(view.indexOf('$variants = ['), view.indexOf('$shadows = [')).matchAll(/^\s*'([\w-]+)' => '([^']*)',$/gm)].map(([, name, classes]) => [name, classes]));
+    assert.equal(Object.keys(variants).length, 25);
+    const failures = [];
+    for (const [variant, classes] of Object.entries(variants)) {
+        const rings = [...classes.matchAll(/(?:^| )focus-visible:outline-([a-z-]+)(?= |$)/g)].map(([, name]) => name);
+        const tone = variant.replace(/^(?:outline|soft)-/, '');
+        const expected = TONES.includes(tone) && tone !== 'primary' ? `${tone}-ink` : 'focus';
+        if (rings.join() !== expected) failures.push(`${variant}: outline-${rings.join(', outline-')}, expected outline-${expected}`);
+        for (const [mode, scope] of Object.entries(scopes)) {
+            for (const background of ['page', 'surface', 'field', 'sunken']) {
+                const ratio = contrast(token(expected, scope), token(background, scope));
+                if (ratio < 3) failures.push(`${mode} ${variant}: ${expected} on ${background} ${ratio.toFixed(2)}:1`);
+            }
+        }
+    }
     assert.deepEqual(failures, []);
 });
 
@@ -424,6 +453,33 @@ function expectedPrimary(mode, color = null, dark = null) {
 }
 
 /**
+ * The user's colour keeps the table's primary promises in every block: the presets and custom
+ * colours (a yellow, an orange, a navy) through js/appearance/theme.js brandShades. Its text tone
+ * reads 4.5:1 on the bare light page (#fafafa) too: measured against the surface alone, the green,
+ * red, yellow and cyan presets' gave 4.35-4.43:1 there and #ffd400's 4.32:1.
+ */
+test('the user\'s colour keeps the primary roles\' contrast in light, dark and the bordered skin', () => {
+    const failures = [];
+    for (const [color, dark] of [['#008933'], ['#d83838'], ['#9f6b13'], ['#038197'], ['#6b7280'], ['#3f404d', '#474747'], ['#ffd400'], ['#f9c74f'], ['#ff6a00'], ['#1e3a8a']]) {
+        for (const [mode, base] of Object.entries(scopes)) {
+            const scope = overlay(base, userVariables(color, dark));
+            const get = (name) => token(name, scope);
+            const check = (what, text, background, minimum) => {
+                const ground = over(background, get('surface'));
+                const ratio = contrast(over(text, ground), ground);
+                if (ratio < minimum) failures.push(`${color} ${mode}: ${what} ${ratio.toFixed(2)}:1 < ${minimum}`);
+            };
+            check('on-primary on primary', get('on-primary'), get('primary'), 4.5);
+            check('on-primary on primary-hover', get('on-primary'), get('primary-hover'), 4.5);
+            for (const background of ['page', 'surface', 'field']) check(`primary-ink on ${background}`, get('primary-ink'), get(background), 4.5);
+            for (const background of ['tint', 'soft']) check(`primary-tint-ink on primary-${background}`, get('primary-tint-ink'), get(`primary-${background}`), 4.5);
+            for (const background of ['page', 'surface', 'field', 'sunken']) check(`focus on ${background}`, get('focus'), get(background), 3);
+        }
+    }
+    assert.deepEqual(failures, []);
+});
+
+/**
  * No bridge: the light and dark blocks are selected with data-theme alone, and the primary roles read
  * the user's variables first, then the theme's own colour. For the default theme that is #794dff,
  * the button's #6a44e0 hover and white text, as in 1.x.
@@ -453,9 +509,11 @@ test('the primary roles read the user\'s colour first, then the theme\'s own', (
     }
     assert.deepEqual(mismatches, []);
 
-    // A preset gives 1.x's values: green's fill, hover, text and brand-600 (dark theme too) are the palette's solid green.
+    // A preset gives 1.x's values: green's fill, hover and text are the palette's solid green, and so
+    // is its brand-600 in the dark theme. In the light theme its text tone is a step darker (#008632),
+    // as the built-in success ink is: the fill reads 4.35:1 on the #fafafa page.
     const green = overlay(scopes.light, userVariables('#008933'));
-    assert.deepEqual(['primary', 'primary-hover', 'on-primary', 'p'].map((role) => toHex(token(role, green))), ['#008933', '#00792d', '#ffffff', '#008933']);
+    assert.deepEqual(['primary', 'primary-hover', 'on-primary', 'p'].map((role) => toHex(token(role, green))), ['#008933', '#00792d', '#ffffff', '#008632']);
     assert.equal(toHex(token('p', overlay(scopes.dark, userVariables('#008933')))), '#008933');
 });
 

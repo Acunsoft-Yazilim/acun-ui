@@ -18,7 +18,7 @@ console.warn = (...args) => {
 process.on('uncaughtException', (exception) => uncaught.push(exception.message));
 
 globalThis.acunTestPage = {
-    head: '<script type="application/json" data-acun-ui-config>{"scope":"app","theme":{"key":"default","light":"light","dark":"dark"},"targets":{"light":"#ffffff","dark":"#1f1f1f"},"colors":{"green":"#008933"},"mode":"dark","brandColor":"green","sidebarMode":"collapsed","navbarMode":null,"skin":"bordered","semiDark":null,"preferenceUrl":null,"defaults":{},"forced":false}</script>',
+    head: '<script type="application/json" data-acun-ui-config>{"scope":"app","theme":{"key":"default","light":"light","dark":"dark"},"targets":{"light":"#fafafa","dark":"#1f1f1f"},"colors":{"green":"#008933"},"mode":"dark","brandColor":"green","sidebarMode":"collapsed","navbarMode":null,"skin":"bordered","semiDark":null,"preferenceUrl":null,"defaults":{},"forced":false}</script>',
     boot: true,
     runtime: false,
 };

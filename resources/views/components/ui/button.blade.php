@@ -36,42 +36,46 @@
     // danger, warning, info, dark. Hover, press and the coloured shadow never apply while the
     // button is disabled (hover:not-disabled:). Every colour is a token (css/tokens.css), so the
     // theme, the dark theme and a custom primary colour change them all.
+    // The keyboard focus ring (2px, 2px off the edge) stands out 3:1 on whatever the button sits
+    // on (the page, a surface, a field, a sunken area) in every theme and section: a colour's ring
+    // is its ink (its text tone: the -line shades are decoration, #00ca4b gave 2:1 and the grey
+    // line-hover 2.62:1 on white); the primary colour's and the neutral buttons' ring is the focus token.
     $variants = [
         // Solid: the tone's fill, its hover and its own text colour (a light custom primary colour
         // takes dark text); the border is the fill.
         'primary' => 'border-primary bg-primary text-on-primary hover:not-disabled:border-primary-hover hover:not-disabled:bg-primary-hover focus-visible:outline-focus',
-        'success' => 'border-success bg-success text-on-success hover:not-disabled:border-success-hover hover:not-disabled:bg-success-hover focus-visible:outline-success-line',
-        'danger' => 'border-danger bg-danger text-on-danger hover:not-disabled:border-danger-hover hover:not-disabled:bg-danger-hover focus-visible:outline-danger-line',
-        'warning' => 'border-warning bg-warning text-on-warning hover:not-disabled:border-warning-hover hover:not-disabled:bg-warning-hover focus-visible:outline-warning-line',
-        'info' => 'border-info bg-info text-on-info hover:not-disabled:border-info-hover hover:not-disabled:bg-info-hover focus-visible:outline-info-line',
-        'secondary' => 'border-secondary bg-secondary text-on-secondary hover:not-disabled:border-secondary-hover hover:not-disabled:bg-secondary-hover focus-visible:outline-secondary-line',
-        'dark' => 'border-dark bg-dark text-on-dark hover:not-disabled:border-dark-hover hover:not-disabled:bg-dark-hover focus-visible:outline-dark-line',
+        'success' => 'border-success bg-success text-on-success hover:not-disabled:border-success-hover hover:not-disabled:bg-success-hover focus-visible:outline-success-ink',
+        'danger' => 'border-danger bg-danger text-on-danger hover:not-disabled:border-danger-hover hover:not-disabled:bg-danger-hover focus-visible:outline-danger-ink',
+        'warning' => 'border-warning bg-warning text-on-warning hover:not-disabled:border-warning-hover hover:not-disabled:bg-warning-hover focus-visible:outline-warning-ink',
+        'info' => 'border-info bg-info text-on-info hover:not-disabled:border-info-hover hover:not-disabled:bg-info-hover focus-visible:outline-info-ink',
+        'secondary' => 'border-secondary bg-secondary text-on-secondary hover:not-disabled:border-secondary-hover hover:not-disabled:bg-secondary-hover focus-visible:outline-secondary-ink',
+        'dark' => 'border-dark bg-dark text-on-dark hover:not-disabled:border-dark-hover hover:not-disabled:bg-dark-hover focus-visible:outline-dark-ink',
         // Light: a sunken grey with a line, darker on hover.
-        'light' => 'border-line bg-sunken text-dim hover:not-disabled:border-line-strong hover:not-disabled:bg-track focus-visible:outline-line-hover',
+        'light' => 'border-line bg-sunken text-dim hover:not-disabled:border-line-strong hover:not-disabled:bg-track focus-visible:outline-focus',
 
         // Outline: border and text in the colour, filled on hover. The text is the colour's ink,
         // readable on the surface; the hover is the solid fill with its own text colour.
         'outline' => 'border-primary-ink text-primary-ink hover:not-disabled:bg-primary hover:not-disabled:text-on-primary focus-visible:outline-focus',
-        'outline-success' => 'border-success-line text-success-ink hover:not-disabled:bg-success hover:not-disabled:text-on-success focus-visible:outline-success-line',
-        'outline-danger' => 'border-danger-line text-danger-ink hover:not-disabled:bg-danger hover:not-disabled:text-on-danger focus-visible:outline-danger-line',
-        'outline-warning' => 'border-warning-line text-warning-ink hover:not-disabled:bg-warning hover:not-disabled:text-on-warning focus-visible:outline-warning-line',
-        'outline-info' => 'border-info-line text-info-ink hover:not-disabled:bg-info hover:not-disabled:text-on-info focus-visible:outline-info-line',
-        'outline-secondary' => 'border-secondary-line text-secondary-ink hover:not-disabled:bg-secondary hover:not-disabled:text-on-secondary focus-visible:outline-secondary-line',
-        'outline-dark' => 'border-dark-line text-dark-ink hover:not-disabled:bg-dark hover:not-disabled:text-on-dark focus-visible:outline-dark-line',
+        'outline-success' => 'border-success-line text-success-ink hover:not-disabled:bg-success hover:not-disabled:text-on-success focus-visible:outline-success-ink',
+        'outline-danger' => 'border-danger-line text-danger-ink hover:not-disabled:bg-danger hover:not-disabled:text-on-danger focus-visible:outline-danger-ink',
+        'outline-warning' => 'border-warning-line text-warning-ink hover:not-disabled:bg-warning hover:not-disabled:text-on-warning focus-visible:outline-warning-ink',
+        'outline-info' => 'border-info-line text-info-ink hover:not-disabled:bg-info hover:not-disabled:text-on-info focus-visible:outline-info-ink',
+        'outline-secondary' => 'border-secondary-line text-secondary-ink hover:not-disabled:bg-secondary hover:not-disabled:text-on-secondary focus-visible:outline-secondary-ink',
+        'outline-dark' => 'border-dark-line text-dark-ink hover:not-disabled:bg-dark hover:not-disabled:text-on-dark focus-visible:outline-dark-ink',
 
         // Soft: a light tint of the colour that fills in on hover.
         'soft' => 'border-transparent bg-primary-soft text-primary-tint-ink hover:not-disabled:bg-primary hover:not-disabled:text-on-primary focus-visible:outline-focus',
-        'soft-success' => 'border-transparent bg-success-soft text-success-tint-ink hover:not-disabled:bg-success hover:not-disabled:text-on-success focus-visible:outline-success-line',
-        'soft-danger' => 'border-transparent bg-danger-soft text-danger-tint-ink hover:not-disabled:bg-danger hover:not-disabled:text-on-danger focus-visible:outline-danger-line',
-        'soft-warning' => 'border-transparent bg-warning-soft text-warning-tint-ink hover:not-disabled:bg-warning hover:not-disabled:text-on-warning focus-visible:outline-warning-line',
-        'soft-info' => 'border-transparent bg-info-soft text-info-tint-ink hover:not-disabled:bg-info hover:not-disabled:text-on-info focus-visible:outline-info-line',
-        'soft-secondary' => 'border-transparent bg-secondary-soft text-secondary-tint-ink hover:not-disabled:bg-secondary hover:not-disabled:text-on-secondary focus-visible:outline-secondary-line',
-        'soft-dark' => 'border-transparent bg-dark-soft text-dark-tint-ink hover:not-disabled:bg-dark hover:not-disabled:text-on-dark focus-visible:outline-dark-line',
+        'soft-success' => 'border-transparent bg-success-soft text-success-tint-ink hover:not-disabled:bg-success hover:not-disabled:text-on-success focus-visible:outline-success-ink',
+        'soft-danger' => 'border-transparent bg-danger-soft text-danger-tint-ink hover:not-disabled:bg-danger hover:not-disabled:text-on-danger focus-visible:outline-danger-ink',
+        'soft-warning' => 'border-transparent bg-warning-soft text-warning-tint-ink hover:not-disabled:bg-warning hover:not-disabled:text-on-warning focus-visible:outline-warning-ink',
+        'soft-info' => 'border-transparent bg-info-soft text-info-tint-ink hover:not-disabled:bg-info hover:not-disabled:text-on-info focus-visible:outline-info-ink',
+        'soft-secondary' => 'border-transparent bg-secondary-soft text-secondary-tint-ink hover:not-disabled:bg-secondary hover:not-disabled:text-on-secondary focus-visible:outline-secondary-ink',
+        'soft-dark' => 'border-transparent bg-dark-soft text-dark-tint-ink hover:not-disabled:bg-dark hover:not-disabled:text-on-dark focus-visible:outline-dark-ink',
 
         // Neutral button (a field with a frame): Cancel, toolbars, pagination.
-        'white' => 'border-line-strong bg-field text-body hover:not-disabled:border-line-hover hover:not-disabled:bg-field-hover focus-visible:outline-line-hover',
+        'white' => 'border-line-strong bg-field text-body hover:not-disabled:border-line-hover hover:not-disabled:bg-field-hover focus-visible:outline-focus',
         // Ghost: no background and no visible border in any state; only the text darkens on hover.
-        'ghost' => 'border-transparent bg-transparent text-dim hover:not-disabled:text-ink focus-visible:outline-line-hover',
+        'ghost' => 'border-transparent bg-transparent text-dim hover:not-disabled:text-ink focus-visible:outline-focus',
         // Link: looks like a link (the primary ink, underlined on hover) but keeps the button's size.
         'link' => 'border-transparent bg-transparent text-primary-ink underline-offset-4 hover:not-disabled:underline focus-visible:outline-focus',
     ];

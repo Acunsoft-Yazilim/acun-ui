@@ -22,7 +22,7 @@ final class AppearanceTest extends TestCase
 
         self::assertSame('app', $config['scope']);
         self::assertSame(['key' => 'default', 'light' => 'light', 'dark' => 'dark'], $config['theme']);
-        self::assertSame(['light' => '#ffffff', 'dark' => '#1f1f1f'], $config['targets']);
+        self::assertSame(['light' => '#fafafa', 'dark' => '#1f1f1f'], $config['targets'], 'The light page and the dark fields: the hardest text backgrounds of the built-in pair.');
         self::assertSame(Appearance::colors(), $config['colors']);
         self::assertNull($config['mode']);
         self::assertArrayNotHasKey('brandPresets', $config, 'The 1.x preset names are gone: presets are colours now.');

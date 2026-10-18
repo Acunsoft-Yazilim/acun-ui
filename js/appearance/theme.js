@@ -16,8 +16,12 @@ const DARK_INK_SHARE = 0.66;
 
 /** The built-in pair (Acun\Ui\Support\Appearance), for a page whose island names none. */
 export const DEFAULT_THEME = { key: 'default', light: 'light', dark: 'dark' };
-/** The text backgrounds a colour is measured against when the island has none (Appearance::TARGETS). */
-export const DEFAULT_TARGETS = { light: '#ffffff', dark: '#1f1f1f' };
+/**
+ * The text backgrounds a colour is measured against when the island has none (Appearance::TARGETS):
+ * the light theme's page (#fafafa, darker than its surface and fields) and the dark theme's fields
+ * (#1f1f1f, lighter than its page and surface).
+ */
+export const DEFAULT_TARGETS = { light: '#fafafa', dark: '#1f1f1f' };
 export const MODES = ['light', 'dark', 'system'];
 export const STORAGE_PREFIX = 'acun-ui:';
 /** The user's colour on <html>: --ac-user-fill, --ac-user-fill-hover … (css/themes.css reads them). */
@@ -75,20 +79,25 @@ function buttonShades(rgb) {
 
 /**
  * The measured shades of a primary colour (#rrggbb) on the given text backgrounds (targets: the
- * darkest light one and the lightest dark one of the enabled themes, Appearance::targets()):
+ * darkest light one and the lightest dark one of the enabled themes, Appearance::targets(); the
+ * built-in light theme's is its page, so link text reads on the bare page as well as on a card):
  *   fill, hover, onFill   the button is filled with the colour as it is; its text is white or a
  *                         dark shade, whichever reaches 4.5:1, and stays the same on the hover
  *   tone                  text and links on light backgrounds: the colour, darkened just enough
  *                         for 4.5:1 on targets.light (so white text reads on it too)
- *   toneDark              the dark theme's tone: lightened just enough to stand out 3:1 on
- *                         targets.dark, and for its text shade (66% of it, with white) to read 4.5:1 there
+ *   toneDark              the dark theme's tone: the colour's shade that carries white text (4.5:1;
+ *                         application code's bg-brand-600 text-white), lightened just enough to
+ *                         stand out 3:1 on targets.dark and for its text shade (66% of it, with
+ *                         white) to read 4.5:1 there. It starts from white, not from the light
+ *                         target, so a darker light page changes no colour of the dark theme.
  */
 export function brandShades(color, targets) {
     const rgb = rgbOf(color);
     const { light, dark } = Object.fromEntries(Object.entries({ ...DEFAULT_TARGETS, ...targets }).map(([side, hex]) => [side, rgbOf(hex)]));
     const { text, hover } = buttonShades(rgb);
     const tone = reach(rgb, BLACK, (candidate) => contrast(candidate, light) >= 4.5);
-    const toneDark = reach(tone, WHITE, (candidate) => contrast(candidate, dark) >= 3 && contrast(mix(candidate, WHITE, DARK_INK_SHARE), dark) >= 4.5);
+    const onWhite = reach(rgb, BLACK, (candidate) => contrast(candidate, WHITE) >= 4.5);
+    const toneDark = reach(onWhite, WHITE, (candidate) => contrast(candidate, dark) >= 3 && contrast(mix(candidate, WHITE, DARK_INK_SHARE), dark) >= 4.5);
 
     return { fill: toHex(rgb), hover: toHex(hover), onFill: toHex(text), tone: toHex(tone), toneDark: toHex(toneDark) };
 }

@@ -22,6 +22,14 @@ export const chrome = [
     '/usr/bin/chromium-browser',
 ].find((file) => file && fs.existsSync(file));
 
+/**
+ * @source lines for the component views of the named packages (componentSources('acun-ui',
+ * 'acun-pro')), for stylesheet()'s app CSS: then the stylesheet has every class the views write, as
+ * an application's has. The rendered markup alone misses the arbitrary ones Blade escapes
+ * ([&:focus-visible>div]:outline-2 becomes [&amp;:focus-visible&gt;div]:outline-2).
+ */
+export const componentSources = (...packages) => packages.map((name) => `@source '${path.join(root, 'packages', name, 'resources/views/components/ui')}';`).join('\n');
+
 /** Tailwind's output for the markup, with panel.css and the app CSS (e.g. a theme's own @theme) after it. */
 export async function stylesheet(markup, appCss = '') {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'acun-contrast-'));
@@ -37,7 +45,8 @@ export async function stylesheet(markup, appCss = '') {
 }
 
 // In the page: the colour of any CSS value as [r, g, b, alpha] (a canvas pixel), the colour behind
-// an element (its own and its ancestors' backgrounds, composited) and WCAG contrast.
+// an element (its own and its ancestors' backgrounds, composited), WCAG contrast and the focus
+// indicator an element draws (focusRings).
 const helpers = `
 const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
 const context = canvas.getContext('2d', { willReadFrequently: true });
@@ -48,6 +57,40 @@ const luminance = (rgb) => rgb.map((v) => v / 255).map((v) => (v <= 0.03928 ? v 
 function contrast(a, b) { const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x); return Math.round(((light + 0.05) / (dark + 0.05)) * 100) / 100; }
 function textContrast(element, pseudo) { const background = behind(element); return contrast(over(rgba(getComputedStyle(element, pseudo).color), background), background); }
 const hex = (color) => '#' + rgba(color).slice(0, 3).map((v) => v.toString(16).padStart(2, '0')).join('');
+// The rings of a box-shadow value: colour, inset, blur and spread.
+function shadowRings(value) {
+    if (value === 'none') return [];
+    const colour = /(?:rgba?|oklab|oklch|lab|lch|color)\\([^)]*\\)|#[0-9a-f]+/i;
+    return value.split(/,(?![^(]*\\))/).map((layer) => {
+        const numbers = layer.replace(colour, '').replace('inset', '').trim().split(/\\s+/).map(parseFloat);
+        return { colour: layer.match(colour)?.[0] ?? 'transparent', inset: /\\binset\\b/.test(layer), blur: numbers[2] || 0, spread: numbers[3] || 0 };
+    });
+}
+// The keyboard focus indicator of target, drawn by drawer (target itself, or the sibling or parent a
+// peer-focus-visible: or focus-within: class styles): its outline when one is painted, each solid
+// ring (box-shadow) the focus adds and a frame (border) it recolours, as { kind, colour, ratio }.
+// The ratio is against what the indicator sits on: the parent's background for one outside the
+// element, the element's own for an inset ring, a frame or an outline drawn inside (a negative offset).
+function focusRings(target, drawer = target) {
+    const before = shadowRings(getComputedStyle(drawer).boxShadow).map((ring) => JSON.stringify(ring));
+    const frame = getComputedStyle(drawer).borderTopColor;
+    target.focus({ focusVisible: true });
+    const style = getComputedStyle(drawer);
+    const rings = [];
+    if (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0 && rgba(style.outlineColor)[3] > 0) {
+        const inside = parseFloat(style.outlineOffset) + parseFloat(style.outlineWidth) <= 0;
+        rings.push({ kind: 'outline', colour: style.outlineColor, ground: behind(inside ? drawer : drawer.parentElement) });
+    }
+    for (const ring of shadowRings(style.boxShadow)) {
+        if (before.includes(JSON.stringify(ring)) || ring.blur > 0 || ring.spread <= 0 || rgba(ring.colour)[3] === 0) continue;
+        rings.push({ kind: ring.inset ? 'inset ring' : 'ring', colour: ring.colour, ground: behind(ring.inset ? drawer : drawer.parentElement) });
+    }
+    if (parseFloat(style.borderTopWidth) > 0 && style.borderTopColor !== frame && rgba(style.borderTopColor)[3] > 0) {
+        rings.push({ kind: 'frame', colour: style.borderTopColor, ground: behind(drawer) });
+    }
+    target.blur();
+    return rings.map(({ kind, colour, ground }) => ({ kind, colour: hex(colour), ratio: contrast(over(rgba(colour), ground), ground) }));
+}
 `;
 
 /**
@@ -60,7 +103,7 @@ export function inChrome({ css, body, measure, htmlAttributes = '' }) {
         const page = path.join(directory, 'page.html');
         fs.writeFileSync(path.join(directory, 'panel.css'), css);
         fs.writeFileSync(page, `<!doctype html><html ${htmlAttributes}><head><meta charset="utf-8"><link rel="stylesheet" href="panel.css"><style>*, ::before, ::after { transition: none !important; }</style></head><body class="bg-page">${body}<pre id="acun-result"></pre><script>${helpers}\ndocument.getElementById('acun-result').textContent = JSON.stringify((() => { ${measure} })());</script></body></html>`);
-        const dom = execFileSync(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${path.join(directory, 'profile')}`, '--dump-dom', `file://${page}`], { stdio: ['ignore', 'pipe', 'ignore'], timeout: 60000 }).toString();
+        const dom = execFileSync(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${path.join(directory, 'profile')}`, '--dump-dom', `file://${page}`], { stdio: ['ignore', 'pipe', 'ignore'], timeout: 60000, maxBuffer: 64 * 1024 * 1024 }).toString();
         const result = dom.match(/<pre id="acun-result">([\s\S]*?)<\/pre>/)[1];
 
         return JSON.parse(result.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));

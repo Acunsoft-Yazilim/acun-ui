@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 const island = (values) => `<script type="application/json" data-acun-ui-config>${JSON.stringify(values)}</script>`;
 const COLORS = { green: '#008933', dark: { light: '#3f404d', dark: '#474747' } };
 const THEME = { key: 'default', light: 'light', dark: 'dark' };
-const TARGETS = { light: '#ffffff', dark: '#1f1f1f' };
+const TARGETS = { light: '#fafafa', dark: '#1f1f1f' };
 const PAGE = { scope: 'panel', theme: THEME, targets: TARGETS, colors: COLORS, mode: null, brandColor: null, sidebarMode: null, navbarMode: 'static', skin: null, semiDark: false, preferenceUrl: null, defaults: { mode: 'dark', skin: 'bordered', sidebar_mode: 'collapsed' }, forced: false };
 
 globalThis.acunTestPage = { head: island(PAGE) };

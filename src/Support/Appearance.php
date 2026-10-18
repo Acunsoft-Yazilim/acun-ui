@@ -34,10 +34,12 @@ final class Appearance
 
     /**
      * The text backgrounds a user's colour is measured against when a theme declares none: the
-     * built-in light theme's surface and the dark theme's field (its lightest text background),
-     * both from css/themes.css (tests/brand-contrast.test.mjs checks that they agree).
+     * built-in light theme's page (#fafafa: its darkest text background, darker than the white
+     * surface and fields, so a link reads 4.5:1 on the bare page too) and the dark theme's field
+     * (#1f1f1f: its lightest, lighter than the page and the surface), both from css/themes.css
+     * (tests/brand-contrast.test.mjs checks that they agree).
      */
-    public const TARGETS = ['light' => '#ffffff', 'dark' => '#1f1f1f'];
+    public const TARGETS = ['light' => '#fafafa', 'dark' => '#1f1f1f'];
 
     /**
      * The preset colours: key => the fill (#rrggbb), or ['light' => …, 'dark' => …] for a colour
@@ -67,7 +69,8 @@ final class Appearance
     /**
      * Registers a theme pair: its light member (default: the key) and its dark member (null: a
      * single, light member; the mode choice is then hidden), and the text backgrounds a user's
-     * colour must read on (light: the darkest light one, dark: the lightest dark one).
+     * colour must read on (light: the darkest light one, usually the page; dark: the lightest
+     * dark one, usually a field).
      *
      * @param  array{light?: string, dark?: string}  $targets
      */

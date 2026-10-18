@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 // choice as the parser adds them, before DOMContentLoaded (no flash of the server's value).
 
 const PAGE = {
-    scope: 'panel', theme: { key: 'default', light: 'light', dark: 'dark' }, targets: { light: '#ffffff', dark: '#1f1f1f' },
+    scope: 'panel', theme: { key: 'default', light: 'light', dark: 'dark' }, targets: { light: '#fafafa', dark: '#1f1f1f' },
     colors: { green: '#008933' }, mode: 'dark', brandColor: 'green', sidebarMode: null, navbarMode: null, skin: null, contentWidth: null,
     semiDark: null, preferenceUrl: null, defaults: {}, forced: false,
 };

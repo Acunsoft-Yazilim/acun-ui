@@ -16,7 +16,8 @@ const WHITE = [255, 255, 255];
 const BLACK = [0, 0, 0];
 
 // The shipped themes' text backgrounds, from css/themes.css: the built-in light and dark blocks
-// (the bordered skin paints the page with the surface, which is one of them already).
+// (the bordered skin paints the page with the surface, which is one of them already). Link text
+// sits on the bare page as well as on cards and fields, so the page is one in both themes.
 const themesCss = read('../css/themes.css').replace(/\/\*[\s\S]*?\*\//g, '');
 const block = (selector) => {
     const start = themesCss.indexOf(`${selector} {`);
@@ -27,8 +28,8 @@ const neutral = (css, name) => css.match(new RegExp(`--ac-${name}: (#[0-9a-f]{6}
 const lightBlock = block(':root,\n    [data-theme]');
 const darkBlock = block("[data-theme$='dark']");
 const THEMES = {
-    // Light text backgrounds: the ones the theme declares as its target (the surface; the field is the same white).
-    light: { light: ['surface', 'field'].map((name) => neutral(lightBlock, name)), dark: [] },
+    // Light text backgrounds: the page (#fafafa, the darkest: the target), the cards and the fields (white).
+    light: { light: ['page', 'surface', 'field'].map((name) => neutral(lightBlock, name)), dark: [] },
     // Dark text backgrounds: the page, the cards and the fields (the lightest).
     dark: { light: [], dark: ['page', 'surface', 'field'].map((name) => neutral(darkBlock, name)) },
 };
@@ -69,8 +70,8 @@ const steps = Array.from({ length: 32 }, (_, i) => Math.round((i * 255) / 31).to
 const grid = steps.flatMap((r) => steps.flatMap((g) => steps.map((b) => `#${r}${g}${b}`)));
 
 test('the targets are the shipped themes\' hardest text backgrounds', () => {
-    // Appearance::TARGETS agrees with themes.css: the light theme's surface, the dark theme's field.
-    assert.deepEqual(TARGETS, { light: neutral(lightBlock, 'surface'), dark: neutral(darkBlock, 'field') });
+    // Appearance::TARGETS agrees with themes.css: the light theme's page, the dark theme's field.
+    assert.deepEqual(TARGETS, { light: neutral(lightBlock, 'page'), dark: neutral(darkBlock, 'field') });
     const luminance = (hex) => contrast(rgb(hex), BLACK);
     assert.equal(TARGETS.light, [...lightBackgrounds].sort((a, b) => luminance(a) - luminance(b))[0], 'The darkest light text background.');
     assert.equal(TARGETS.dark, [...darkBackgrounds].sort((a, b) => luminance(b) - luminance(a))[0], 'The lightest dark text background.');
@@ -80,6 +81,21 @@ test('the targets are the shipped themes\' hardest text backgrounds', () => {
 
 test('the colours that failed before give readable pairs', () => {
     assert.deepEqual(examples.flatMap((color) => check(color)), []);
+});
+
+/**
+ * Link and outline text sits on the bare page too, not only on cards and fields. Measured against
+ * the surface (#fff) alone, a borderline colour's text read 4.32:1 on the page (#fafafa: #ffd400),
+ * the green, red, yellow and cyan presets' 4.35-4.43:1. The light target is the page now.
+ */
+test('the text tone reads 4.5:1 on the light page, not only on the cards', () => {
+    const page = rgb(neutral(lightBlock, 'page'));
+    const presets = Object.values(COLORS).map((color) => color.light ?? color);
+    for (const color of ['#ffd400', '#ff6a00', '#f9c74f', ...presets]) {
+        assert.ok(contrast(rgb(brandShades(color).tone), page) >= 4.5, `${color}: ${contrast(rgb(brandShades(color).tone), page).toFixed(2)}:1 on the page`);
+    }
+    // Measured on the surface alone it did not.
+    assert.equal(contrast(rgb(brandShades('#ffd400', { light: '#ffffff' }).tone), page).toFixed(2), '4.32');
 });
 
 test('every colour of a 32-step grid gives readable pairs on every shipped theme surface', () => {
@@ -140,8 +156,10 @@ test('the tone is the colour itself when it reads on the light target, the dark 
     assert.equal(brandShades('#2563eb').tone, '#2563eb');
     // #ffd400 gave 3.89:1 with the fixed 60% black.
     assert.notEqual(brandShades('#ffd400').tone, '#ffd400');
-    // Light or medium colours keep the same tone in the dark theme; #1e3a8a (1.78:1 there) gets a lighter one.
-    assert.equal(brandShades('#ff6a00').toneDark, brandShades('#ff6a00').tone);
+    // Light or medium colours keep their white-text shade in the dark theme (the light page's target
+    // does not darken it); #1e3a8a (1.78:1 there) gets a lighter one.
+    assert.equal(brandShades('#ff6a00').toneDark, brandShades('#ff6a00', { light: '#ffffff' }).tone);
+    assert.equal(brandShades('#ff6a00', { light: '#f7f3ea' }).toneDark, brandShades('#ff6a00').toneDark);
     assert.equal(brandShades('#1e3a8a').tone, '#1e3a8a');
     assert.notEqual(brandShades('#1e3a8a').toneDark, '#1e3a8a');
     // T3-D11: the dark tone was measured on zinc-900 only; on the fields (#1f1f1f) #1e3a8a's gave 2.69:1.
@@ -151,8 +169,11 @@ test('the tone is the colour itself when it reads on the light target, the dark 
 /**
  * The presets are the palette's solid fills, read from panel.css (and the dark tone from
  * themes.css), so they cannot drift; through the pipeline they give today's tuned button, hover,
- * text and brand-600 values. One exception: the dark preset's tone in a dark theme was a hand-picked
- * gray-500 (#71717b); measured, it is the least lightened shade of #3f404d that stands out 3:1.
+ * text and brand-600 values. Two exceptions: the dark preset's tone in a dark theme was a hand-picked
+ * gray-500 (#71717b); measured, it is the least lightened shade of #3f404d that stands out 3:1. And
+ * the light theme's text tone of the four fills that read below 4.5:1 on the page (#fafafa) is a
+ * step darker, as the built-in success and danger inks are (at most 3 per channel); their buttons,
+ * hovers and dark-theme tones keep the fill.
  */
 test('the presets through the pipeline give today\'s tuned values', () => {
     const panelCss = read('../css/panel.css');
@@ -167,11 +188,18 @@ test('the presets through the pipeline give today\'s tuned values', () => {
     assert.equal(COLORS.default, neutral(lightBlock, 'tone-primary'), 'The swatch of the theme\'s own colour is the built-in purple.');
     assert.deepEqual(Object.fromEntries(Object.entries(COLORS).filter(([key]) => key !== 'default')), fills);
 
+    // On the page: green 4.35, red 4.43, yellow 4.39, cyan 4.38:1 → a step darker.
+    const darker = { green: '#008632', red: '#d63737', yellow: '#9c6913', blue: '#037e94' };
     for (const [key, color] of Object.entries(fills)) {
         const fill = color.light ?? color;
         const shades = brandShades(fill);
         // Today: the button filled with the palette fill, hovered with 12% black, white text; brand-600 the fill.
-        assert.deepEqual({ fill: shades.fill, hover: shades.hover, onFill: shades.onFill, tone: shades.tone }, { fill, hover: toHex(mix(rgb(fill), BLACK, 0.88)), onFill: '#ffffff', tone: fill }, key);
+        assert.deepEqual({ fill: shades.fill, hover: shades.hover, onFill: shades.onFill, tone: shades.tone }, { fill, hover: toHex(mix(rgb(fill), BLACK, 0.88)), onFill: '#ffffff', tone: darker[key] ?? fill }, key);
+        if (darker[key]) {
+            const page = rgb(neutral(lightBlock, 'page'));
+            assert.ok(contrast(rgb(fill), page) < 4.5 && contrast(rgb(shades.tone), page) >= 4.5, `${key}: the fill fails on the page, the tone reads`);
+            assert.ok(Math.max(...[0, 1, 2].map((i) => Math.abs(rgb(fill)[i] - rgb(shades.tone)[i]))) <= 3, `${key}: a small step`);
+        }
         if (key === 'dark') {
             assert.equal(shades.toneDark, '#696a74', 'Measured (today\'s hand-picked #71717b).');
             // Its own dark fill: zinc-600 with white text, hovered with 12% black, as today.
