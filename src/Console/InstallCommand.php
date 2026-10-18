@@ -24,7 +24,8 @@ use function Laravel\Prompts\confirm;
  *
  * The starter kit's entries (resources/css/acun-ui.css, resources/js/acun-ui.js) are edited instead of
  * app.css and app.js when they exist. With acunsoft/acun-pro installed it adds that package's lines
- * too and lists the steps left (Vite, layout, menu, first page). Only missing lines are added (see
+ * too (into the entries that import Acun Pro when that is not the main one, see files()) and lists
+ * the steps left (Vite, layout, menu, first page). Only missing lines are added (see
  * Wiring), so a second run changes nothing; a missing file is never created. --example copies an
  * example page, --npm runs the package manager's install and build (asked when interactive).
  *
@@ -193,15 +194,49 @@ final class InstallCommand extends Command
     /**
      * The files to wire and their edit: package.json, the CSS entry, the JS entry.
      *
+     * With acunsoft/acun-pro, its lines go into the entry too, unless the entry does not import Acun Pro
+     * and other entries of the folder do (an application with one Vite entry per section, like the demos'
+     * resources/css/panel.css next to app.css): those entries then get every line, the entry the free ones.
+     *
      * @return array<string, \Closure(string): array>
      */
     private function files(bool $pro): array
     {
-        return [
-            base_path('package.json') => fn (string $content): array => Wiring::packageJson($content, $pro),
-            $this->entry('css') => fn (string $content): array => Wiring::css($content, $pro),
-            $this->entry('js') => fn (string $content): array => Wiring::js($content, $pro),
-        ];
+        $files = [base_path('package.json') => fn (string $content): array => Wiring::packageJson($content, $pro)];
+
+        foreach (['css', 'js'] as $type) {
+            $entry = $this->entry($type);
+            $proEntries = $pro ? $this->proEntries($type, $entry) : [];
+            $edit = fn (bool $withPro): \Closure => $type === 'css'
+                ? fn (string $content): array => Wiring::css($content, $withPro)
+                : fn (string $content): array => Wiring::js($content, $withPro);
+
+            $files[$entry] = $edit($pro && $proEntries === []);
+
+            foreach ($proEntries as $proEntry) {
+                $files[$proEntry] = $edit(true);
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * The other resources/{css,js}/*.{css,js} files that import Acun Pro, when the entry does not.
+     *
+     * @return list<string>
+     */
+    private function proEntries(string $type, string $entry): array
+    {
+        if (is_file($entry) && Wiring::importsPro($type, (string) file_get_contents($entry))) {
+            return [];
+        }
+
+        $files = glob(resource_path("{$type}/*.{$type}")) ?: [];
+        sort($files);
+
+        return array_values(array_filter($files, fn (string $file): bool => $file !== $entry
+            && Wiring::importsPro($type, (string) file_get_contents($file))));
     }
 
     /** resources/css/app.css and resources/js/app.js, or the starter kit's acun-ui.css and acun-ui.js. */
@@ -369,15 +404,22 @@ final class InstallCommand extends Command
             }
         }
 
-        foreach ($pro ? ['acun-ui', 'acun-pro'] : ['acun-ui'] as $package) {
-            $rows[] = match ($this->linked($package)) {
-                'link' => [true, "node_modules/@acunsoft/{$package} points to vendor/acunsoft/{$package}"],
-                'copy' => [true, "node_modules/@acunsoft/{$package} is a copy of vendor/acunsoft/{$package} (run {$manager} install again after composer update)"],
-                default => [false, "node_modules/@acunsoft/{$package} does not point to vendor/acunsoft/{$package}", "Run {$manager} install (after composer install: npm takes the package from vendor/)."],
-            };
+        $build = $this->build();
+
+        // Built assets without node_modules (the starter kit and the demos of the Acun Pro zip, a server
+        // without Node.js): the pages work, Node.js is only needed to change the design.
+        if ($build === 'build' && ! is_dir(base_path('node_modules'))) {
+            $rows[] = [null, 'node_modules is missing: the pages use the built assets in public/build', "Node.js is only needed to change the design: run {$manager} install, then {$manager} run build."];
+        } else {
+            foreach ($pro ? ['acun-ui', 'acun-pro'] : ['acun-ui'] as $package) {
+                $rows[] = match ($this->linked($package)) {
+                    'link' => [true, "node_modules/@acunsoft/{$package} points to vendor/acunsoft/{$package}"],
+                    'copy' => [true, "node_modules/@acunsoft/{$package} is a copy of vendor/acunsoft/{$package} (run {$manager} install again after composer update)"],
+                    default => [false, "node_modules/@acunsoft/{$package} does not point to vendor/acunsoft/{$package}", "Run {$manager} install (after composer install: npm takes the package from vendor/)."],
+                };
+            }
         }
 
-        $build = $this->build();
         $rows[] = $build !== null
             ? [true, $build === 'hot' ? 'public/hot: the Vite dev server is running' : 'public/build/manifest.json: the assets are built']
             : [false, 'No build: public/build/manifest.json and public/hot are missing', "Run {$manager} run build (or {$manager} run dev while you work)."];

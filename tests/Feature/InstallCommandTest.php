@@ -287,6 +287,35 @@ final class InstallCommandTest extends TestCase
         self::assertStringContainsString('1 thing is missing: fix it as shown above.', $output);
     }
 
+    public function test_check_passes_with_built_assets_and_no_node_modules(): void
+    {
+        File::ensureDirectoryExists($this->root.'/vendor/acunsoft/acun-pro');
+        $this->skeleton();
+        $this->acun();
+        $this->write('public/build/manifest.json', '{}');
+
+        [$exit, $output] = $this->acun(['--check' => true]);
+
+        self::assertSame(0, $exit, $output);
+        self::assertStringContainsString("! node_modules is missing: the pages use the built assets in public/build\n    → Node.js is only needed to change the design: run npm install, then npm run build.", $output);
+        self::assertStringContainsString('✓ public/build/manifest.json: the assets are built', $output);
+        self::assertStringNotContainsString('✗', $output);
+        self::assertStringContainsString('Acun UI is set up.', $output);
+
+        // A node_modules folder without the link is still a failure, and so is no build at all.
+        File::ensureDirectoryExists($this->root.'/node_modules');
+        [$exit, $output] = $this->acun(['--check' => true]);
+        self::assertSame(1, $exit, $output);
+        self::assertStringContainsString('✗ node_modules/@acunsoft/acun-pro does not point to vendor/acunsoft/acun-pro', $output);
+
+        File::deleteDirectory($this->root.'/node_modules');
+        File::delete($this->root.'/public/build/manifest.json');
+        [$exit, $output] = $this->acun(['--check' => true]);
+        self::assertSame(1, $exit, $output);
+        self::assertStringContainsString('✗ node_modules/@acunsoft/acun-ui does not point to vendor/acunsoft/acun-ui', $output);
+        self::assertStringContainsString('✗ No build: public/build/manifest.json and public/hot are missing', $output);
+    }
+
     public function test_without_interaction_there_is_no_example_page_and_no_package_manager(): void
     {
         Process::fake();
@@ -441,6 +470,45 @@ final class InstallCommandTest extends TestCase
         self::assertMatchesRegularExpression('~resources/css/acun-ui\.css \.+ unchanged~', $output);
         self::assertMatchesRegularExpression('~resources/js/acun-ui\.js \.+ unchanged~', $output);
         self::assertStringContainsString('Already set up. Nothing changed.', $output);
+    }
+
+    public function test_with_an_entry_per_section_acun_pro_belongs_to_the_entries_that_import_it(): void
+    {
+        // Like the demos: app.css and app.js (the free package only), panel.css and panel.js with Acun Pro.
+        File::ensureDirectoryExists($this->root.'/vendor/acunsoft/acun-pro');
+        $this->write('package.json', "{\n    \"dependencies\": {\n        \"@acunsoft/acun-pro\": \"file:vendor/acunsoft/acun-pro\",\n        \"@acunsoft/acun-ui\": \"file:vendor/acunsoft/acun-ui\"\n    },\n    \"devDependencies\": {\n        \"@tailwindcss/forms\": \"^0.5.11\"\n    }\n}\n");
+        $free = "@import 'tailwindcss' source(none);\n@plugin '@tailwindcss/forms';\n@import '@acunsoft/acun-ui';\n\n@source '../../vendor/acunsoft/acun-ui/resources/views';\n";
+        $this->write('resources/css/app.css', $free);
+        $this->write('resources/css/panel.css', "@import 'tailwindcss';\n@plugin '@tailwindcss/forms';\n@import '@acunsoft/acun-ui';\n@import '@acunsoft/acun-pro';\n\n@source '../../vendor/acunsoft/acun-ui/resources/views';\n");
+        $this->write('resources/css/ecommerce.css', $free);
+        $this->write('resources/js/app.js', "import '@acunsoft/acun-ui';\n");
+        $this->write('resources/js/panel.js', "import '@acunsoft/acun-ui';\nimport { registerChart } from '@acunsoft/acun-pro';\n");
+        $this->linkNodeModules('acun-ui');
+        $this->linkNodeModules('acun-pro');
+        $this->write('public/build/manifest.json', '{}');
+
+        [$exit, $output] = $this->acun(['--check' => true]);
+
+        self::assertSame(1, $exit, $output);
+        self::assertStringContainsString("✓ resources/css/app.css: @import '@acunsoft/acun-ui';", $output);
+        self::assertStringNotContainsString("resources/css/app.css: @import '@acunsoft/acun-pro';", $output);
+        self::assertStringContainsString("✓ resources/css/panel.css: @import '@acunsoft/acun-pro';", $output);
+        self::assertStringContainsString("✗ resources/css/panel.css: @source '../../vendor/acunsoft/acun-pro/resources/views/components/ui';", $output);
+        self::assertStringContainsString("✓ resources/js/panel.js: import '@acunsoft/acun-pro';", $output);
+        self::assertStringNotContainsString('ecommerce.css', $output, 'An entry without Acun Pro is not checked.');
+        self::assertStringContainsString('1 thing is missing', $output);
+
+        $files = $this->snapshot();
+        [$exit, $output] = $this->acun();
+
+        self::assertSame(0, $exit, $output);
+        self::assertStringContainsString("@import '@acunsoft/acun-pro';\n\n@source '../../vendor/acunsoft/acun-ui/resources/views';\n@source '../../vendor/acunsoft/acun-pro/resources/views/components/ui';\n", $this->read('resources/css/panel.css'));
+        $files['resources/css/panel.css'] = $this->read('resources/css/panel.css');
+        self::assertSame($files, $this->snapshot(), 'Only panel.css changed: app.css and app.js stay free.');
+
+        [$exit, $output] = $this->acun(['--check' => true]);
+        self::assertSame(0, $exit, $output);
+        self::assertStringContainsString('Acun UI is set up.', $output);
     }
 
     public function test_a_missing_package_json_is_not_created(): void

@@ -5,7 +5,7 @@
 // stays idle, so no listener and no Alpine component is registered twice.
 
 // Follows the release version (packages/acun-ui/package.json); tests/js/runtime.test.mjs checks it.
-export const VERSION = '2.0.1';
+export const VERSION = '2.1.0';
 
 /**
  * Sets up window.AcunUI with the public API and runs setup() once per page.

@@ -179,6 +179,16 @@ final class Wiring
         return ['content' => self::join($lines, $eol, $final), 'items' => $items];
     }
 
+    /** Whether a CSS or JS file imports Acun Pro (outside comments; any import of it counts in JS). */
+    public static function importsPro(string $type, string $content): bool
+    {
+        [$lines] = self::lines($content);
+
+        return $type === 'css'
+            ? self::find(self::code($lines, js: false), self::CSS_PATTERNS['acun-pro']) !== null
+            : self::importLine(self::code($lines, js: true), self::LINKS['acun-pro'][0]) !== null;
+    }
+
     /** "file:vendor/acunsoft/acun-ui", also written "file:./vendor/acunsoft/acun-ui/". */
     private static function sameLink(string $found, string $expected): bool
     {

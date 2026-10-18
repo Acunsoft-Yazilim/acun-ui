@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 (2026-10-18)
 
 - `php artisan acun:install` wires the package into a Laravel application, so the install is two commands: `composer require acunsoft/acun-ui`, then `php artisan acun:install`. It adds `"@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui"` and `"@tailwindcss/forms"` to `package.json`, `@plugin '@tailwindcss/forms'`, `@import '@acunsoft/acun-ui'` and the views' `@source` to `resources/css/app.css`, and `import '@acunsoft/acun-ui'` to `resources/js/app.js` (the starter kit's `resources/css/acun-ui.css` and `resources/js/acun-ui.js` when they exist); with `acunsoft/acun-pro` installed, that package's lines too, and it lists the steps left. Only missing lines are added and no file is created, so a second run changes nothing; an `@theme` block that sets `--font-sans` is left alone with a warning. `--example` copies an example page (`resources/views/acun/example.blade.php`), `--npm` and `--no-npm` run or skip the package manager's install and build (npm, pnpm, yarn or bun, by the lock file; asked when interactive), `--no-interaction` asks nothing. `--check` changes nothing: it lists every item with a fix for the missing ones and exits with 1 when something is missing. The package now requires `illuminate/console`, `illuminate/process` and `laravel/prompts`, which every Laravel application has.
 - The theme switcher's screen reader texts say mode, not theme: "Switch to dark mode" and "Switch to light mode" (Turkish "Koyu moda geç", "Açık moda geç"), were "Switch to the dark theme" and "Switch to the light theme". An application that translates the old keys in its own `lang/*.json` renames them.
+- `php artisan acun:install --check` with built assets (`public/build/manifest.json`) and no `node_modules` folder, as in the starter kit and the demos of the Acun Pro zip or on a server without Node.js, shows `node_modules` as a note (`!`), not as missing: the pages use the built assets, and Node.js is only needed to change the design.
+- With one Vite entry per section, where the main entry does not import Acun Pro and others do (the demos' `resources/css/panel.css` and `resources/js/panel.js` next to a free `app.css` and `app.js`), `php artisan acun:install` adds and checks Acun Pro's lines in those entries and leaves the main one with the free lines.
 
 ## 2.0.1 (2026-10-18)
 
