@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1 (2026-10-22)
+
+- `php artisan acun:install`: Laravel's skeleton sets its own font (`--font-sans` in an `@theme` block of `app.css`), which overrides Acun UI's (Public Sans, DM Mono). An interactive run now asks to remove it (yes by default) and shows the removed lines; the block goes too when nothing else is left in it. `--remove-font` removes it without asking. Without interaction the line is left with a warning, as before (a script never changes the design by itself).
+
 ## 2.1.0 (2026-10-18)
 
 - `php artisan acun:install` wires the package into a Laravel application, so the install is two commands: `composer require acunsoft/acun-ui`, then `php artisan acun:install`. It adds `"@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui"` and `"@tailwindcss/forms"` to `package.json`, `@plugin '@tailwindcss/forms'`, `@import '@acunsoft/acun-ui'` and the views' `@source` to `resources/css/app.css`, and `import '@acunsoft/acun-ui'` to `resources/js/app.js` (the starter kit's `resources/css/acun-ui.css` and `resources/js/acun-ui.js` when they exist); with `acunsoft/acun-pro` installed, that package's lines too, and it lists the steps left. Only missing lines are added and no file is created, so a second run changes nothing; an `@theme` block that sets `--font-sans` is left alone with a warning. `--example` copies an example page (`resources/views/acun/example.blade.php`), `--npm` and `--no-npm` run or skip the package manager's install and build (npm, pnpm, yarn or bun, by the lock file; asked when interactive), `--no-interaction` asks nothing. `--check` changes nothing: it lists every item with a fix for the missing ones and exits with 1 when something is missing. The package now requires `illuminate/console`, `illuminate/process` and `laravel/prompts`, which every Laravel application has.

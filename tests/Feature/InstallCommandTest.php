@@ -232,7 +232,57 @@ final class InstallCommandTest extends TestCase
         $css = $this->read('resources/css/app.css');
         self::assertStringEndsWith(self::THEME, $css, 'The @theme block is not changed.');
         self::assertStringStartsWith("@import 'tailwindcss';\n@plugin '@tailwindcss/forms';\n@import '@acunsoft/acun-ui';\n\n".self::SOURCE_LINE."\n", $css);
-        self::assertStringContainsString("resources/css/app.css line 12: an @theme block sets --font-sans, which replaces Acun UI's fonts (Public Sans, DM Mono). Remove that line (the whole block if nothing else is in it) unless you want your own font. acun:install leaves it as it is.", $output);
+        self::assertStringContainsString("resources/css/app.css line 12: an @theme block sets --font-sans, which replaces Acun UI's fonts (Public Sans, DM Mono). Remove that line (the whole block if nothing else is in it) unless you want your own font, or run php artisan acun:install --remove-font. Without interaction acun:install leaves it as it is.", $output);
+    }
+
+    public function test_an_interactive_run_removes_laravels_font_on_yes(): void
+    {
+        Process::fake();
+        $this->skeleton(theme: true);
+
+        $this->artisan('acun:install')
+            ->expectsConfirmation("resources/css/app.css line 12: Laravel's own font (--font-sans in @theme) replaces Acun UI's fonts (Public Sans, DM Mono). Remove it?", 'yes')
+            ->expectsConfirmation('Copy an example page to resources/views/acun/example.blade.php?', 'no')
+            ->expectsConfirmation('Run npm install and npm run build now?', 'no')
+            ->expectsOutputToContain("- @theme {")
+            ->doesntExpectOutputToContain('an @theme block sets --font-sans')
+            ->assertExitCode(0);
+
+        $css = $this->read('resources/css/app.css');
+        self::assertStringNotContainsString('@theme', $css, 'The block had nothing else: it goes with the line.');
+        self::assertStringNotContainsString('--font-sans', $css);
+        self::assertStringEndsWith("@source '../**/*.js';\n", $css, 'No blank lines are left behind.');
+
+        [, $output] = $this->acun();
+        self::assertStringContainsString('Already set up. Nothing changed.', $output, 'A second run has nothing to remove.');
+    }
+
+    public function test_an_interactive_no_keeps_the_font_without_a_warning(): void
+    {
+        Process::fake();
+        $this->skeleton(theme: true);
+
+        $this->artisan('acun:install')
+            ->expectsConfirmation("resources/css/app.css line 12: Laravel's own font (--font-sans in @theme) replaces Acun UI's fonts (Public Sans, DM Mono). Remove it?", 'no')
+            ->expectsConfirmation('Copy an example page to resources/views/acun/example.blade.php?', 'no')
+            ->expectsConfirmation('Run npm install and npm run build now?', 'no')
+            ->doesntExpectOutputToContain('an @theme block sets --font-sans')
+            ->assertExitCode(0);
+
+        self::assertStringEndsWith(self::THEME, $this->read('resources/css/app.css'), 'Kept on purpose.');
+    }
+
+    public function test_remove_font_removes_it_without_interaction_and_keeps_the_rest_of_the_block(): void
+    {
+        $this->skeleton();
+        $this->write('resources/css/app.css', self::SOURCES."\n@theme {\n    --color-brand: #0f766e;\n    --font-sans: Inter, sans-serif;\n}\n");
+
+        [$exit, $output] = $this->acun(['--remove-font' => true]);
+
+        self::assertSame(0, $exit, $output);
+        self::assertStringContainsString('- --font-sans: Inter, sans-serif;', preg_replace('~\s+~', ' ', $output));
+        self::assertStringNotContainsString('an @theme block sets --font-sans', $output);
+        self::assertStringEndsWith("\n@theme {\n    --color-brand: #0f766e;\n}\n", $this->read('resources/css/app.css'), 'Only the font line goes.');
     }
 
     public function test_check_changes_nothing_and_lists_what_is_missing(): void

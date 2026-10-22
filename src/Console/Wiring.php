@@ -549,6 +549,93 @@ final class Wiring
         return $index;
     }
 
+    /**
+     * Removes the --font-sans declaration of the first @theme block that has one (Laravel's skeleton sets
+     * its own font there, which replaces the kit's), however many lines it spans; the block goes too
+     * when nothing else is left in it, with the blank line before it. Everything else is kept as it is.
+     * removed is the text taken out, line by line (empty when there was no such declaration).
+     *
+     * @return array{content: string, removed: list<string>}
+     */
+    public static function removeFontSans(string $css): array
+    {
+        [$lines, $eol, $final] = self::lines($css);
+        $text = implode("\n", $lines);
+        $code = implode("\n", self::code($lines, js: false));
+        $offset = 0;
+
+        while (preg_match('~@theme\b[^{;]*\{~', $code, $match, PREG_OFFSET_CAPTURE, $offset)) {
+            $start = $match[0][1];
+            $open = $start + strlen($match[0][0]) - 1;
+            $close = self::skipValue($code, $open);
+            $block = substr($code, $open, $close - $open);
+
+            if (! preg_match('~--font-sans\s*:~', $block, $declaration, PREG_OFFSET_CAPTURE)) {
+                $offset = $close;
+
+                continue;
+            }
+
+            // From the start of the declaration's line to the end of the line of its ";" (or of the block).
+            $from = $open + $declaration[0][1];
+            $end = self::declarationEnd($code, $from, $close - 1);
+            $lineStart = strrpos(substr($text, 0, $from), "\n");
+            $lineStart = $lineStart === false ? 0 : $lineStart + 1;
+            // On the line of the "{" (a one-line block): only the declaration itself.
+            $lineStart = $lineStart <= $open ? $from : $lineStart;
+            $lineEnd = strpos($text, "\n", $end);
+            $lineEnd = $lineEnd === false || $lineEnd >= $close - 1 ? $end + 1 : $lineEnd + 1;
+            $removed = explode("\n", rtrim(substr($text, $lineStart, $lineEnd - $lineStart), "\n"));
+
+            $rest = substr($code, $open + 1, $lineStart - $open - 1).substr($code, $lineEnd, $close - 1 - $lineEnd);
+
+            if (trim($rest) === '') {
+                // Nothing else in the block: the whole block (from its line) and the blank line before it.
+                $blockStart = strrpos(substr($text, 0, $start), "\n");
+                $blockStart = $blockStart === false ? 0 : $blockStart + 1;
+                $blockEnd = strpos($text, "\n", $close - 1);
+                $blockEnd = $blockEnd === false ? strlen($text) : $blockEnd + 1;
+
+                if ($blockStart >= 2 && substr($text, $blockStart - 2, 2) === "\n\n") {
+                    $blockStart--;
+                }
+
+                $removed = explode("\n", rtrim(substr($text, $blockStart, $blockEnd - $blockStart), "\n"));
+                $removed = array_values(array_filter($removed, fn (string $line): bool => trim($line) !== ''));
+                $text = substr($text, 0, $blockStart).substr($text, $blockEnd);
+            } else {
+                $text = substr($text, 0, $lineStart).substr($text, $lineEnd);
+            }
+
+            $result = $text === '' ? [] : explode("\n", rtrim($text, "\n"));
+
+            return ['content' => self::join($result, $eol, $final), 'removed' => $removed];
+        }
+
+        return ['content' => $css, 'removed' => []];
+    }
+
+    /** The offset of the ";" that ends a declaration starting at $from (quotes skipped), or $limit. */
+    private static function declarationEnd(string $code, int $from, int $limit): int
+    {
+        for ($i = $from; $i < $limit; $i++) {
+            $char = $code[$i];
+
+            if ($char === "'" || $char === '"') {
+                // To the closing quote of the same kind (a backslash escapes the next character).
+                for ($i++; $i < $limit && $code[$i] !== $char; $i++) {
+                    if ($code[$i] === '\\') {
+                        $i++;
+                    }
+                }
+            } elseif ($char === ';') {
+                return $i;
+            }
+        }
+
+        return $limit;
+    }
+
     /** The 1-based line of a CSS file's --font-sans inside an @theme block, or null. */
     public static function fontSans(string $css): ?int
     {

@@ -12,7 +12,7 @@ use UnexpectedValueException;
 use function Laravel\Prompts\confirm;
 
 /**
- * php artisan acun:install [--check] [--example] [--npm | --no-npm]
+ * php artisan acun:install [--check] [--example] [--npm | --no-npm] [--remove-font]
  *
  * Wires the free package into a Laravel application (https://ui.acunsoft.com/installation.html#free):
  *
@@ -28,6 +28,9 @@ use function Laravel\Prompts\confirm;
  * the steps left (Vite, layout, menu, first page). Only missing lines are added (see
  * Wiring), so a second run changes nothing; a missing file is never created. --example copies an
  * example page, --npm runs the package manager's install and build (asked when interactive).
+ * Laravel's skeleton sets its own font (--font-sans in an @theme block of app.css), which replaces the
+ * kit's: an interactive run asks to remove it (yes by default), --remove-font removes it without asking,
+ * and a run without interaction leaves it with a warning (a script never changes the design by itself).
  *
  * --check changes nothing: it lists every item with a fix for the missing ones, and exits 1 when
  * something is missing (for support).
@@ -38,7 +41,8 @@ final class InstallCommand extends Command
         {--check : Change nothing: list what is set up and what is missing (exit code 1 when something is)}
         {--example : Copy an example page to resources/views/acun/example.blade.php}
         {--npm : Run the package manager\'s install and build at the end}
-        {--no-npm : Do not run the package manager}';
+        {--no-npm : Do not run the package manager}
+        {--remove-font : Remove the --font-sans line of an @theme block (Laravel\'s own font) without asking}';
 
     protected $description = 'Wire Acun UI into package.json and the CSS and JS entries (Acun Pro\'s lines too when it is installed)';
 
@@ -110,16 +114,31 @@ final class InstallCommand extends Command
 
             $added = array_values(array_filter($result['items'], fn (array $item): bool => $item['added']));
 
+            // Laravel's own font (--font-sans in @theme) replaces the kit's: asked, or --remove-font.
+            $fontRemoved = [];
+            $fontLine = $result['fontSans'] ?? null;
+            $fontAnswer = $fontLine !== null ? $this->removeFont($name, $fontLine) : null;
+
+            if ($fontAnswer === true) {
+                $removal = Wiring::removeFontSans($result['content']);
+                $result['content'] = $removal['content'];
+                $fontRemoved = $removal['removed'];
+            }
+
             if ($result['content'] !== $original) {
                 file_put_contents($path, $result['content']);
                 $changed[] = $name;
             }
 
-            $this->components->twoColumnDetail($name, $added === [] ? '<fg=gray>unchanged</>' : '<fg=green>updated</>');
+            $this->components->twoColumnDetail($name, $added === [] && $fontRemoved === [] ? '<fg=gray>unchanged</>' : '<fg=green>updated</>');
 
             foreach ($added as $item) {
                 $this->line("    <fg=green>+</> {$item['line']}");
                 $proAdded = $proAdded || $item['pro'];
+            }
+
+            foreach ($fontRemoved as $line) {
+                $this->line("    <fg=red>-</> {$line}");
             }
 
             foreach ($result['items'] as $item) {
@@ -129,8 +148,9 @@ final class InstallCommand extends Command
                 }
             }
 
-            if (($result['fontSans'] ?? null) !== null) {
-                $warnings[] = $this->fontSansWarning($name, $result['fontSans']);
+            // Left without interaction: a warning. Kept on purpose (answered no): nothing to say.
+            if ($fontAnswer === null && $fontLine !== null) {
+                $warnings[] = $this->fontSansWarning($name, $fontLine);
             }
         }
 
@@ -487,7 +507,29 @@ final class InstallCommand extends Command
     private function fontSansWarning(string $file, int $line): string
     {
         return "{$file} line {$line}: an @theme block sets --font-sans, which replaces Acun UI's fonts (Public Sans, DM Mono)."
-            .' Remove that line (the whole block if nothing else is in it) unless you want your own font. acun:install leaves it as it is.';
+            .' Remove that line (the whole block if nothing else is in it) unless you want your own font,'
+            .' or run php artisan acun:install --remove-font. Without interaction acun:install leaves it as it is.';
+    }
+
+    /**
+     * Whether to remove Laravel's own font: true with --remove-font or a yes; false for a no (the
+     * application keeps its font on purpose); null without interaction (left, with a warning).
+     */
+    private function removeFont(string $file, int $line): ?bool
+    {
+        if ($this->option('remove-font')) {
+            return true;
+        }
+
+        if (! $this->input->isInteractive()) {
+            return null;
+        }
+
+        return confirm(
+            "{$file} line {$line}: Laravel's own font (--font-sans in @theme) replaces Acun UI's fonts (Public Sans, DM Mono). Remove it?",
+            default: true,
+            hint: 'Answer no to keep your own font: the components then use it.',
+        );
     }
 
     /** A path relative to the application root. */

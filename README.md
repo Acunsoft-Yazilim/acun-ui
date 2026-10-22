@@ -26,7 +26,7 @@ php artisan acun:install
 `acun:install` adds only the lines that are missing and changes nothing else:
 
 - `package.json`: `"@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui"`, so npm takes the CSS and JavaScript from the copy in `vendor/` and they always match the installed Blade components, and `"@tailwindcss/forms"`;
-- `resources/css/app.css`: `@plugin '@tailwindcss/forms';`, `@import '@acunsoft/acun-ui';` and `@source '../../vendor/acunsoft/acun-ui/resources/views';` after `@import 'tailwindcss';` (an `@theme` block that sets `--font-sans` is left alone, with a warning);
+- `resources/css/app.css`: `@plugin '@tailwindcss/forms';`, `@import '@acunsoft/acun-ui';` and `@source '../../vendor/acunsoft/acun-ui/resources/views';` after `@import 'tailwindcss';` (Laravel's own font, an `@theme` block's `--font-sans`, overrides the kit's: an interactive run asks to remove it, `--remove-font` removes it without asking, and without interaction it is left with a warning);
 - `resources/js/app.js`: `import '@acunsoft/acun-ui';`.
 
 It offers to run `npm install` and `npm run build` (`--npm`, `--no-npm`; pnpm, yarn and bun by their lock file), copies an example page with `--example`, adds Acun Pro's lines when `acunsoft/acun-pro` is installed, and asks nothing with `--no-interaction` (CI). A second run changes nothing. `php artisan acun:install --check` changes nothing: it lists what is set up and what is missing, and exits with 1 when something is. Then put `<acun:layout.blank>` on a page (or `<acun:layout.head>` in your own layout) and run `npm run dev`.
