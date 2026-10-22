@@ -18,11 +18,11 @@ final class PaidComponents
         'layout.sidebar', 'layout.horizontal', 'layout.auth', 'layout.message', 'layout.print',
         'menu', 'nav.', 'user-menu', 'filter-button', 'filter-context', 'auth-panel', 'message-panel',
         // The PRO components.
-        'chart', 'combobox', 'date-picker', 'date-range', 'file-upload', 'form', 'form-actions', 'form-guard-dialog',
-        'form-modal', 'input-otp', 'loading-overlay', 'map', 'media-player', 'option-card', 'pill-action', 'range',
-        'rating', 'sortable', 'sortable-item', 'sortable.item', 'step', 'stepper', 'stepper.step', 'tag-input',
-        'timeline', 'timeline-item', 'timeline.item', 'tour', 'tree', 'tree-branch', 'tree.branch',
-        'unsaved-changes-dialog',
+        'chart', 'combobox', 'data-table', 'date-picker', 'date-range', 'file-upload', 'form', 'form-actions',
+        'form-guard-dialog', 'form-modal', 'input-otp', 'loading-overlay', 'map', 'media-player', 'option-card',
+        'pill-action', 'range', 'rating', 'sortable', 'sortable-item', 'sortable.item', 'step', 'stepper',
+        'stepper.step', 'tag-input', 'timeline', 'timeline-item', 'timeline.item', 'tour', 'tree', 'tree-branch',
+        'tree.branch', 'unsaved-changes-dialog',
         // The storefront components.
         'shop.',
     ];
