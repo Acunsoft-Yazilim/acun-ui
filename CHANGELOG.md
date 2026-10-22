@@ -6,8 +6,6 @@
 - `php artisan acun:install` no longer adds `@plugin '@tailwindcss/forms';` to the CSS entry or `"@tailwindcss/forms"` to `package.json`, and `--check` no longer lists them. A line that is already there is left as it is. Applications may remove `@plugin '@tailwindcss/forms';` and the devDependency (then run `npm install` and `npm run build`); keeping them is harmless, and a field the application writes itself without a component keeps the plugin's look only while the plugin stays (or with `data-acun-control`).
 - List pages: Acun Pro's `php artisan acun:table` generator is removed. The kit's list parts (`acun:table` and its parts, `acun:list-toolbar`, `acun:search`, `acun:sortable-th`, `acun:selection-bar`, `acun:per-page-select`, the pagination view) are unchanged and work with the data table of your choice; their comments no longer mention the generator. Guide: https://ui.acunsoft.com/list-page.html
 
-- `acun:data-table` (Acun Pro's new DataTables component) is in the list of Acun Pro tags: without `acunsoft/acun-pro` it stops with the error that says where the component is.
-
 ## 2.1.1 (2026-10-22)
 
 - `php artisan acun:install`: Laravel's skeleton sets its own font (`--font-sans` in an `@theme` block of `app.css`), which overrides Acun UI's (Public Sans, DM Mono). An interactive run now asks to remove it (yes by default) and shows the removed lines; the block goes too when nothing else is left in it. `--remove-font` removes it without asking. Without interaction the line is left with a warning, as before (a script never changes the design by itself).
