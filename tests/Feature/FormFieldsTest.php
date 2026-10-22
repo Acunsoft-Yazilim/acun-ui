@@ -261,13 +261,13 @@ final class FormFieldsTest extends TestCase
     {
         // The field (with %s for the attributes), the start of its outer element, the start of its control.
         return [
-            'input' => ['<x-ui.input wire:model="sku" label="Kod" %s />', '<div ', '<input\s+id="sku"'],
-            'input floating' => ['<x-ui.input wire:model="sku" label="Kod" variant="floating" %s />', '<div ', '<input\s+id="sku"'],
-            'select' => ['<x-ui.select wire:model="sku" label="Kod" :options="[\'a\' => \'A\']" %s />', '<div ', '<select\s+id="sku"'],
-            'textarea' => ['<x-ui.textarea wire:model="sku" label="Kod" %s />', '<div ', '<textarea\s+id="sku"'],
-            'checkbox' => ['<x-ui.checkbox wire:model="sku" label="Kod" %s />', '<label for="sku" ', '<input\s+id="sku"'],
-            'radio' => ['<x-ui.radio wire:model="sku" value="a" label="Kod" %s />', '<label for="sku-a" ', '<input\s+id="sku-a"'],
-            'input-group' => ['<x-ui.input-group wire:model="sku" label="Kod" prefix="₺" %s />', '<div ', '<input\s+id="sku"'],
+            'input' => ['<x-ui.input wire:model="sku" label="Kod" %s />', '<div ', '<input\s+data-acun-control\s+id="sku"'],
+            'input floating' => ['<x-ui.input wire:model="sku" label="Kod" variant="floating" %s />', '<div ', '<input\s+data-acun-control\s+id="sku"'],
+            'select' => ['<x-ui.select wire:model="sku" label="Kod" :options="[\'a\' => \'A\']" %s />', '<div ', '<select\s+data-acun-control\s+id="sku"'],
+            'textarea' => ['<x-ui.textarea wire:model="sku" label="Kod" %s />', '<div ', '<textarea\s+data-acun-control\s+id="sku"'],
+            'checkbox' => ['<x-ui.checkbox wire:model="sku" label="Kod" %s />', '<label for="sku" ', '<input\s+data-acun-control\s+id="sku"'],
+            'radio' => ['<x-ui.radio wire:model="sku" value="a" label="Kod" %s />', '<label for="sku-a" ', '<input\s+data-acun-control\s+id="sku-a"'],
+            'input-group' => ['<x-ui.input-group wire:model="sku" label="Kod" prefix="₺" %s />', '<div ', '<input\s+data-acun-control\s+id="sku"'],
         ];
     }
 
@@ -381,7 +381,7 @@ final class FormFieldsTest extends TestCase
     public function test_input_class_replaces_the_kit_classes_of_the_same_kind_but_not_the_error_frame(): void
     {
         $html = Blade::render('<x-ui.input name="sku" input-class="ring-blue-500 h-12 px-4 font-mono" />');
-        self::assertSame(1, preg_match('/<input\s+id="sku"(?:[^>"]|"[^"]*")*>/s', $html, $input));
+        self::assertSame(1, preg_match('/<input\s+data-acun-control\s+id="sku"(?:[^>"]|"[^"]*")*>/s', $html, $input));
         self::assertSame(1, preg_match('/\sclass="([^"]*)"/', $input[0], $class));
         $classes = explode(' ', $class[1]);
         foreach (['ring-blue-500', 'h-12', 'px-4', 'font-mono', 'ring-1', 'ring-inset', 'focus:ring-focus', 'bg-field'] as $kept) {
@@ -395,14 +395,14 @@ final class FormFieldsTest extends TestCase
         self::assertStringNotContainsString(' h-10 ', Blade::render('<x-ui.select name="durum" :options="[1 => \'A\']" input-class="h-12" />'));
         self::assertDoesNotMatchRegularExpression('/\srounded-sm\s/', Blade::render('<x-ui.checkbox name="kabul" input-class="rounded-full" />'));
         self::assertStringContainsString('class="block w-full rounded-sm border-0 py-1.5 px-3 bg-field text-ink', Blade::render('<x-ui.textarea name="not" />'), 'No input-class: the kit classes as they are.');
-        self::assertSame(1, preg_match('/<input\s+id="tutar"(?:[^>"]|"[^"]*")*>/s', Blade::render('<x-ui.input-group name="tutar" prefix="₺" input-class="px-1" />'), $group));
+        self::assertSame(1, preg_match('/<input\s+data-acun-control\s+id="tutar"(?:[^>"]|"[^"]*")*>/s', Blade::render('<x-ui.input-group name="tutar" prefix="₺" input-class="px-1" />'), $group));
         self::assertStringNotContainsString(' px-3 ', $group[0]);
         self::assertStringContainsString(' px-1', $group[0]);
 
         // With an error the kit's red frame stays; the page's frame colour gives way to it.
         $this->withErrors(['sku' => ['Kod gerekli.']]);
         $invalid = Blade::render('<x-ui.input name="sku" input-class="ring-transparent focus:ring-blue-600 font-mono" />');
-        self::assertSame(1, preg_match('/<input\s+id="sku"(?:[^>"]|"[^"]*")*>/s', $invalid, $input));
+        self::assertSame(1, preg_match('/<input\s+data-acun-control\s+id="sku"(?:[^>"]|"[^"]*")*>/s', $invalid, $input));
         self::assertStringContainsString('ring-danger-line', $input[0]);
         self::assertStringContainsString('focus:ring-danger-line', $input[0]);
         self::assertStringContainsString('font-mono', $input[0]);
@@ -426,7 +426,7 @@ final class FormFieldsTest extends TestCase
         $html = Blade::render('<x-ui.switch wire:model="notify" label="Bildirim" class="mt-1" wire:key="s1" input-class="x-check" data-testid="s" aria-describedby="not" />');
 
         self::assertStringContainsString('<label for="switch-notify" class="inline-flex cursor-pointer items-start gap-3 select-none has-disabled:cursor-not-allowed has-disabled:opacity-50 mt-1" wire:key="s1">', $html);
-        $input = self::tag($html, '<input\s+id="switch-notify"');
+        $input = self::tag($html, '<input\s+data-acun-control\s+id="switch-notify"');
         self::assertStringContainsString('class="peer sr-only x-check" wire:model="notify" data-testid="s"', $input);
         self::assertStringContainsString('aria-invalid="true"', $input);
         self::assertStringContainsString('aria-describedby="not switch-notify-message"', $input);

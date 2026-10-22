@@ -55,6 +55,7 @@
             is re-applied on the next tick.
         --}}
         <select
+            data-acun-control
             id="{{ $selectId }}"
             name="{{ $fieldName }}"
             @if (($sync ?? config('acun-ui.select_sync', false)) && $attributes->whereStartsWith('wire:model')->isNotEmpty() && ! $attributes->has('x-init'))

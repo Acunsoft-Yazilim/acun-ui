@@ -34,7 +34,7 @@
 >
     @foreach ($options as $key => $text)
         <label @class(['relative', 'flex-1' => $fullWidth])>
-            <input type="radio" name="{{ $fieldName }}" value="{{ $key }}" class="peer sr-only" @checked($current !== null && $current === (string) $key) {{ $binding }}>
+            <input data-acun-control type="radio" name="{{ $fieldName }}" value="{{ $key }}" class="peer sr-only" @checked($current !== null && $current === (string) $key) {{ $binding }}>
             <span @class([
                 'flex cursor-pointer items-center justify-center rounded-sm font-medium whitespace-nowrap text-dim transition-colors select-none hover:text-ink',
                 'peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm',

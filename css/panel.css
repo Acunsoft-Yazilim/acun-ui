@@ -6,8 +6,10 @@
  * entry AFTER Tailwind (@acunsoft/acun-ui NPM package):
  *
  *     @import 'tailwindcss';
- *     @plugin '@tailwindcss/forms';
  *     @import '@acunsoft/acun-ui';
+ *
+ * The kit draws its own form controls (forms.css): no @tailwindcss/forms plugin is needed. An
+ * application that still loads it (Acun UI 2.1 and older asked for it) may keep it or remove it.
  *
  * Add the files that contain the component markup to Tailwind's sources.
  * Laravel (acunsoft/acun-ui):
@@ -21,6 +23,7 @@
  */
 @import './tokens.css';
 @import './themes.css';
+@import './forms.css';
 
 /*
  * dark: (application code, until 3.0; the kit's components paint with the tokens) follows the

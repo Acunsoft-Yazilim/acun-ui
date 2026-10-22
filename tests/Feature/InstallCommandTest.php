@@ -102,7 +102,6 @@ final class InstallCommandTest extends TestCase
                     "dev": "vite"
                 },
                 "devDependencies": {
-                    "@tailwindcss/forms": "^0.5.11",
                     "@tailwindcss/vite": "^4.1.0",
                     "concurrently": "^10.0.3",
                     "laravel-vite-plugin": "^3.1",
@@ -117,7 +116,6 @@ final class InstallCommandTest extends TestCase
             JSON, $this->read('package.json'));
         self::assertSame(<<<'CSS'
             @import 'tailwindcss';
-            @plugin '@tailwindcss/forms';
             @import '@acunsoft/acun-ui';
 
             @source '../../vendor/acunsoft/acun-ui/resources/views';
@@ -131,8 +129,7 @@ final class InstallCommandTest extends TestCase
 
         self::assertMatchesRegularExpression('~package\.json \.+ updated~', $output);
         self::assertStringContainsString('+ "@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui" (dependencies)', $output);
-        self::assertStringContainsString('+ "@tailwindcss/forms": "^0.5.11" (devDependencies)', $output);
-        self::assertStringContainsString("+ @plugin '@tailwindcss/forms';", $output);
+        self::assertStringNotContainsString('@tailwindcss/forms', $output, 'The kit draws its own form controls: no plugin.');
         self::assertStringContainsString('+ '.self::SOURCE_LINE, $output);
         self::assertStringContainsString("+ import '@acunsoft/acun-ui';", $output);
         self::assertStringNotContainsString("+ @import 'tailwindcss';", $output, 'Present lines are not added again.');
@@ -172,7 +169,8 @@ final class InstallCommandTest extends TestCase
     public function test_a_partial_setup_gets_only_the_missing_lines(): void
     {
         // Two-space JSON, Windows line endings in the CSS, a JS entry that imports the kit its own way.
-        $this->write('package.json', "{\n  \"name\": \"shop\",\n  \"dependencies\": {\n    \"@acunsoft/acun-ui\": \"file:./vendor/acunsoft/acun-ui\",\n    \"apexcharts\": \"^3.54.1\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^8.0.0\"\n  }\n}");
+        $json = "{\n  \"name\": \"shop\",\n  \"dependencies\": {\n    \"@acunsoft/acun-ui\": \"file:./vendor/acunsoft/acun-ui\",\n    \"apexcharts\": \"^3.54.1\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^8.0.0\"\n  }\n}";
+        $this->write('package.json', $json);
         $this->write('resources/css/app.css', implode("\r\n", [
             '/* Shop styles */',
             '@import "tailwindcss";',
@@ -189,11 +187,10 @@ final class InstallCommandTest extends TestCase
         [$exit, $output] = $this->acun();
 
         self::assertSame(0, $exit, $output);
-        self::assertSame("{\n  \"name\": \"shop\",\n  \"dependencies\": {\n    \"@acunsoft/acun-ui\": \"file:./vendor/acunsoft/acun-ui\",\n    \"apexcharts\": \"^3.54.1\"\n  },\n  \"devDependencies\": {\n    \"@tailwindcss/forms\": \"^0.5.11\",\n    \"vite\": \"^8.0.0\"\n  }\n}", $this->read('package.json'), 'The link written with ./ counts; the file keeps its indentation and its missing final newline.');
+        self::assertSame($json, $this->read('package.json'), 'The link written with ./ counts: nothing to add.');
         self::assertSame(implode("\r\n", [
             '/* Shop styles */',
             '@import "tailwindcss";',
-            "@plugin '@tailwindcss/forms';",
             "@import '@acunsoft/acun-ui';",
             '',
             self::SOURCE_LINE,
@@ -204,10 +201,11 @@ final class InstallCommandTest extends TestCase
         ]), $this->read('resources/css/app.css'));
         self::assertSame($js, $this->read('resources/js/app.js'));
 
+        self::assertMatchesRegularExpression('~package\.json \.+ unchanged~', $output);
         self::assertMatchesRegularExpression('~resources/js/app\.js \.+ unchanged~', $output);
         self::assertStringNotContainsString('+ "@acunsoft/acun-ui"', $output);
         self::assertStringNotContainsString("+ @import '@acunsoft/acun-ui';", $output);
-        self::assertStringContainsString('Changed: package.json, resources/css/app.css.', $output);
+        self::assertStringContainsString('Changed: resources/css/app.css.', $output);
     }
 
     public function test_a_line_in_a_comment_does_not_count(): void
@@ -218,8 +216,39 @@ final class InstallCommandTest extends TestCase
 
         $this->acun();
 
-        self::assertSame("@import 'tailwindcss';\n@plugin '@tailwindcss/forms';\n@import '@acunsoft/acun-ui';\n\n".self::SOURCE_LINE."\n\n/* @import '@acunsoft/acun-ui'; */\n", $this->read('resources/css/app.css'));
+        self::assertSame("@import 'tailwindcss';\n@import '@acunsoft/acun-ui';\n\n".self::SOURCE_LINE."\n\n/* @import '@acunsoft/acun-ui'; */\n", $this->read('resources/css/app.css'));
         self::assertSame("// import '@acunsoft/acun-ui';\nimport './bootstrap';\nimport '@acunsoft/acun-ui';\n", $this->read('resources/js/app.js'));
+    }
+
+    public function test_the_forms_plugin_of_an_older_setup_is_left_alone(): void
+    {
+        // Acun UI 2.1 added @tailwindcss/forms; the kit draws its own form controls now. A Breeze-like
+        // entry with the plugin and no kit yet: the kit's import goes after the plugin's line, as it did.
+        $json = "{\n    \"devDependencies\": {\n        \"@tailwindcss/forms\": \"^0.5.11\",\n        \"vite\": \"^8.0.0\"\n    }\n}\n";
+        $this->write('package.json', $json);
+        $this->write('resources/css/app.css', "@import 'tailwindcss';\n@plugin '@tailwindcss/forms';\n\n@source '../**/*.blade.php';\n");
+        $this->write('resources/js/app.js', "import './bootstrap';\n");
+
+        [$exit, $output] = $this->acun();
+
+        self::assertSame(0, $exit, $output);
+        self::assertSame("{\n    \"devDependencies\": {\n        \"@tailwindcss/forms\": \"^0.5.11\",\n        \"vite\": \"^8.0.0\"\n    },\n    \"dependencies\": {\n        \"@acunsoft/acun-ui\": \"file:vendor/acunsoft/acun-ui\"\n    }\n}\n", $this->read('package.json'), 'The plugin stays in devDependencies.');
+        self::assertSame("@import 'tailwindcss';\n@plugin '@tailwindcss/forms';\n@import '@acunsoft/acun-ui';\n\n".self::SOURCE_LINE."\n@source '../**/*.blade.php';\n", $this->read('resources/css/app.css'));
+        self::assertStringNotContainsString('@tailwindcss/forms', $output);
+
+        $this->linkNodeModules('acun-ui');
+        $this->write('public/build/manifest.json', '{}');
+        [$exit, $output] = $this->acun(['--check' => true]);
+        self::assertSame(0, $exit, $output);
+        self::assertStringNotContainsString('@tailwindcss/forms', $output, '--check does not list the plugin.');
+        self::assertStringContainsString('Acun UI is set up.', $output);
+
+        // Without the plugin (an application that removed it after 2.2) nothing is missing either.
+        $this->write('resources/css/app.css', "@import 'tailwindcss';\n@import '@acunsoft/acun-ui';\n\n".self::SOURCE_LINE."\n");
+        $this->write('package.json', "{\n    \"dependencies\": {\n        \"@acunsoft/acun-ui\": \"file:vendor/acunsoft/acun-ui\"\n    }\n}\n");
+        [$exit, $output] = $this->acun(['--check' => true]);
+        self::assertSame(0, $exit, $output);
+        self::assertStringContainsString('Acun UI is set up.', $output);
     }
 
     public function test_a_theme_block_with_a_sans_font_is_left_alone_with_a_warning(): void
@@ -231,8 +260,8 @@ final class InstallCommandTest extends TestCase
         self::assertSame(0, $exit, $output);
         $css = $this->read('resources/css/app.css');
         self::assertStringEndsWith(self::THEME, $css, 'The @theme block is not changed.');
-        self::assertStringStartsWith("@import 'tailwindcss';\n@plugin '@tailwindcss/forms';\n@import '@acunsoft/acun-ui';\n\n".self::SOURCE_LINE."\n", $css);
-        self::assertStringContainsString("resources/css/app.css line 12: an @theme block sets --font-sans, which replaces Acun UI's fonts (Public Sans, DM Mono). Remove that line (the whole block if nothing else is in it) unless you want your own font, or run php artisan acun:install --remove-font. Without interaction acun:install leaves it as it is.", $output);
+        self::assertStringStartsWith("@import 'tailwindcss';\n@import '@acunsoft/acun-ui';\n\n".self::SOURCE_LINE."\n", $css);
+        self::assertStringContainsString("resources/css/app.css line 11: an @theme block sets --font-sans, which replaces Acun UI's fonts (Public Sans, DM Mono). Remove that line (the whole block if nothing else is in it) unless you want your own font, or run php artisan acun:install --remove-font. Without interaction acun:install leaves it as it is.", $output);
     }
 
     public function test_an_interactive_run_removes_laravels_font_on_yes(): void
@@ -241,7 +270,7 @@ final class InstallCommandTest extends TestCase
         $this->skeleton(theme: true);
 
         $this->artisan('acun:install')
-            ->expectsConfirmation("resources/css/app.css line 12: Laravel's own font (--font-sans in @theme) replaces Acun UI's fonts (Public Sans, DM Mono). Remove it?", 'yes')
+            ->expectsConfirmation("resources/css/app.css line 11: Laravel's own font (--font-sans in @theme) replaces Acun UI's fonts (Public Sans, DM Mono). Remove it?", 'yes')
             ->expectsConfirmation('Copy an example page to resources/views/acun/example.blade.php?', 'no')
             ->expectsConfirmation('Run npm install and npm run build now?', 'no')
             ->expectsOutputToContain("- @theme {")
@@ -263,7 +292,7 @@ final class InstallCommandTest extends TestCase
         $this->skeleton(theme: true);
 
         $this->artisan('acun:install')
-            ->expectsConfirmation("resources/css/app.css line 12: Laravel's own font (--font-sans in @theme) replaces Acun UI's fonts (Public Sans, DM Mono). Remove it?", 'no')
+            ->expectsConfirmation("resources/css/app.css line 11: Laravel's own font (--font-sans in @theme) replaces Acun UI's fonts (Public Sans, DM Mono). Remove it?", 'no')
             ->expectsConfirmation('Copy an example page to resources/views/acun/example.blade.php?', 'no')
             ->expectsConfirmation('Run npm install and npm run build now?', 'no')
             ->doesntExpectOutputToContain('an @theme block sets --font-sans')
@@ -304,7 +333,8 @@ final class InstallCommandTest extends TestCase
         self::assertStringContainsString('✗ node_modules/@acunsoft/acun-ui does not point to vendor/acunsoft/acun-ui', $output);
         self::assertStringContainsString('→ Run npm install (after composer install: npm takes the package from vendor/).', $output);
         self::assertStringContainsString('✗ No build: public/build/manifest.json and public/hot are missing', $output);
-        self::assertStringContainsString('8 things are missing: fix them as shown above.', $output);
+        self::assertStringNotContainsString('@tailwindcss/forms', $output, 'The plugin is not wanted: the kit draws its own form controls.');
+        self::assertStringContainsString('6 things are missing: fix them as shown above.', $output);
         self::assertStringContainsString('Guide: https://ui.acunsoft.com/installation.html#free', $output);
     }
 
@@ -321,7 +351,7 @@ final class InstallCommandTest extends TestCase
         self::assertStringContainsString('✓ resources/css/app.css: '.self::SOURCE_LINE, $output);
         self::assertStringContainsString('✓ node_modules/@acunsoft/acun-ui points to vendor/acunsoft/acun-ui', $output);
         self::assertStringContainsString('✓ public/build/manifest.json: the assets are built', $output);
-        self::assertStringContainsString('! resources/css/app.css line 12: an @theme block sets --font-sans', $output, 'A note, not a failure.');
+        self::assertStringContainsString('! resources/css/app.css line 11: an @theme block sets --font-sans', $output, 'A note, not a failure.');
         self::assertStringNotContainsString('✗', $output);
         self::assertStringContainsString('Acun UI is set up.', $output);
 
@@ -469,7 +499,6 @@ final class InstallCommandTest extends TestCase
         self::assertStringContainsString("\"dependencies\": {\n        \"@acunsoft/acun-pro\": \"file:vendor/acunsoft/acun-pro\",\n        \"@acunsoft/acun-ui\": \"file:vendor/acunsoft/acun-ui\"\n    }", $this->read('package.json'));
         self::assertStringStartsWith(implode("\n", [
             "@import 'tailwindcss';",
-            "@plugin '@tailwindcss/forms';",
             "@import '@acunsoft/acun-ui';",
             "@import '@acunsoft/acun-pro';",
             '',
@@ -546,6 +575,7 @@ final class InstallCommandTest extends TestCase
         self::assertStringContainsString("✗ resources/css/panel.css: @source '../../vendor/acunsoft/acun-pro/resources/views/components/ui';", $output);
         self::assertStringContainsString("✓ resources/js/panel.js: import '@acunsoft/acun-pro';", $output);
         self::assertStringNotContainsString('ecommerce.css', $output, 'An entry without Acun Pro is not checked.');
+        self::assertStringNotContainsString('@tailwindcss/forms', $output, 'The plugin lines 2.1 added are neither wanted nor listed.');
         self::assertStringContainsString('1 thing is missing', $output);
 
         $files = $this->snapshot();

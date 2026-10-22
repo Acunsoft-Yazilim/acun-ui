@@ -16,11 +16,13 @@ use function Laravel\Prompts\confirm;
  *
  * Wires the free package into a Laravel application (https://ui.acunsoft.com/installation.html#free):
  *
- *   package.json            "@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui" in dependencies,
- *                           "@tailwindcss/forms" in devDependencies
- *   resources/css/app.css   @import 'tailwindcss'; @plugin '@tailwindcss/forms'; @import '@acunsoft/acun-ui';
+ *   package.json            "@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui" in dependencies
+ *   resources/css/app.css   @import 'tailwindcss'; @import '@acunsoft/acun-ui';
  *                           @source '../../vendor/acunsoft/acun-ui/resources/views';
  *   resources/js/app.js     import '@acunsoft/acun-ui';
+ *
+ * The kit draws its own form controls (2.2): the @tailwindcss/forms plugin is neither added nor checked;
+ * an application that has it (2.1 added it) keeps it, which does no harm.
  *
  * The starter kit's entries (resources/css/acun-ui.css, resources/js/acun-ui.js) are edited instead of
  * app.css and app.js when they exist. With acunsoft/acun-pro installed it adds that package's lines

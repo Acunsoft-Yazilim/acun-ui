@@ -45,6 +45,7 @@
     <div class="relative">
         @if ($variant === 'floating')
             <textarea
+                data-acun-control
                 id="{{ $areaId }}"
                 name="{{ $fieldName }}"
                 rows="{{ $rows }}"
@@ -70,6 +71,7 @@
             @endif
         @else
             <textarea
+                data-acun-control
                 id="{{ $areaId }}"
                 name="{{ $fieldName }}"
                 rows="{{ $rows }}"

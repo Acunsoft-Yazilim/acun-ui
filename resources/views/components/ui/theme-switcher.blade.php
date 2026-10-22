@@ -146,7 +146,7 @@
         >
             @foreach ($presets as $key => [$hex, $presetName])
                 <label class="relative size-9 cursor-pointer" title="{{ $presetName }}">
-                    <input type="radio" name="{{ $id }}-color" value="{{ $key }}" aria-label="{{ $presetName }}" class="peer sr-only" x-bind:checked="selected === @js((string) $key)" x-on:change="select(@js((string) $key))">
+                    <input data-acun-control type="radio" name="{{ $id }}-color" value="{{ $key }}" aria-label="{{ $presetName }}" class="peer sr-only" x-bind:checked="selected === @js((string) $key)" x-on:change="select(@js((string) $key))">
                     {{-- The default is the page's own colour; it carries white text (theming guide), so its tick stays white. --}}
                     <span
                         class="absolute inset-0 rounded-sm ring-offset-2 ring-offset-surface transition-shadow peer-checked:ring-2 peer-checked:ring-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"
@@ -168,6 +168,7 @@
                     <span class="font-medium text-body">{{ __('Custom') }}</span>
                     <span x-show="isCustom" x-cloak class="font-mono text-xs text-muted uppercase" x-text="selected"></span>
                     <input
+                        data-acun-control
                         type="color"
                         x-bind:value="customColor"
                         x-on:input.debounce.150ms="select($event.target.value.toLowerCase())"

@@ -32,6 +32,7 @@
 <label for="{{ $switchId }}" {{ $attributes->filter(fn ($value, $key) => $isLayout($key))->class('inline-flex cursor-pointer items-start gap-3 select-none has-disabled:cursor-not-allowed has-disabled:opacity-50') }}>
     <span class="relative mt-0.5 inline-flex flex-none">
         <input
+            data-acun-control
             id="{{ $switchId }}"
             type="checkbox"
             role="switch"

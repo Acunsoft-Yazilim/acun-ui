@@ -39,7 +39,7 @@
             $count = is_array($option) ? ($option['count'] ?? null) : null;
         @endphp
         <label class="relative">
-            <input type="{{ $multiple ? 'checkbox' : 'radio' }}" name="{{ $inputName }}" value="{{ $key }}" class="peer sr-only" @checked(in_array((string) $key, $chosen, true)) {{ $binding }}>
+            <input data-acun-control type="{{ $multiple ? 'checkbox' : 'radio' }}" name="{{ $inputName }}" value="{{ $key }}" class="peer sr-only" @checked(in_array((string) $key, $chosen, true)) {{ $binding }}>
             <span @class([
                 'inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-sm font-medium text-body transition-colors select-none hover:border-line-strong',
                 'peer-checked:border-primary-ink peer-checked:bg-primary-tint peer-checked:text-primary-tint-ink',

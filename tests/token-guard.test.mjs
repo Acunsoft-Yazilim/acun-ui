@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cssViolations, scan, viewFiles, violations } from './js/token-guard.mjs';
+import { cssViolations, scan, unmarkedControls, viewFiles, violations } from './js/token-guard.mjs';
 
 // Plan 6.1, item 4: the kit's components paint with tokens only (see js/token-guard.mjs).
 const views = fileURLToPath(new URL('../resources/views', import.meta.url));
@@ -16,6 +17,15 @@ test('no palette shade, hex or dark: colour class in the kit\'s component markup
     const files = viewFiles([views]);
     assert.ok(files.length > 100, `${files.length} views`);
     assert.deepEqual(scan(files, views, allowlist), {});
+});
+
+test('every form control of the kit\'s markup carries data-acun-control (css/forms.css draws it)', () => {
+    const report = Object.fromEntries(viewFiles([views]).map((file) => [path.relative(views, file), unmarkedControls(fs.readFileSync(file, 'utf8'))]).filter(([, found]) => found.length));
+    assert.deepEqual(report, {});
+    assert.deepEqual(unmarkedControls([
+        '<input type="text">', '<select', '    name="plan">', '{{-- <input> in a comment --}}', '<input data-acun-control type="radio">',
+        '<input type="hidden" name="token">', '<textarea', '    data-acun-control', '></textarea>',
+    ].join('\n')), ['1: <input type="text">', '2: <select']);
 });
 
 test('the guard finds what it is for', () => {
@@ -38,7 +48,8 @@ test('the guard finds what it is for', () => {
 /**
  * The kit's stylesheets read the tokens too: no palette variable, hex colour, .dark rule or 1.x kit
  * variable (--ui-*, --btn-*). panel.css keeps the palette scales in its @theme block for application
- * code and data colours; themes.css holds the built-in themes' own values (hex allowed there).
+ * code and data colours; themes.css holds the built-in themes' own values (hex allowed there);
+ * forms.css, the form controls' base, reads the tokens too.
  */
 test('no palette variable, hex colour, .dark rule or 1.x kit variable in the kit\'s CSS', () => {
     const css = (file) => fs.readFileSync(new URL(`../css/${file}`, import.meta.url), 'utf8');
@@ -49,7 +60,8 @@ test('no palette variable, hex colour, .dark rule or 1.x kit variable in the kit
         'panel.css': cssViolations(outsideTheme),
         'tokens.css': cssViolations(css('tokens.css')),
         'themes.css': cssViolations(css('themes.css'), { hex: false }),
-    }, { 'panel.css': [], 'tokens.css': [], 'themes.css': [] });
+        'forms.css': cssViolations(css('forms.css')),
+    }, { 'panel.css': [], 'tokens.css': [], 'themes.css': [], 'forms.css': [] });
 });
 
 test('the CSS guard finds what it is for', () => {

@@ -23,12 +23,8 @@ final class Wiring
         'acun-pro' => ['@acunsoft/acun-pro', 'file:vendor/acunsoft/acun-pro'],
     ];
 
-    /** The range the installation guide uses. */
-    public const FORMS = ['@tailwindcss/forms', '^0.5.11'];
-
     public const CSS = [
         'tailwind' => "@import 'tailwindcss';",
-        'forms' => "@plugin '@tailwindcss/forms';",
         'acun-ui' => "@import '@acunsoft/acun-ui';",
         'acun-pro' => "@import '@acunsoft/acun-pro';",
         'acun-ui-source' => "@source '../../vendor/acunsoft/acun-ui/resources/views';",
@@ -44,7 +40,6 @@ final class Wiring
     private const CSS_PATTERNS = [
         // A tailwindcss import, also with options (source(none), layer(…)) or of its parts (tailwindcss/theme.css).
         'tailwind' => '~^\s*@import\s+([\'"])tailwindcss(?:/[^\'"]*)?\1~',
-        'forms' => '~^\s*@plugin\s+([\'"])@tailwindcss/forms\1~',
         'acun-ui' => '~^\s*@import\s+([\'"])@acunsoft/acun-ui(?:/css/panel\.css)?\1~',
         'acun-pro' => '~^\s*@import\s+([\'"])@acunsoft/acun-pro(?:/css/panel\.css)?\1~',
         // The package's views, or a folder or glob inside them.
@@ -53,9 +48,17 @@ final class Wiring
     ];
 
     /**
-     * package.json: the npm links of the packages in dependencies (sorted in, as npm sorts) and
-     * @tailwindcss/forms in devDependencies; a missing section is added at the end. A package that is
-     * already there (in either section) is left as it is; for a link with another value, "found" holds it.
+     * The @tailwindcss/forms plugin line that Acun UI 2.1 and older added. The kit draws its own form
+     * controls since 2.2 (css/forms.css): the line is not wanted any more, and one that is there is left
+     * as it is (harmless); the kit's import still goes after it, where it went.
+     */
+    private const FORMS_PLUGIN = '~^\s*@plugin\s+([\'"])@tailwindcss/forms\1~';
+
+    /**
+     * package.json: the npm links of the packages in dependencies (sorted in, as npm sorts); a missing
+     * section is added at the end. A package that is already there (in either section) is left as it
+     * is; for a link with another value, "found" holds it. (@tailwindcss/forms is no longer added: the
+     * kit draws its own form controls; one in devDependencies is left alone.)
      *
      * @return array{content: string, items: list<array{line: string, added: bool, pro: bool, package: string, version: string, found: ?string}>}
      *
@@ -70,7 +73,6 @@ final class Wiring
         $wanted = [
             ['dependencies', ...self::LINKS['acun-ui'], true, false],
             ...($pro ? [['dependencies', ...self::LINKS['acun-pro'], true, true]] : []),
-            ['devDependencies', ...self::FORMS, false, false],
         ];
 
         foreach ($wanted as [$section, $name, $version, $link, $isPro]) {
@@ -100,9 +102,10 @@ final class Wiring
     }
 
     /**
-     * The CSS entry, in this order: @import 'tailwindcss'; (at the top), @plugin '@tailwindcss/forms';
-     * and the kit's @import right after it, then the @source of the kit's views: before the first
-     * @source of the file, or after the @import lines. fontSans is the line of an @theme block's
+     * The CSS entry, in this order: @import 'tailwindcss'; (at the top) and the kit's @import right
+     * after it (after an @plugin '@tailwindcss/forms'; line that follows it, kept from Acun UI 2.1),
+     * then the @source of the kit's views: before the first @source of the file, or after the @import
+     * lines. fontSans is the line of an @theme block's
      * --font-sans in the result (it replaces the kit's fonts; it is never changed here), or null.
      *
      * @return array{content: string, items: list<array{line: string, added: bool, pro: bool}>, fontSans: ?int}
@@ -123,8 +126,7 @@ final class Wiring
                 // After the line it follows (after the whole statement: @plugin may hold a { } block).
                 $insert = match ($key) {
                     'tailwind' => self::top($code),
-                    'forms' => self::statementEnd($code, self::findLast($code, self::CSS_PATTERNS['tailwind'])) + 1,
-                    'acun-ui' => self::statementEnd($code, self::find($code, self::CSS_PATTERNS['forms'])) + 1,
+                    'acun-ui' => self::statementEnd($code, self::kitAnchor($code)) + 1,
                     'acun-pro' => self::statementEnd($code, self::find($code, self::CSS_PATTERNS['acun-ui'])) + 1,
                     'acun-pro-source' => self::statementEnd($code, self::find($code, self::CSS_PATTERNS['acun-ui-source'])) + 1,
                     'acun-ui-source' => null,
@@ -177,6 +179,20 @@ final class Wiring
         }
 
         return ['content' => self::join($lines, $eol, $final), 'items' => $items];
+    }
+
+    /**
+     * The line the kit's @import follows: the last tailwindcss import, or an @plugin '@tailwindcss/forms'
+     * line after it (an application set up by Acun UI 2.1 keeps its order).
+     *
+     * @param  list<string>  $code
+     */
+    private static function kitAnchor(array $code): ?int
+    {
+        $tailwind = self::findLast($code, self::CSS_PATTERNS['tailwind']);
+        $forms = self::find($code, self::FORMS_PLUGIN);
+
+        return $forms !== null && ($tailwind === null || $forms > $tailwind) ? $forms : $tailwind;
     }
 
     /** Whether a CSS or JS file imports Acun Pro (outside comments; any import of it counts in JS). */

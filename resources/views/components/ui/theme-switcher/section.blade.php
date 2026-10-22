@@ -59,7 +59,7 @@
         >
             @foreach ($choices as $key => $option)
                 <label @class(['relative', 'flex-1' => ! $cards])>
-                    <input type="radio" name="{{ $headingId }}" value="{{ $key }}" class="peer sr-only" @if ($value) x-bind:checked="({{ $value }}) === @js((string) $key)" @endif>
+                    <input data-acun-control type="radio" name="{{ $headingId }}" value="{{ $key }}" class="peer sr-only" @if ($value) x-bind:checked="({{ $value }}) === @js((string) $key)" @endif>
                     @if ($cards)
                         <span class="block h-full cursor-pointer rounded-sm p-3 text-left ring-1 ring-line ring-inset transition-shadow hover:ring-line-strong peer-checked:ring-2 peer-checked:ring-primary-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus">
                             <span class="block text-sm font-medium text-ink">{{ $option['label'] }}</span>

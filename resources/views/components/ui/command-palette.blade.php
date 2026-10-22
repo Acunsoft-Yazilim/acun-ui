@@ -106,6 +106,7 @@
                 <div class="flex items-center gap-3 border-b border-line px-4">
                     <acun:icon name="magnifying-glass" size="5" class="text-faint" />
                     <input
+                        data-acun-control
                         :id="listId + '-input'"
                         x-model="query"
                         x-on:input="highlighted = 0"

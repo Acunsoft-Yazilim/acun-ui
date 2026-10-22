@@ -11,7 +11,7 @@ A package of components can join the `acun` tag prefix with `Acun\Ui\AcunUi::add
 
 ## Requirements
 
-- Tailwind CSS 4 with `@tailwindcss/forms`
+- Tailwind CSS 4 (no plugin: the kit draws its own form controls, `css/forms.css`)
 - Alpine.js 3 (bundled with Livewire 4 in Laravel apps)
 
 ## Install
@@ -25,18 +25,18 @@ php artisan acun:install
 
 `acun:install` adds only the lines that are missing and changes nothing else:
 
-- `package.json`: `"@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui"`, so npm takes the CSS and JavaScript from the copy in `vendor/` and they always match the installed Blade components, and `"@tailwindcss/forms"`;
-- `resources/css/app.css`: `@plugin '@tailwindcss/forms';`, `@import '@acunsoft/acun-ui';` and `@source '../../vendor/acunsoft/acun-ui/resources/views';` after `@import 'tailwindcss';` (Laravel's own font, an `@theme` block's `--font-sans`, overrides the kit's: an interactive run asks to remove it, `--remove-font` removes it without asking, and without interaction it is left with a warning);
+- `package.json`: `"@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui"`, so npm takes the CSS and JavaScript from the copy in `vendor/` and they always match the installed Blade components;
+- `resources/css/app.css`: `@import '@acunsoft/acun-ui';` and `@source '../../vendor/acunsoft/acun-ui/resources/views';` after `@import 'tailwindcss';` (Laravel's own font, an `@theme` block's `--font-sans`, overrides the kit's: an interactive run asks to remove it, `--remove-font` removes it without asking, and without interaction it is left with a warning);
 - `resources/js/app.js`: `import '@acunsoft/acun-ui';`.
 
-It offers to run `npm install` and `npm run build` (`--npm`, `--no-npm`; pnpm, yarn and bun by their lock file), copies an example page with `--example`, adds Acun Pro's lines when `acunsoft/acun-pro` is installed, and asks nothing with `--no-interaction` (CI). A second run changes nothing. `php artisan acun:install --check` changes nothing: it lists what is set up and what is missing, and exits with 1 when something is. Then put `<acun:layout.blank>` on a page (or `<acun:layout.head>` in your own layout) and run `npm run dev`.
+It no longer adds `@tailwindcss/forms` (2.1 and older did; a line that is there is left alone and does no harm). It offers to run `npm install` and `npm run build` (`--npm`, `--no-npm`; pnpm, yarn and bun by their lock file), copies an example page with `--example`, adds Acun Pro's lines when `acunsoft/acun-pro` is installed, and asks nothing with `--no-interaction` (CI). A second run changes nothing. `php artisan acun:install --check` changes nothing: it lists what is set up and what is missing, and exits with 1 when something is. Then put `<acun:layout.blank>` on a page (or `<acun:layout.head>` in your own layout) and run `npm run dev`.
 
 The same lines by hand: https://ui.acunsoft.com/installation.html#manual
 
 Without Composer (any Tailwind CSS 4 project), install it from npm (the CSS, `js/`, `dist/` and `vite/` only):
 
 ```bash
-npm install @acunsoft/acun-ui @tailwindcss/forms
+npm install @acunsoft/acun-ui
 ```
 
 In a Laravel app keep the `file:` line above instead: an npm copy of another version would not match the Blade components.
@@ -47,7 +47,6 @@ Import it after Tailwind and tell Tailwind where your markup lives (in `resource
 
 ```css
 @import 'tailwindcss';
-@plugin '@tailwindcss/forms';
 @import '@acunsoft/acun-ui';
 
 /* Laravel: the Blade components of this package */
@@ -55,6 +54,8 @@ Import it after Tailwind and tell Tailwind where your markup lives (in `resource
 ```
 
 Without the `@source` line the components render unstyled. If Laravel's default file has an `@theme` block that sets `--font-sans`, remove it: Acun UI sets the fonts.
+
+The kit draws its own form controls: every `<input>`, `<select>` and `<textarea>` a component renders carries `data-acun-control`, and `css/forms.css` styles only those (the `@tailwindcss/forms` plugin is not needed, and the application's other fields are left alone). Your own markup (the npm path) puts `data-acun-control` on a field to get the same base.
 
 ### Theming
 

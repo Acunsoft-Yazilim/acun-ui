@@ -21,12 +21,13 @@
     // label. The rest (name, wire:model, aria-*, data-*, events…) belong to the radio;
     // input-class styles it (Acun\Ui\Support\Field). Checked, it is filled with the primary colour and
     // its dot is that fill's own text colour (a light custom colour takes a dark dot). The keyboard
-    // focus ring is acun:checkbox's: an outline in the focus token (@tailwindcss/forms' ring sat on a
-    // white ring offset, a white halo in a dark theme).
+    // focus ring is acun:checkbox's: an outline in the focus token (the form base's ring, css/forms.css,
+    // sits on a ring offset: a halo in a dark theme).
 @endphp
 
 <label for="{{ $radioId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex items-center gap-2 text-sm text-body select-none has-disabled:cursor-not-allowed has-disabled:text-faint') }}>
     <input
+        data-acun-control
         id="{{ $radioId }}"
         type="radio"
         name="{{ $fieldName }}"

@@ -54,6 +54,7 @@
 
         {{-- w-full with min-w-0: the field never asks for its natural width (about 20 characters), which overflowed narrow grid columns. --}}
         <input
+            data-acun-control
             id="{{ $inputId }}"
             name="{{ $fieldName }}"
             @if ($error) aria-invalid="true" @endif

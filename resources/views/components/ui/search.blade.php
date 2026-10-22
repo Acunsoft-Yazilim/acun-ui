@@ -90,6 +90,7 @@
 
         {{-- peer: the clear button and the shortcut hint below read its :placeholder-shown / :focus. --}}
         <input
+            data-acun-control
             x-ref="input"
             id="{{ $inputId }}"
             @if ($name) name="{{ $name }}" @endif

@@ -92,7 +92,7 @@ final class SearchComponentTest extends TestCase
             self::assertStringNotContainsString($control, $outer[0]);
         }
 
-        self::assertSame(1, preg_match('/<input\s+x-ref="input"(?:[^>"]|"[^"]*")*>/s', $html, $input));
+        self::assertSame(1, preg_match('/<input\s+data-acun-control\s+x-ref="input"(?:[^>"]|"[^"]*")*>/s', $html, $input));
         self::assertStringContainsString('wire:model.live="arama"', $input[0]);
         self::assertStringContainsString('data-testid="ara"', $input[0]);
         self::assertStringContainsString('x-on:keyup="ara()"', $input[0]);

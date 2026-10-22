@@ -80,6 +80,24 @@ export function violations(source, allow = () => false) {
     return found;
 }
 
+/**
+ * The form controls of a view without the kit's form marker: ["line: <tag…", …]. Every <input> (but a
+ * hidden one), <select> and <textarea> a component renders carries data-acun-control as its first
+ * attribute: css/forms.css gives those, and only those, the base of a form control (the kit needs no
+ * @tailwindcss/forms). Blade, HTML and CSS comments and PHP line comments are skipped.
+ */
+export function unmarkedControls(source) {
+    const blank = (text) => text.replace(/[^\n]/g, ' ');
+    const code = source.replace(/\{\{--[\s\S]*?--\}\}|<!--[\s\S]*?-->|\/\*[\s\S]*?\*\//g, blank).replace(/^\s*\/\/.*$/gm, blank);
+    const found = [];
+    for (const match of code.matchAll(/<(input|select|textarea)\b(?!\s+data-acun-control\b)([^\n]*)/g)) {
+        if (/\btype="hidden"/.test(match[2])) continue;
+        found.push(`${code.slice(0, match.index).split('\n').length}: ${match[0].trim().slice(0, 60)}`);
+    }
+
+    return found;
+}
+
 /** The report for a set of files: { "relative/file": [...] } of the ones that break the rule. */
 export function scan(files, base, allowlist = {}) {
     const report = {};

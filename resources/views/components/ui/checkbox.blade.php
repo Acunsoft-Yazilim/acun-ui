@@ -35,6 +35,7 @@
 <label for="{{ $boxId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex '.($showsMessage ? 'items-start' : 'items-center').' gap-2.5 text-sm text-body select-none') }}>
     <span @class(['relative flex size-4.5 flex-none items-center justify-center', 'mt-px' => $showsMessage])>
         <input
+            data-acun-control
             id="{{ $boxId }}"
             type="checkbox"
             name="{{ $fieldName }}"
@@ -43,14 +44,13 @@
             @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
             {{ \Acun\Ui\Support\Field::controlAttributes($attributes)->except(['id', 'label', 'checked', 'aria-describedby'])->merge([
                 'value' => '1',
-                // @tailwindcss/forms adds its own white ring-offset + blue ring
-                // box-shadow for [type=checkbox]:focus; since it has the SAME
-                // specificity as our focus:ring-0 it wins depending on the
-                // compiled CSS order - '!' overrides it for good
-                // (the pattern used earlier in this project for the same kind of issue).
+                // The kit's form base (css/forms.css, data-acun-control) gives a
+                // focused box a ring on a ring offset, as @tailwindcss/forms did;
+                // '!' keeps it off whatever the order of the compiled CSS (an
+                // application that still loads the plugin gets the plugin's too).
                 // No outline-none: it sets the outline style to none for the
                 // focus-visible ring too, which then never showed (on a mouse
-                // focus @tailwindcss/forms' outline is transparent anyway).
+                // focus the base's outline is transparent anyway).
                 'class' => \Acun\Ui\Support\Field::controlClass('peer size-4.5 shrink-0 appearance-none rounded-(--ac-radius-check) border border-control bg-field checked:border-primary checked:bg-primary indeterminate:border-primary indeterminate:bg-primary focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-focus aria-invalid:border-danger-line disabled:cursor-not-allowed disabled:opacity-40', $inputClass),
             ]) }}
         />

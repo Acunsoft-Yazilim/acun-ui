@@ -93,8 +93,8 @@ final class LayoutSettingsTest extends TestCase
         self::assertSame(Appearance::COLORS, Layout::BRAND_COLORS, 'The 1.x name is kept until 3.0.');
 
         $picker = Blade::render('<x-ui.brand-color-picker />');
-        self::assertMatchesRegularExpression('/title="Sarı">\s*<input type="radio"[^>]*>\s*<span[^>]*style="background: #9f6b13"[^>]*><\/span>\s*<svg[^>]*text-surface/', $picker);
-        self::assertMatchesRegularExpression('/title="Koyu">\s*<input type="radio"[^>]*>\s*<span[^>]*style="background: #3f404d"[^>]*><\/span>\s*<svg[^>]*text-surface/', $picker);
+        self::assertMatchesRegularExpression('/title="Sarı">\s*<input data-acun-control type="radio"[^>]*>\s*<span[^>]*style="background: #9f6b13"[^>]*><\/span>\s*<svg[^>]*text-surface/', $picker);
+        self::assertMatchesRegularExpression('/title="Koyu">\s*<input data-acun-control type="radio"[^>]*>\s*<span[^>]*style="background: #3f404d"[^>]*><\/span>\s*<svg[^>]*text-surface/', $picker);
 
         // The theme's own colour (default) is no colour of the runtime: it removes the user's.
         self::assertSame(
@@ -112,7 +112,7 @@ final class LayoutSettingsTest extends TestCase
     {
         $picker = Blade::render('<x-ui.brand-color-picker />');
 
-        $swatch = fn (string $name, string $tick): string => '/title="'.$name.'">\s*<input type="radio"[^>]*>\s*<span[^>]*><\/span>\s*<svg[^>]*\b'.$tick.'\b/';
+        $swatch = fn (string $name, string $tick): string => '/title="'.$name.'">\s*<input data-acun-control type="radio"[^>]*>\s*<span[^>]*><\/span>\s*<svg[^>]*\b'.$tick.'\b/';
 
         foreach (['Varsayılan', 'Yeşil', 'Kırmızı', 'Sarı', 'Turkuaz', 'Gri', 'Koyu'] as $name) {
             self::assertMatchesRegularExpression($swatch($name, 'text-surface'), $picker, $name);

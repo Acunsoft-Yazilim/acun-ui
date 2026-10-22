@@ -35,7 +35,7 @@ export async function stylesheet(markup, appCss = '') {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'acun-contrast-'));
     try {
         fs.writeFileSync(path.join(directory, 'markup.html'), markup);
-        const input = `@import 'tailwindcss';\n@plugin '@tailwindcss/forms';\n@import '${path.join(root, 'packages/acun-ui/css/panel.css')}';\n@source '${path.join(directory, 'markup.html')}';\n${appCss}\n`;
+        const input = `@import 'tailwindcss';\n@import '${path.join(root, 'packages/acun-ui/css/panel.css')}';\n@source '${path.join(directory, 'markup.html')}';\n${appCss}\n`;
         const compiler = await compile(input, { base: root, onDependency: () => {} });
 
         return compiler.build(new Scanner({ sources: compiler.sources }).scan());

@@ -49,6 +49,7 @@
     <div class="relative" @if ($viewable) x-data="{ shown: false }" @endif>
         @if ($variant === 'floating')
             <input
+                data-acun-control
                 id="{{ $inputId }}"
                 name="{{ $fieldName }}"
                 placeholder=" "
@@ -75,6 +76,7 @@
             @endif
         @else
             <input
+                data-acun-control
                 id="{{ $inputId }}"
                 name="{{ $fieldName }}"
                 @if ($viewable) :type="shown ? 'text' : 'password'" @endif
