@@ -1,9 +1,9 @@
 {{--
     Top bar of list pages: page size (`start` slot) and search (default slot) on the
     left, actions (`actions` slot: filters, export, a "New" button) on the right. It
-    only lays them out; the list's Livewire component owns the state they bind to.
-    Acun Pro's php artisan acun:table generates a listing that uses it, with its
-    acun:filter-button among the actions.
+    only lays them out; the list's Livewire component (or the data table package the
+    application uses) owns the state they bind to. Acun Pro's acun:filter-button goes
+    among the actions.
         <acun:list-toolbar>
             <acun:slot:start><acun:per-page-select :options="[10, 25, 50]" /></acun:slot:start>
             <acun:search wire:model.live.debounce.300ms="search" placeholder="Search" />

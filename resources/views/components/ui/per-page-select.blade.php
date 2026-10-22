@@ -10,7 +10,7 @@
     Page-size box of a list ("10 / 25 / 50 / 100"). Put it before the search in
     acun:list-toolbar's `start` slot. The list contract: the Livewire component has
     the public property named by `model` (perPage by default) and goes back to the
-    first page when it changes. php artisan acun:table generates a listing that uses it.
+    first page when it changes.
         <acun:slot:start><acun:per-page-select :options="[10, 25, 50]" /></acun:slot:start>
 --}}
 <div {{ $attributes->except('id')->class('w-20 flex-none') }}>

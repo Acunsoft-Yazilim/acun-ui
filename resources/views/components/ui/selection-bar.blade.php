@@ -15,8 +15,7 @@
 {{--
     Bulk action bar - visible while something is selected. Action buttons come from the slot.
     The list contract: the Livewire component counts its own selection and has the method
-    named by clear-action (clearSelection by default). php artisan acun:table generates a
-    listing that uses it.
+    named by clear-action (clearSelection by default).
         …table… {{ $orders->links() }}
         <acun:selection-bar :count="$selectionCount" :all-matching="$allMatching" :total="$selectionCount">
             <acun:button variant="danger" size="sm" wire:click="deleteSelected">Delete</acun:button>
