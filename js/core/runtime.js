@@ -7,25 +7,31 @@
 // Follows the release version (packages/acun-ui/package.json); tests/js/runtime.test.mjs checks it.
 export const VERSION = '2.2.0';
 
+/** @import { AcunWindow } from './types.js' */
+
 /**
  * Sets up window.AcunUI with the public API and runs setup() once per page.
  * Keeps what is already on the namespace (AcunUI.pro, when the PRO JS ran first).
  *
- * @returns {{ runtime: object, created: boolean }}
+ * @template {object} T
+ * @param {T} api
+ * @param {(runtime: T & Record<string, any>) => void} setup
+ * @returns {{ runtime: T & Record<string, any>, created: boolean }}
  */
 export function createRuntime(api, setup) {
-    const existing = window.AcunUI;
+    const page = /** @type {AcunWindow} */ (window);
+    const existing = page.AcunUI;
 
     if (existing?.initialized) {
         if (existing.version !== VERSION) {
             console.warn(`[Acun UI] Two different versions are on the page (${existing.version} and ${VERSION}); only the first one runs.`);
         }
 
-        return { runtime: existing, created: false };
+        return { runtime: /** @type {T & Record<string, any>} */ (existing), created: false };
     }
 
     const runtime = Object.assign(existing ?? {}, api, { version: VERSION, initialized: true });
-    window.AcunUI = runtime;
+    page.AcunUI = runtime;
     setup(runtime);
 
     return { runtime, created: true };

@@ -8,10 +8,10 @@
         <acun:modal.trigger name="musteri-ekle">
             <acun:button>Yeni müşteri</acun:button>
         </acun:modal.trigger>
-    It renders a layout-neutral wrapper (display: contents) that sends acun:modal:open on a
-    click, so the button keeps its own role, focus and keyboard behaviour. Attributes
-    go on the wrapper. The first element, when it is a button or a link, gets
-    aria-haspopup="dialog".
+    It renders a layout-neutral wrapper (display: contents) with data-acun-open: a click
+    opens the modal (the plugin of the runtime, no Alpine), and the button keeps its own
+    role, focus and keyboard behaviour. Attributes go on the wrapper. The first element,
+    when it is a button or a link, gets aria-haspopup="dialog".
 --}}
 @php
     $html = $slot->toHtml();
@@ -22,4 +22,4 @@
     }
 @endphp
 
-<span data-slot="modal-trigger" x-data x-on:click="$dispatch('acun:modal:open', { name: @js($name) })" {{ $attributes->merge(['class' => 'contents']) }}>{!! $html !!}</span>
+<span data-slot="modal-trigger" data-acun-open="{{ $name }}" {{ $attributes->merge(['class' => 'contents']) }}>{!! $html !!}</span>

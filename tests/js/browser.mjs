@@ -4,7 +4,8 @@
 //
 // A test file can shape the page before importing this module (dynamically):
 //     globalThis.acunTestPage = { head: '<script type="application/json" data-acun-ui-config>…', boot: true, runtime: false };
-// head: the <head> markup · boot: run the boot script (js/boot.js) · runtime: load the runtime (default true).
+// head: the <head> markup · boot: run the boot script (js/boot.js) · runtime: load the runtime (default true)
+// · alpine: false for a page without Alpine (and without Livewire): the plugins alone, as in plain HTML.
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
@@ -112,10 +113,11 @@ for (const property of ['offsetWidth', 'offsetHeight']) {
 // Livewire would start itself on DOMContentLoaded; the tests start Alpine alone, after the
 // Acun UI runtime has registered its components (as on a page: the runtime runs first).
 window.livewireScriptConfig = {};
-const { Alpine } = await import(`${root}vendor/livewire/livewire/dist/livewire.esm.js`);
+const withAlpine = options.alpine !== false;
+const { Alpine } = withAlpine ? await import(`${root}vendor/livewire/livewire/dist/livewire.esm.js`) : { Alpine: null };
 if (options.boot) await import(`${root}packages/acun-ui/js/boot.js`);
 if (options.runtime !== false) await import(`${root}packages/acun-ui/js/index.js`);
-Alpine.start();
+Alpine?.start();
 
 export const AcunUI = window.AcunUI;
 export { Alpine, window };
@@ -131,7 +133,7 @@ export async function settle() {
 // Puts html on the page (in place of the previous test's) and lets Alpine start it.
 export async function mount(html) {
     for (const element of [...document.body.children]) {
-        Alpine.destroyTree(element);
+        Alpine?.destroyTree(element);
         element.remove();
     }
 

@@ -9,21 +9,57 @@ import { scrollLock } from './scroll-lock.js';
 import { trapTab } from './focus-trap.js';
 import { rememberFocus } from './focus-restore.js';
 
+/**
+ * How a dialog takes part (overlays.open's options).
+ *
+ * @typedef {object} OverlayOptions
+ * @property {() => void} [close]  closes it (Escape)
+ * @property {boolean} [lockScroll]  locks the page scroll (default true)
+ * @property {HTMLElement | null | (() => HTMLElement | null)} [trap]  the element Tab stays in (none: null)
+ * @property {'inside' | 'anywhere' | false | (() => 'inside' | 'anywhere' | false)} [escape]  where an Escape belongs to it (default 'inside')
+ * @property {boolean} [restoreFocus]  gives the focus back when it closes (default true)
+ * @property {Element | null} [opener]  the element the focus goes back to (default: the one focused now)
+ */
+
+/**
+ * @typedef {object} OverlayEntry
+ * @property {HTMLElement} element
+ * @property {() => void} close
+ * @property {OverlayOptions['trap'] | null} trap
+ * @property {NonNullable<OverlayOptions['escape']>} escape
+ * @property {boolean} locked
+ * @property {(() => void) | null} restore
+ * @property {string | null} zIndex
+ */
+
+/** @type {OverlayEntry[]} */
 const stack = [];
 
-const resolve = (value) => (typeof value === 'function' ? value() : value);
+/**
+ * @template T
+ * @param {T | (() => T)} value
+ * @returns {T}
+ */
+const resolve = (value) => (typeof value === 'function' ? /** @type {() => T} */ (value)() : value);
+/** @param {Element} element */
 const entryOf = (element) => stack.find((entry) => entry.element === element);
 
-/** Escape belongs to the dialog when the focus is in it, or nowhere ('anywhere': always). */
+/**
+ * Escape belongs to the dialog when the focus is in it, or nowhere ('anywhere': always).
+ *
+ * @param {OverlayEntry} entry
+ * @param {KeyboardEvent} event
+ */
 function ownsEscape(entry, event) {
     if (entry.escape === false) return false;
     if (resolve(entry.escape) === 'anywhere') return true;
 
     const active = document.activeElement;
 
-    return !active || active === document.body || entry.element.contains(active) || entry.element.contains(event.target);
+    return !active || active === document.body || entry.element.contains(active) || entry.element.contains(/** @type {Node | null} */ (event.target));
 }
 
+/** @param {KeyboardEvent} event */
 function onKeydown(event) {
     const top = stack[stack.length - 1];
     if (!top) return;
@@ -32,7 +68,7 @@ function onKeydown(event) {
         // A character still being composed with an input method (IME: Japanese, Chinese, Korean) takes the Escape.
         if (event.isComposing || event.keyCode === 229) return;
         // A list, menu or search box inside the dialog took the Escape (and stopped it or marked it).
-        if (event.defaultPrevented || event.target.closest?.('[role="combobox"][aria-expanded="true"]')) return;
+        if (event.defaultPrevented || /** @type {Element | null} */ (event.target)?.closest?.('[role="combobox"][aria-expanded="true"]')) return;
         if (!ownsEscape(top, event)) return;
         // Handled: nothing else (a fullscreen video, the page) acts on the same Escape.
         event.preventDefault();
@@ -43,11 +79,12 @@ function onKeydown(event) {
     }
 }
 
+/** @param {OverlayEntry} entry */
 function lift(entry) {
     const below = stack[stack.length - 1];
     if (!below) return;
 
-    const z = (element) => Number.parseInt(getComputedStyle(element).zIndex, 10) || 0;
+    const z = (/** @type {Element} */ element) => Number.parseInt(getComputedStyle(element).zIndex, 10) || 0;
     const needed = z(below.element) + 1;
 
     if (z(entry.element) < needed) {
@@ -61,18 +98,23 @@ export const overlays = {
      * Registers an open dialog. element: its outermost element (the layer).
      * options.close(): closes it (Escape) · lockScroll (true) · trap: the element Tab
      * stays in (or a function returning it, null for none) · escape: 'inside' (default),
-     * 'anywhere' or false · restoreFocus (true).
+     * 'anywhere' or false · restoreFocus (true) · opener: the element the focus goes back to
+     * (default: the one focused now).
+     *
+     * @param {HTMLElement | null | undefined} element
+     * @param {OverlayOptions} [options]
      */
     open(element, options = {}) {
         if (!element || entryOf(element)) return;
 
+        /** @type {OverlayEntry} */
         const entry = {
             element,
             close: options.close ?? (() => {}),
             trap: options.trap ?? null,
             escape: options.escape ?? 'inside',
             locked: options.lockScroll !== false,
-            restore: options.restoreFocus === false ? null : rememberFocus(),
+            restore: options.restoreFocus === false ? null : rememberFocus(options.opener ?? document.activeElement),
             zIndex: null,
         };
 
@@ -81,25 +123,37 @@ export const overlays = {
         stack.push(entry);
     },
 
-    /** Unregisters it: releases the scroll lock and gives the focus back. */
+    /**
+     * Unregisters it: releases the scroll lock and gives the focus back.
+     *
+     * @param {Element | null | undefined} element
+     */
     close(element) {
+        if (!element) return;
         const entry = entryOf(element);
         if (!entry) return;
 
         stack.splice(stack.indexOf(entry), 1);
         if (entry.locked) scrollLock.unlock();
-        if (entry.zIndex !== null) element.style.zIndex = entry.zIndex;
+        if (entry.zIndex !== null) entry.element.style.zIndex = entry.zIndex;
 
-        // Only while the focus is still in the dialog (or nowhere): not when it went on to another window.
+        // Only while the focus is still in the dialog, or nowhere: not when it went on to another window.
+        // A click on the backdrop moves it to the nearest focusable element around the dialog (a
+        // <main tabindex="-1"> the dialog is rendered in): that is nowhere too.
         const active = document.activeElement;
-        if (entry.restore && (!active || active === document.body || element.contains(active))) entry.restore();
+        if (entry.restore && (!active || active === document.body || element.contains(active) || active.contains(element))) entry.restore();
     },
 
+    /** @param {Element} element */
     isOpen(element) {
         return Boolean(entryOf(element));
     },
 
-    /** The newest open dialog's element. */
+    /**
+     * The newest open dialog's element.
+     *
+     * @returns {HTMLElement | null}
+     */
     top() {
         return stack[stack.length - 1]?.element ?? null;
     },

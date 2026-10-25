@@ -1,143 +1,125 @@
-// acun:drawer: x-data="acunDrawer({ name, docked, lockScroll })" (the Blade
-// component prints it). The markup binds rendered, entered, opened and overlay;
-// slots call close(). Open state can be bound with wire:model / x-model (x-modelable="model").
+// Deprecated until 3.0: the Alpine side of acun:drawer from before 2.1. The behaviour is the drawer
+// plugin's (plugins/drawer.js), with no Alpine; these delegate to it.
+// - drawer(): Alpine.data('acunDrawer'), for markup of its own written with
+//   x-data="acunDrawer({ name, docked, lockScroll })" (x-ref="panel", x-show="rendered").
+// - drawerScope(): the Alpine scope adapters/alpine.js gives every drawer root, so content that
+//   calls close() or reads opened keeps working, and wire:model / x-model bind its model.
+//   New markup: data-acun-close.
 
-import { EVENTS, dispatch, isFor, listen } from '../core/events.js';
-import { focusable } from '../core/dom.js';
-import { keepHeaderName } from '../behavior/dialog-name.js';
-import { focusFirst } from '../behavior/focus-trap.js';
-import { overlays } from '../behavior/overlay-manager.js';
+import { plugins } from '../core/plugins.js';
+import { followState } from '../adapters/alpine.js';
 
-const DESKTOP = '(min-width: 1024px)';
-const onDesktop = () => window.matchMedia?.(DESKTOP)?.matches === true;
+/** @import { AlpineLike } from '../core/types.js' */
+/** @import { DrawerInstance } from '../plugins/drawer.js' */
 
-export function drawer({ name, docked = false, lockScroll = true } = {}) {
-    const stop = [];
-    // The component root. Alpine binds this.$el to the element whose directive runs, so a
-    // method called from a part (the X, acun:drawer.close) would see that part instead.
-    let root = null;
-    let closeTimer = null;
+let warned = false;
+const warn = () => {
+    if (!warned) console.warn('[Acun UI] x-data="acunDrawer(…)" is deprecated and goes in 3.0: use the drawer markup with data-acun-drawer (it needs no Alpine).');
+    warned = true;
+};
+
+/**
+ * @param {Element} root
+ * @returns {DrawerInstance | null}
+ */
+const instanceOf = (root) => /** @type {DrawerInstance | null} */ (/** @type {unknown} */ (plugins.get(root, 'drawer') ?? plugins.mount(root, 'drawer')));
+
+/**
+ * What drawerScope() and drawer() share: the 2.0 names, on the plugin instance of root.
+ *
+ * @param {Element} root
+ */
+function methods(root) {
+    return {
+        openPanel() {
+            instanceOf(root)?.open();
+        },
+        close() {
+            instanceOf(root)?.close();
+        },
+        // The plugin registers itself and follows the window's width.
+        register() {},
+        syncDock() {},
+        // The plugin closes the panel on a followed link itself.
+        followLink() {},
+        /** @returns {HTMLElement[]} */
+        focusableElements() {
+            return instanceOf(root)?.focusables() ?? [];
+        },
+    };
+}
+
+/** @param {Element} root */
+const state = (root) => {
+    const instance = instanceOf(root);
+    const open = instance?.isOpen ?? false;
+
+    return { rendered: open, entered: open, opened: open, model: open, overlay: instance?.overlay ?? true };
+};
+
+/**
+ * The scope of a drawer root (adapters/alpine.js).
+ *
+ * @param {HTMLElement} root
+ * @param {AlpineLike} Alpine
+ */
+export function drawerScope(root, Alpine) {
+    const scope = Alpine.reactive({ ...state(root), ...methods(root) });
+    const stopFollowing = followState(root, 'drawer', () => Object.assign(scope, state(root)));
+    // The bound property (wire:model / x-model through x-modelable): true opens, false closes.
+    const stopWatching = Alpine.watch(() => scope.model, (value) => (value ? instanceOf(root)?.open() : instanceOf(root)?.close()));
 
     return {
-        // rendered: on the page (stays true while the panel slides out) · entered: slid in ·
-        // opened: open, false as soon as it starts closing · model: the value wire:model /
-        // x-model binds · overlay: modal (a docked panel only below lg; on desktop it sits
-        // beside the content and the page stays in use).
+        scope,
+        stop() {
+            stopFollowing();
+            stopWatching();
+        },
+    };
+}
+
+/**
+ * Alpine.data('acunDrawer'): deprecated, see above.
+ *
+ * @param {{ name?: string, docked?: boolean, lockScroll?: boolean }} [options]
+ */
+export function drawer({ name, docked = false, lockScroll = true } = {}) {
+    let stop = () => {};
+
+    return {
         rendered: false,
         entered: false,
         opened: false,
         model: false,
         overlay: !docked,
 
+        /** @this {AlpineMagics & Record<string, any>} */
         init() {
-            root = this.$el;
-            stop.push(
-                listen(EVENTS.drawer.open, (event) => isFor(event, name) && this.openPanel()),
-                listen(EVENTS.drawer.toggle, (event) => isFor(event, name) && (this.opened ? this.close() : this.openPanel())),
-                listen(EVENTS.drawer.close, (event) => isFor(event, name, { all: true }) && this.close()),
-                // The dialog (the root, or the docked panel) keeps the name of a header that
-                // a nested Livewire component draws.
-                keepHeaderName(root.matches('[role="dialog"]') ? root : root.querySelector('[role="dialog"]'), root, 'drawer'),
-            );
+            warn();
+            const root = this.$el;
+            if (!root.hasAttribute('data-acun-drawer') && name) root.setAttribute('data-acun-drawer', name);
+            if (docked) root.setAttribute('data-docked', '');
+            if (!lockScroll) root.setAttribute('data-lock-scroll', 'false');
+            Object.assign(this, methods(root));
 
+            stop = followState(root, 'drawer', () => Object.assign(this, state(root)));
             this.$watch('model', (value) => (value ? this.openPanel() : this.close()));
-
-            // A docked panel changes mode with the window (a rotated tablet, a resized window):
-            // beside the content from lg up, a modal overlay below.
-            const media = docked ? window.matchMedia?.(DESKTOP) : null;
-            if (media?.addEventListener) {
-                const onChange = () => this.syncDock();
-                media.addEventListener('change', onChange);
-                stop.push(() => media.removeEventListener('change', onChange));
-            }
-            // Sent when it opens and as soon as it starts closing.
-            this.$watch('opened', (open) => {
-                dispatch(open ? EVENTS.drawer.opened : EVENTS.drawer.closed, { name }, root);
-                dispatch('drawer-state-changed', { name, open }, root);
-            });
         },
 
         destroy() {
-            stop.splice(0).forEach((stopListening) => stopListening());
-            clearTimeout(closeTimer);
-            overlays.close(root);
+            stop();
         },
 
-        openPanel() {
-            if (this.opened) return;
-
-            this.opened = this.model = true;
-            if (docked) this.overlay = !onDesktop();
-            clearTimeout(closeTimer);
-            this.rendered = true;
-            this.register();
-
-            // Slides in and takes the focus two frames later: x-show renders the panel on the
-            // next frame, and an element that is not rendered cannot take the focus. Closed by
-            // then (a quick double toggle), it stays closed. On desktop a docked panel leaves
-            // the focus on the trigger beside it.
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                this.entered = this.opened;
-                if (this.opened && this.overlay) focusFirst(this.$refs.panel);
-            }));
-        },
-
-        /** Joins the dialog stack in the current mode: a modal overlay locks the page and keeps Tab in. */
-        register() {
-            overlays.open(root, {
-                close: () => this.close(),
-                lockScroll: lockScroll && this.overlay,
-                trap: () => (this.overlay ? this.$refs.panel : null),
-                escape: this.overlay ? 'inside' : 'anywhere',
-            });
-        },
-
-        /** The window crossed lg while a docked panel is open: it changes mode in place. */
-        syncDock() {
-            const overlay = !onDesktop();
-            if (!docked || overlay === this.overlay) return;
-
-            this.overlay = overlay;
-            if (!this.opened) return;
-
-            overlays.close(root);
-            this.register();
-            if (overlay && !this.$refs.panel.contains(document.activeElement)) focusFirst(this.$refs.panel);
-        },
-
-        close() {
-            if (!this.opened) return;
-
-            this.opened = this.model = false;
-            this.entered = false;
-            overlays.close(root);
-            clearTimeout(closeTimer);
-            closeTimer = setTimeout(() => {
-                this.rendered = false;
-            }, 200);
-        },
-
-        /**
-         * A click in the panel: a followed link closes it (a menu). Not a link the page
-         * handles itself (wire:click.prevent, a cancelled click: pagination, tabs), one
-         * opened elsewhere (target, download, a modifier key) or one inside
-         * [data-drawer-keep-open]. wire:navigate links cancel the click too, but they do
-         * leave the page.
-         */
-        followLink(event) {
-            const link = event.target.closest?.('a[href]');
-            if (!link || link.closest('[data-drawer-keep-open]')) return;
-
-            const navigates = [...link.attributes].some((attribute) => attribute.name.startsWith('wire:navigate'));
-            const elsewhere = (link.target && link.target !== '_self') || link.hasAttribute('download')
-                || event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-
-            if (!elsewhere && (navigates || !event.defaultPrevented)) this.close();
-        },
-
-        /** The panel's elements that Tab reaches. */
+        openPanel() {},
+        register() {},
+        syncDock() {},
+        close() {},
+        followLink() {},
+        /** @returns {HTMLElement[]} */
         focusableElements() {
-            return focusable(this.$refs.panel);
+            return [];
         },
     };
 }
+
+/** @typedef {{ $el: HTMLElement, $watch: (property: string, callback: (value: any) => void) => void, $nextTick: (callback: () => void) => void }} AlpineMagics */

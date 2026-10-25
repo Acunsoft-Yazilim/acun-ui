@@ -47,8 +47,6 @@
         : null;
     $labelledBy = $headerKey !== null ? $headerKey.'-title' : null;
     $describedBy = $headerKey !== null && str_contains($slotHtml, 'id="'.e($headerKey).'-description"') ? $headerKey.'-description' : null;
-    // Bound open state: wire:model / x-model on the drawer (acunDrawer's model).
-    $bound = $attributes->whereStartsWith(['wire:model', 'x-model'])->isNotEmpty();
     $dialogName = fn ($label) => $labelledBy
         ? 'aria-labelledby="'.e($labelledBy).'"'.($describedBy ? ' aria-describedby="'.e($describedBy).'"' : '')
         : 'aria-label="'.e($label).'"';
@@ -63,50 +61,46 @@
         are handled in Acun Pro's panel.css (the panel layouts, acunsoft/acun-pro)
         with the CSS variables each layout declares on its own <body>
         (`layout-horizontal`/`layout-vertical`). The
-        open/closed state is exposed via the `data-filter-open` attribute and the
-        content area reads it with `:has()` - no JS store or event syncing.
+        open/closed state is the panel's `data-open` attribute and the content
+        area reads it with `:has()` - no JS store or event syncing.
 
         On mobile (below lg) the same element is a classic sliding overlay (with a
         backdrop); on desktop a fixed panel without backdrop and with a width
         transition. The form fields are rendered ONLY ONCE (so that no two form
         elements share the same `id`).
+
+        The behaviour is the drawer plugin (js/plugins/drawer.js, data-docked): the root
+        stays, the backdrop and the panel are hidden while closed and carry data-open while
+        open.
     --}}
     <div
-        x-data="acunDrawer(@js(['name' => $name, 'docked' => true]))"
-        @if ($bound) x-modelable="model" @endif
         data-acun-drawer="{{ $name }}"
+        data-docked
         {{-- lg:z-40: in the vertical layout the panel opens ON TOP of the side menu (z-30), in its position. --}}
         {{ $attributes->merge(['class' => 'relative z-50 lg:z-40']) }}
     >
         {{-- Backdrop: visible ONLY on mobile (below lg) - with `lg:hidden` it behaves on desktop as if never rendered and does not catch clicks either (so the "it closes when I click on empty space" complaint never happens on desktop). --}}
         <div
-            x-show="rendered"
-            x-cloak
-            :class="entered ? 'opacity-100' : 'opacity-0'"
-            class="ui-backdrop fixed inset-0 transition-opacity duration-200 lg:hidden"
+            data-slot="drawer-backdrop"
+            hidden
+            class="ui-backdrop fixed inset-0 opacity-0 transition-opacity duration-200 data-open:opacity-100 motion-reduce:transition-none lg:hidden"
             aria-hidden="true"
-            @if ($closableOnBackdrop) x-on:click="close()" @endif
+            @if ($closableOnBackdrop) data-acun-close @endif
         ></div>
 
         {{--
-            `x-cloak`: the static classes have no "closed" transform/width
-            (both come from `:class`), so the panel is kept hidden until Alpine
-            is ready - otherwise it would briefly appear open with `w-[85vw]`
-            while loading. Since the panel always starts closed, staying hidden
-            is visually the correct state anyway; there is no transition/jump on
-            the first paint.
+            Hidden while closed (the server renders it closed: no flash of an open panel while
+            the page loads). On desktop closing animates the width (not a slide), so the close
+            button can follow the edge in both directions; once closed the panel is hidden, so
+            the border line left at 0 width does not show. Modal (aria-modal="true") only as the
+            mobile overlay; on desktop the page beside it stays in use (the plugin sets it).
         --}}
         <div
-            x-ref="panel"
-            x-cloak
-            {{-- On desktop closing also animates the width (not a slide) - so the close button can follow the edge in both directions; once fully closed (rendered=false) the panel is invisible so the border line left at 0 width does not show. --}}
-            :class="[entered ? 'translate-x-0 lg:w-(--menu-width)' : '-translate-x-full lg:translate-x-0 lg:w-0', rendered ? '' : 'invisible']"
-            :data-filter-open="entered ? 'true' : 'false'"
-            class="filter-panel fixed inset-y-0 left-0 z-50 flex h-full w-[85vw] max-w-xs flex-col overflow-hidden bg-surface shadow-xl transition-transform duration-200 ease-out lg:max-w-none lg:border lg:border-line lg:shadow-lg lg:transition-[width]"
+            data-slot="drawer-panel"
+            hidden
+            class="filter-panel fixed inset-y-0 left-0 z-50 flex h-full w-[85vw] max-w-xs -translate-x-full flex-col overflow-hidden bg-surface shadow-xl transition-transform duration-200 ease-out data-open:translate-x-0 motion-reduce:transition-none lg:w-0 lg:max-w-none lg:translate-x-0 lg:border lg:border-line lg:shadow-lg lg:transition-[width] lg:data-open:w-(--menu-width)"
             tabindex="-1"
             role="dialog"
-            {{-- Modal only as the mobile overlay; on desktop the page beside it stays in use. --}}
-            :aria-modal="overlay.toString()"
             {!! $dialogName($title ?? __('Filters')) !!}
         >
             <div class="flex w-full flex-1 flex-col overflow-hidden lg:w-(--menu-width){{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=drawer-header],[data-slot=drawer-body],[data-slot=drawer-footer]))]:contents' : '' }}">
@@ -137,14 +131,12 @@
             `overflow-hidden` (so it can be clipped to 0 width when closed) and
             a button overflowing the edge would be clipped inside. Its position
             and visibility live in panel.css as `.filter-close-button`: bound to
-            the panel's open/closed state (`data-filter-open`), it follows the
-            panel's right edge while the width animates (x-show is not used -
-            Alpine's transition styles would override the position transition).
+            the panel's open/closed state (`.filter-panel[data-open]`), it follows the
+            panel's right edge while the width animates.
         --}}
         <button
             type="button"
-            x-cloak
-            x-on:click="close()"
+            data-acun-close
             class="menu-toggle menu-toggle-close filter-close-button fixed z-50 hidden -translate-y-1/2 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger-ink lg:flex"
             aria-label="{{ __('Close filters') }}"
             title="{{ __('Close filters') }}"
@@ -156,21 +148,29 @@
     </div>
 @else
     {{--
-        The behaviour is acunDrawer of the @acunsoft/acun-ui runtime (js/components/drawer.js);
-        Escape, Tab, the page scroll lock and the focus restore come from its overlay manager.
-        To open: AcunUI.drawer.open('{{ $name }}'), $dispatch('acun:drawer:open', { name: '{{ $name }}' })
-        (the first name open-drawer works too), or wrap the button in <acun:drawer.trigger name="{{ $name }}">.
+        The behaviour is the drawer plugin of the @acunsoft/acun-ui runtime (js/plugins/drawer.js),
+        plain JavaScript bound to this markup by data-* attributes, the same HTML the free npm
+        package documents; Escape, Tab, the page scroll lock and the focus restore come from its
+        overlay manager.
+        To open: data-acun-open="{{ $name }}" on a button, AcunUI.drawer.open('{{ $name }}'),
+        $dispatch('acun:drawer:open', { name: '{{ $name }}' }) (the first name open-drawer works too),
+        or wrap the button in <acun:drawer.trigger name="{{ $name }}">.
         To close: AcunUI.drawer.close('{{ $name }}') or acun:drawer:close (close-drawer); without a
-        name every open drawer closes. Inside the drawer: <acun:drawer.close>, or close().
-        To toggle: AcunUI.drawer.toggle('{{ $name }}') or acun:drawer:toggle (toggle-drawer).
+        name every open drawer closes. Inside the drawer: data-acun-close on a button, or
+        <acun:drawer.close> (close() of the 2.0 Alpine scope still works until 3.0).
+        To toggle: data-acun-toggle="{{ $name }}", AcunUI.drawer.toggle('{{ $name }}') or
+        acun:drawer:toggle (toggle-drawer).
         Bound to a boolean (Livewire or Alpine), it opens and closes with it and sets it
         when the user closes it (Escape, backdrop, X):
             <acun:drawer name="siparis-detay" wire:model="showDetail">…</acun:drawer>
         (wire:model.live sends the closing at once.) x-model binds Alpine data; name the
-        property other than the drawer's own state (rendered, entered, opened, model).
+        property other than the drawer's 2.0 state (rendered, entered, opened, model).
         It sends acun:drawer:opened / acun:drawer:closed ({ name }) and drawer-state-changed
         ({ name, open }) when it opens and as soon as it starts closing. Other attributes go
         on the root element.
+
+        Closed, the root is hidden; open, it and its backdrop and panel carry data-open, and the
+        transitions are CSS (data-open: classes, motion-reduce: none).
 
         Written in parts (the docked panel takes them too):
             <acun:drawer name="siparis-detay">
@@ -185,11 +185,9 @@
         as the drawer's content, its root starting with acun:drawer.header or acun:drawer.body).
     --}}
     <div
-        x-data="acunDrawer(@js(['name' => $name, 'lockScroll' => (bool) $lockScroll]))"
-        @if ($bound) x-modelable="model" @endif
         data-acun-drawer="{{ $name }}"
-        x-show="rendered"
-        x-cloak
+        @unless ($lockScroll) data-lock-scroll="false" @endunless
+        hidden
         id="{{ $name }}"
         role="dialog"
         aria-modal="true"
@@ -197,25 +195,23 @@
         {{ $attributes->merge(['class' => 'relative z-50']) }}
     >
         <div
+            data-slot="drawer-backdrop"
             @if ($backdrop)
-                :class="entered ? 'opacity-100' : 'opacity-0'"
-                class="ui-backdrop fixed inset-0 transition-opacity duration-200"
+                class="ui-backdrop fixed inset-0 opacity-0 transition-opacity duration-200 data-open:opacity-100 motion-reduce:transition-none"
             @else
                 class="fixed inset-0"
             @endif
             aria-hidden="true"
-            @if ($closableOnBackdrop) x-on:click="close()" @endif
+            @if ($closableOnBackdrop) data-acun-close @endif
         ></div>
 
         <div class="fixed {{ $floating ? 'inset-y-4' : 'inset-y-0' }} flex max-w-full {{ $side === 'left' ? 'left-0' : 'right-0' }} {{ $floating ? ($side === 'left' ? 'ml-4' : 'mr-4') : '' }}">
+            {{-- A followed link closes the panel (a menu; see the plugin for the exceptions); the click still bubbles, so popups inside close on click outside. --}}
             <div
-                x-ref="panel"
-                :class="entered ? 'translate-x-0' : '{{ $side === 'left' ? '-translate-x-full' : 'translate-x-full' }}'"
+                data-slot="drawer-panel"
                 {{-- Written in parts, a nested Livewire component that starts with a part (body and footer after the header) is layout-neutral, so its parts are the panel's rows. --}}
-                class="flex h-full w-[85vw] {{ $widthClass }} flex-col bg-surface shadow-xl outline-none transition-transform duration-200 ease-out {{ $floating ? 'rounded-sm' : '' }}{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=drawer-header],[data-slot=drawer-body],[data-slot=drawer-footer]))]:contents' : '' }}"
+                class="flex h-full w-[85vw] {{ $widthClass }} flex-col bg-surface shadow-xl outline-none {{ $side === 'left' ? '-translate-x-full' : 'translate-x-full' }} transition-transform duration-200 ease-out data-open:translate-x-0 motion-reduce:transition-none {{ $floating ? 'rounded-sm' : '' }}{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=drawer-header],[data-slot=drawer-body],[data-slot=drawer-footer]))]:contents' : '' }}"
                 tabindex="-1"
-                {{-- A followed link closes the panel (a menu; see followLink() for the exceptions); the click still bubbles, so popups inside close on click outside. --}}
-                x-on:click="followLink($event)"
             >
                 @if (isset($header) && ! $headerPart)
                     <div class="px-5 pt-4 border-b border-line">
@@ -224,7 +220,7 @@
                 @elseif ($title && ! $headerPart)
                     <div class="flex items-center justify-between px-5 py-4 border-b border-line">
                         <h3 class="text-base font-semibold text-ink">{{ $title }}</h3>
-                        <button type="button" x-on:click="close()" aria-label="{{ __('Close') }}" title="{{ __('Close') }}" class="cursor-pointer rounded-sm text-muted hover:text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+                        <button type="button" data-acun-close aria-label="{{ __('Close') }}" title="{{ __('Close') }}" class="cursor-pointer rounded-sm text-muted hover:text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
                             <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>

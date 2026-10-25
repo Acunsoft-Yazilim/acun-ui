@@ -2,10 +2,18 @@
 // each is registered once, when Livewire is there: right away when its script has
 // already run (it runs before deferred and module scripts), otherwise on livewire:init.
 
+/** @import { AcunWindow, LivewireLike } from './types.js' */
+
+/** @type {LivewireLike | null} */
 let livewire = null;
+/** @type {((livewire: LivewireLike) => void)[]} */
 const waiting = [];
 
-/** Runs callback(Livewire) once Livewire is on the page. */
+/**
+ * Runs callback(Livewire) once Livewire is on the page.
+ *
+ * @param {(livewire: LivewireLike) => void} callback
+ */
 export function onLivewire(callback) {
     if (livewire) {
         callback(livewire);
@@ -14,12 +22,21 @@ export function onLivewire(callback) {
     }
 }
 
-/** Livewire.hook(name, callback), registered once. */
+/**
+ * Livewire.hook(name, callback), registered once.
+ *
+ * @param {string} name
+ * @param {(...args: any[]) => void} callback
+ */
 export function hook(name, callback) {
     onLivewire((instance) => instance.hook(name, callback));
 }
 
-/** After a wire:navigate page change. */
+/**
+ * After a wire:navigate page change.
+ *
+ * @param {() => void} callback
+ */
 export function onNavigated(callback) {
     document.addEventListener('livewire:navigated', callback);
 }
@@ -27,10 +44,11 @@ export function onNavigated(callback) {
 /** Called once by the runtime. */
 export function connectLivewire() {
     const connect = () => {
-        if (livewire || typeof window.Livewire?.hook !== 'function') return;
+        const instance = /** @type {AcunWindow} */ (window).Livewire;
+        if (livewire || typeof instance?.hook !== 'function') return;
 
-        livewire = window.Livewire;
-        waiting.splice(0).forEach((callback) => callback(livewire));
+        livewire = instance;
+        waiting.splice(0).forEach((callback) => callback(instance));
     };
 
     connect();

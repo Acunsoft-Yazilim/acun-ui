@@ -20,8 +20,8 @@ const html = render({
 });
 
 const byId = (id) => document.getElementById(id);
-const drawerOf = (name) => Alpine.$data(document.querySelector(`[data-acun-drawer="${name}"]`));
-const modalOf = (name) => Alpine.$data(document.querySelector(`[data-acun-modal="${name}"]`));
+const drawerOf = (name) => AcunUI.plugins.get(document.querySelector(`[data-acun-drawer="${name}"]`), 'drawer');
+const modalOf = (name) => AcunUI.plugins.get(document.querySelector(`[data-acun-modal="${name}"]`), 'modal');
 const locked = () => document.documentElement.classList.contains('scroll-locked');
 const releaseVersion = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
 
@@ -39,8 +39,9 @@ test('the runtime sets up window.AcunUI with its public API', () => {
     assert.equal(window.AcunUI, AcunUI);
     assert.equal(AcunUI.version, releaseVersion);
     assert.equal(AcunUI.initialized, true);
-    assert.deepEqual(Object.keys(AcunUI).sort(), ['components', 'drawer', 'events', 'focus', 'initialized', 'isDark', 'load', 'modal', 'overlays', 'scrollLock', 'tokenColor', 'version']);
+    assert.deepEqual(Object.keys(AcunUI).sort(), ['components', 'destroy', 'drawer', 'events', 'focus', 'init', 'initialized', 'isDark', 'load', 'modal', 'observe', 'overlays', 'plugins', 'scrollLock', 'tokenColor', 'version']);
     assert.deepEqual(Object.keys(AcunUI.components).sort(), ['define', 'isLoaded', 'load']);
+    assert.deepEqual(AcunUI.plugins.names, ['modal', 'drawer']);
     assert.deepEqual(Object.keys(AcunUI.drawer).sort(), ['close', 'open', 'toggle']);
     assert.deepEqual(Object.keys(AcunUI.modal).sort(), ['close', 'open']);
     // Nothing else of its own on window.
@@ -69,6 +70,8 @@ test('a second copy of the runtime stays idle and registers no listener', async 
         assert.equal(copy.components, AcunUI.components);
         assert.equal(copy.focusFirst, AcunUI.focus.first);
         assert.equal(copy.focusable, AcunUI.focus.focusable);
+        assert.equal(copy.plugins, AcunUI.plugins);
+        assert.equal(copy.init, AcunUI.init);
     } finally {
         restore.forEach((undo) => undo());
     }
@@ -90,8 +93,8 @@ test('with two copies on the page one Escape still closes one dialog', async () 
     press('Escape');
     await settle();
 
-    assert.equal(modalOf('bir').open, false);
-    assert.equal(drawerOf('sag').opened, true, 'The drawer under it stays open.');
+    assert.equal(modalOf('bir').isOpen, false);
+    assert.equal(drawerOf('sag').isOpen, true, 'The drawer under it stays open.');
 });
 
 // --- scroll lock -----------------------------------------------------------------------
@@ -131,6 +134,21 @@ test('the first name window.acunScrollLock still works, with a warning', () => {
 
 // --- nested dialogs ----------------------------------------------------------------------
 
+test('a click on the backdrop gives the focus back even when it moved to a focusable element around the dialog', async () => {
+    await mount(`<div id="icerik" tabindex="-1">${html.modals}</div>`);
+    byId('opener').focus();
+    AcunUI.modal.open('bir');
+    await settle();
+    assert.ok(modalOf('bir').panel.contains(document.activeElement));
+
+    // The browser moves the focus of a click on the backdrop to the nearest focusable ancestor.
+    byId('icerik').focus();
+    document.querySelector('[data-acun-modal="bir"] [data-slot="modal-backdrop"]').click();
+    await settle();
+    assert.equal(modalOf('bir').isOpen, false);
+    assert.equal(document.activeElement, byId('opener'));
+});
+
 test('a modal over a drawer: lifted above it, the lock is held until both close, the focus goes back step by step', async () => {
     // The z-index of the components' Tailwind class (no panel.css in jsdom).
     await mount('<style>.z-50 { z-index: 50; }</style>' + html.drawers + html.modals);
@@ -159,7 +177,7 @@ test('a modal over a drawer: lifted above it, the lock is held until both close,
 
     press('Escape');
     await settle();
-    assert.equal(drawerOf('sag').opened, false);
+    assert.equal(drawerOf('sag').isOpen, false);
     assert.equal(locked(), false);
     assert.equal(document.activeElement, byId('outside'));
 });
@@ -172,7 +190,7 @@ test('Tab stays in the newest dialog', async () => {
     AcunUI.modal.open('bir');
     await settle();
 
-    const inModal = AcunUI.focus.focusable(modalOf('bir').$refs.panel);
+    const inModal = AcunUI.focus.focusable(modalOf('bir').panel);
     inModal[inModal.length - 1].focus();
     assert.ok(press('Tab').defaultPrevented);
     assert.equal(document.activeElement, inModal[0]);
@@ -215,19 +233,19 @@ test('drawers open and close by the API, the new events and the first names', as
 
     AcunUI.drawer.open('sag');
     await settle();
-    assert.equal(drawerOf('sag').opened, true);
-    assert.equal(drawerOf('sol').opened, false, 'Only the named one.');
+    assert.equal(drawerOf('sag').isOpen, true);
+    assert.equal(drawerOf('sol').isOpen, false, 'Only the named one.');
 
     AcunUI.drawer.toggle('sag');
     await settle();
-    assert.equal(drawerOf('sag').opened, false);
+    assert.equal(drawerOf('sag').isOpen, false);
 
     dispatch('acun:drawer:open', { name: 'sol' });
     await settle();
-    assert.equal(drawerOf('sol').opened, true);
+    assert.equal(drawerOf('sol').isOpen, true);
     dispatch('close-drawer', { name: 'sol' });
     await settle();
-    assert.equal(drawerOf('sol').opened, false);
+    assert.equal(drawerOf('sol').isOpen, false);
 
     dispatch('open-drawer', { name: 'sag' });
     dispatch('acun:drawer:toggle', { name: 'sol' });
@@ -236,8 +254,8 @@ test('drawers open and close by the API, the new events and the first names', as
     await settle();
     stop();
 
-    assert.equal(drawerOf('sag').opened, false, 'close() without a name closes every drawer.');
-    assert.equal(drawerOf('sol').opened, false);
+    assert.equal(drawerOf('sag').isOpen, false, 'close() without a name closes every drawer.');
+    assert.equal(drawerOf('sol').isOpen, false);
     assert.deepEqual(events.slice(0, 4), [
         ['acun:drawer:opened', { name: 'sag' }],
         ['drawer-state-changed', { name: 'sag', open: true }],
@@ -254,19 +272,19 @@ test('modals open and close by the API, the new events and the first names; one 
 
     AcunUI.modal.open('bir');
     await settle();
-    assert.equal(modalOf('bir').open, true);
+    assert.equal(modalOf('bir').isOpen, true);
 
     // Opened from the page (a shortcut, a server event while nothing in the modal has the focus).
     document.activeElement.blur();
     dispatch('open-modal', { name: 'iki' });
     await settle();
-    assert.equal(modalOf('iki').open, true);
-    assert.equal(modalOf('bir').open, false, 'Opening a modal closes the other one.');
+    assert.equal(modalOf('iki').isOpen, true);
+    assert.equal(modalOf('bir').isOpen, false, 'Opening a modal closes the other one.');
     assert.equal(AcunUI.scrollLock.count, 1);
 
     dispatch('acun:modal:close', { name: 'iki' });
     await settle();
-    assert.equal(modalOf('iki').open, false);
+    assert.equal(modalOf('iki').isOpen, false);
 
     dispatch('acun:modal:open', { name: 'bir' });
     await settle();
@@ -274,7 +292,7 @@ test('modals open and close by the API, the new events and the first names; one 
     await settle();
     stop();
 
-    assert.equal(modalOf('bir').open, false, 'close-modal without a name closes every modal.');
+    assert.equal(modalOf('bir').isOpen, false, 'close-modal without a name closes every modal.');
     assert.equal(AcunUI.scrollLock.count, 0);
     assert.deepEqual(events.slice(0, 5), [
         ['acun:modal:opened', { name: 'bir' }],
@@ -286,35 +304,37 @@ test('modals open and close by the API, the new events and the first names; one 
 });
 
 test('a modal opened from inside another goes on top of it; a replaced one tells the server', async () => {
-    // $wire of a Livewire component (no server here): records the close-action calls.
+    // The $wire of the Livewire component around the modals (no server here): records the close-action calls.
     const calls = [];
-    Alpine.magic('wire', () => ({ kapat: () => calls.push('kapat') }));
-    await mount(render({ stacked: `
+    const find = window.Livewire.find;
+    window.Livewire.find = (id) => (id === 'sayfa' ? { kapat: () => calls.push('kapat') } : find(id));
+    await mount(`<div wire:id="sayfa">${render({ stacked: `
         <acun:modal name="duzenle" title="Düzenle" close-action="kapat"><input id="duzenle-alan"><button id="sil">Sil</button></acun:modal>
         <acun:modal name="onay" title="Silinsin mi?"><button id="evet">Evet</button></acun:modal>
-        <acun:modal name="baska" title="Başka"><input id="baska-alan"></acun:modal>` }).stacked);
+        <acun:modal name="baska" title="Başka"><input id="baska-alan"></acun:modal>` }).stacked}</div>`);
 
     AcunUI.modal.open('duzenle');
     await settle();
     byId('sil').focus();
     AcunUI.modal.open('onay');
     await settle();
-    assert.deepEqual([modalOf('duzenle').open, modalOf('onay').open], [true, true], 'The confirmation stacks on the edit form.');
+    assert.deepEqual([modalOf('duzenle').isOpen, modalOf('onay').isOpen], [true, true], 'The confirmation stacks on the edit form.');
     assert.equal(AcunUI.overlays.count, 2);
 
     press('Escape');
     await settle();
-    assert.deepEqual([modalOf('duzenle').open, modalOf('onay').open], [true, false], 'Escape closes only the top one.');
+    assert.deepEqual([modalOf('duzenle').isOpen, modalOf('onay').isOpen], [true, false], 'Escape closes only the top one.');
 
     // Opened from outside: the edit form is replaced and its close-action runs.
     assert.deepEqual(calls, [], 'Escape on the confirmation does not close the edit form.');
     document.activeElement.blur();
     AcunUI.modal.open('baska');
     await settle();
-    assert.deepEqual([modalOf('duzenle').open, modalOf('baska').open], [false, true]);
+    assert.deepEqual([modalOf('duzenle').isOpen, modalOf('baska').isOpen], [false, true]);
     assert.deepEqual(calls, ['kapat']);
     AcunUI.modal.close();
     await settle();
+    window.Livewire.find = find;
 });
 
 test('request-close-event: Escape and the backdrop ask instead of closing', async () => {
@@ -328,7 +348,7 @@ test('request-close-event: Escape and the backdrop ask instead of closing', asyn
     await settle();
     stop();
 
-    assert.equal(modalOf('sorulu').open, true);
+    assert.equal(modalOf('sorulu').isOpen, true);
     assert.equal(events.length, 2);
 });
 
@@ -456,7 +476,7 @@ test('several drawers and modals on one page keep their own state', async () => 
     AcunUI.modal.open('iki');
     await settle();
 
-    assert.deepEqual([drawerOf('sag').opened, drawerOf('sol').opened, modalOf('bir').open, modalOf('iki').open], [false, true, false, true]);
+    assert.deepEqual([drawerOf('sag').isOpen, drawerOf('sol').isOpen, modalOf('bir').isOpen, modalOf('iki').isOpen], [false, true, false, true]);
     assert.equal(AcunUI.overlays.count, 2);
 });
 
@@ -466,7 +486,7 @@ test('a Livewire re-render: new content is used, a removed open drawer releases 
     await settle();
 
     // Morphed content inside the open panel: Tab uses the new elements.
-    const panel = drawerOf('sag').$refs.panel;
+    const panel = drawerOf('sag').panel;
     panel.querySelector('#sag-alan').insertAdjacentHTML('afterend', '<button id="yeni">Yeni</button>');
     await settle();
     byId('sag-modal').focus();
@@ -474,10 +494,11 @@ test('a Livewire re-render: new content is used, a removed open drawer releases 
     byId('yeni').focus();
     assert.equal(press('Tab').defaultPrevented, false, 'The new button is in the order.');
 
-    // The component re-rendered without the drawer: Alpine destroys it.
+    // The component re-rendered without the drawer: the observer stops it (Alpine destroys its scope).
     const root = document.querySelector('[data-acun-drawer="sag"]');
-    Alpine.destroyTree(root);
     root.remove();
+    await settle();
+    assert.equal(AcunUI.plugins.isMounted(root), false);
     assert.equal(AcunUI.overlays.count, 0);
     assert.equal(locked(), false);
 
@@ -486,7 +507,7 @@ test('a Livewire re-render: new content is used, a removed open drawer releases 
     await settle();
     AcunUI.drawer.open('sag');
     await settle();
-    assert.equal(drawerOf('sag').opened, true);
+    assert.equal(drawerOf('sag').isOpen, true);
     assert.equal(AcunUI.scrollLock.count, 1);
 });
 
@@ -571,17 +592,54 @@ test('a modal bound with x-model opens with its property and sets it back when c
     });
     await mount(bound.modal);
     const page = Alpine.$data(document.getElementById('page'));
-    const modalData = Alpine.$data(document.querySelector('[data-acun-modal="bagli"]'));
+    const modalData = modalOf('bagli');
 
     page.showForm = true;
     await settle();
-    assert.equal(modalData.open, true);
+    assert.equal(modalData.isOpen, true);
     assert.equal(locked(), true);
 
     // The user closes it (Escape): the property follows.
     press('Escape');
     await settle();
-    assert.equal(modalData.open, false);
+    assert.equal(modalData.isOpen, false);
     assert.equal(page.showForm, false);
     assert.equal(locked(), false);
+});
+
+test('deprecated: markup of its own written for x-data="acunModal(…)" still opens and closes, with one warning', async () => {
+    const warnings = [];
+    const { warn } = console;
+    console.warn = (message) => warnings.push(String(message));
+
+    try {
+        await mount(`
+            <button id="eski-ac" x-data x-on:click="$dispatch('open-modal', { name: 'eski' })">Aç</button>
+            <div x-data="acunModal({ name: 'eski' })" class="fixed inset-0">
+                <div x-show="open" x-ref="panel" role="dialog" aria-label="Eski">
+                    <input id="eski-alan"><button id="eski-kapat" x-on:click="close()">Kapat</button>
+                </div>
+            </div>`);
+        const root = document.querySelector('[x-data^="acunModal"]');
+
+        byId('eski-ac').focus();
+        byId('eski-ac').click();
+        await settle();
+        const modal = AcunUI.plugins.get(root, 'modal');
+        assert.equal(modal.isOpen, true);
+        assert.equal(Alpine.$data(root).open, true);
+        assert.notEqual(root.querySelector('[role="dialog"]').style.display, 'none', 'Its own x-show shows the panel.');
+        assert.equal(document.activeElement, byId('eski-alan'));
+        assert.equal(root.hidden, false, 'The 2.0 markup shows and hides itself: the root is not hidden.');
+
+        byId('eski-kapat').click();
+        await settle();
+        assert.equal(modal.isOpen, false);
+        assert.equal(document.activeElement, byId('eski-ac'));
+        assert.equal(locked(), false);
+    } finally {
+        console.warn = warn;
+    }
+
+    assert.equal(warnings.filter((message) => message.includes('acunModal')).length, 1);
 });

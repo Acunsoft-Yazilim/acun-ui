@@ -205,7 +205,7 @@ final class ThemeSwitcherTest extends TestCase
         $drawer = Blade::render('<acun:theme-switcher as="drawer" />');
         self::assertStringContainsString('$store.customizer?.reset()', $drawer, 'The stores go back to the defaults and the scope\'s key is removed.');
         self::assertMatchesRegularExpression('~<button[^>]*x-on:click="reset\(\)"[^>]*>\s*<svg[^>]*>.*?</svg>\s*Varsayılana döndür~s', $drawer);
-        self::assertStringContainsString('x-on:click="close()"', $drawer, 'Done.');
+        self::assertMatchesRegularExpression('~<button[^>]*data-acun-close=""[^>]*>\s*Tamam~', $drawer, 'Done closes the drawer it is in.');
 
         self::assertStringNotContainsString('Varsayılana döndür', Blade::render('<acun:theme-switcher as="drawer" :reset="false" />'));
 

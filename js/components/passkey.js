@@ -1,3 +1,5 @@
+// @ts-nocheck: not type-checked yet; typed progressively (ARCHITECTURE.md, ADR-008).
+//
 // acun:passkey-button: x-data="acunPasskey({ mode, optionsUrl, actionUrl, optionsMethod,
 // actionMethod, optionsGet, nameField })" (the Blade component prints it).
 //

@@ -265,10 +265,10 @@
             // in a couple of frames after it opens (later while the page is still loading), so sliding
             // stays off until its panel is in place.
             this.$el.dataset.instant = ''
-            const panel = this.$el.querySelector('[data-acun-drawer] [x-ref=panel]')
+            const panel = this.$el.querySelector('[data-acun-drawer] [data-slot=drawer-panel]')
             const settle = () => { watch.disconnect(); requestAnimationFrame(() => delete this.$el.dataset.instant) }
-            const watch = new MutationObserver(() => panel.classList.contains('translate-x-0') && settle())
-            watch.observe(panel, { attributes: true, attributeFilter: ['class'] })
+            const watch = new MutationObserver(() => panel.hasAttribute('data-open') && settle())
+            watch.observe(panel, { attributes: true, attributeFilter: ['data-open'] })
             setTimeout(settle, 3000)
             this.$nextTick(() => this.$dispatch('acun:drawer:open', { name: @js($name) }))
         },
@@ -324,7 +324,7 @@
                     <acun:icon name="arrow-path" size="4" /> {{ __('Reset to defaults') }}
                 </acun:button>
             @endif
-            <acun:button size="sm" x-on:click="close()">{{ __('Done') }}</acun:button>
+            <acun:button size="sm" data-acun-close="">{{ __('Done') }}</acun:button>
         </acun:slot:footer>
     </acun:drawer>
 @else

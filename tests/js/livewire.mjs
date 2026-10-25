@@ -65,7 +65,9 @@ export function morphComponent(el, html) {
 
     Alpine.morph(el, to, {
         key: (node) => (node.nodeType !== 1 ? undefined : node.hasAttribute('wire:id') ? node.getAttribute('wire:id') : node.hasAttribute('wire:key') ? node.getAttribute('wire:key') : node.id),
-        updating: (from, toEl, childrenOnly, skip) => {
+        updating: (from, toEl, childrenOnly, skip, skipChildren) => {
+            // As Livewire's getMorphConfig: its morph.updating hook first (the Acun UI plugins keep their state attributes there).
+            if (from.nodeType === 1) window.Livewire.trigger('morph.updating', { el: from, toEl, component: { el, id }, skip, childrenOnly, skipChildren });
             if (isComponentRoot(from) && from.getAttribute('wire:id') !== id) skip();
         },
         removing: (node, skip) => {

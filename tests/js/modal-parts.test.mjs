@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Alpine, document, mount, settle, window } from './browser.mjs';
+import { AcunUI, document, mount, settle, window } from './browser.mjs';
 import { chrome, inChrome } from './chrome.mjs';
 import { component, morphComponent, renderLivewire } from './livewire.mjs';
 import { kitCss } from './tailwind.mjs';
@@ -74,9 +74,12 @@ test('Chrome lays out a nested component\'s parts as the panel\'s rows, also aft
         // The kit's classes as the application's Tailwind builds them (its @source of the views).
         css: await kitCss(['modal.blade.php', 'modal/header.blade.php', 'modal/body.blade.php', 'modal/footer.blade.php'].map((file) => `packages/acun-ui/resources/views/components/ui/${file}`), '@import "tailwindcss";'),
         body: [page.first, updated, classic.first].map((html) => `<section>${html}</section>`).join(''),
+        // Shown as when open (the server renders the dialog closed: hidden).
         measure: `
+            document.querySelectorAll('[hidden]').forEach((element) => element.removeAttribute('hidden'));
+            document.querySelectorAll('[data-acun-modal], [data-slot="modal-backdrop"], [data-slot="modal-panel"]').forEach((element) => element.setAttribute('data-open', ''));
             return [...document.querySelectorAll('section')].map((section) => {
-                const panel = section.querySelector('[x-ref="panel"]');
+                const panel = section.querySelector('[data-slot="modal-panel"]');
                 const root = [...panel.querySelectorAll('*')].find((element) => element.hasAttribute('wire:id'));
                 const left = (element) => element ? Math.round(element.getBoundingClientRect().left - panel.getBoundingClientRect().left) : null;
                 return {
@@ -101,21 +104,21 @@ test('the parts still close the modal after the nested component\'s own update',
     await mount(page.first);
     morphComponent(component('musteri-formu'), page.updates['musteri-formu']);
     await settle();
-    const modal = document.querySelector('[data-acun-modal="musteri-ekle"]');
+    const modal = AcunUI.plugins.get(document.querySelector('[data-acun-modal="musteri-ekle"]'), 'modal');
 
-    Alpine.$data(modal).show();
+    modal.open();
     await settle();
-    assert.equal(Alpine.$data(modal).open, true);
+    assert.equal(modal.isOpen, true);
 
     document.querySelector('[data-slot="modal-close"] button').click();
     await settle();
-    assert.equal(Alpine.$data(modal).open, false, 'modal.close calls the modal close() from its Alpine scope.');
+    assert.equal(modal.isOpen, false, 'modal.close (data-acun-close-now) closes the modal the click is in.');
 
-    Alpine.$data(modal).show();
+    modal.open();
     await settle();
     document.querySelector('[data-slot="modal-header"] button[aria-label]').click();
     await settle();
-    assert.equal(Alpine.$data(modal).open, false, 'The header X closes it too.');
+    assert.equal(modal.isOpen, false, 'The header X (data-acun-close) closes it too.');
 });
 
 test('a header that ends up outside a modal says so instead of throwing', async () => {
@@ -142,6 +145,35 @@ test('a header that ends up outside a modal says so instead of throwing', async 
         window.removeEventListener('error', onError);
     }
 
-    assert.deepEqual(uncaught, [], 'no ReferenceError (requestClose / close is not defined)');
-    assert.deepEqual(errors, ['acun:modal.header is not inside an acun:modal.', 'acun:modal.close is not inside an acun:modal.']);
+    assert.deepEqual(uncaught, [], 'no ReferenceError');
+    assert.equal(errors.length, 2);
+    assert.match(errors[0], /^\[Acun UI\] data-acun-close is not inside a component it can close\./);
+    assert.match(errors[1], /^\[Acun UI\] data-acun-close-now is not inside a component it can close\./);
+});
+
+test('a page update while the modal is open keeps it open (Livewire renders it closed on every update)', async () => {
+    await mount(page.first);
+    const root = document.querySelector('[data-acun-modal="musteri-ekle"]');
+    const modal = AcunUI.plugins.get(root, 'modal');
+
+    modal.open();
+    await settle();
+    assert.match(page.updates['musteri-sayfasi'], /data-acun-modal="musteri-ekle"\s+hidden/, 'The server renders it closed.');
+
+    for (const update of [page.updates['musteri-sayfasi'], page.updates['musteri-formu']]) {
+        morphComponent(component(update === page.updates['musteri-formu'] ? 'musteri-formu' : 'musteri-sayfasi'), update);
+        await settle();
+
+        assert.equal(AcunUI.plugins.get(root, 'modal'), modal, 'The same element and instance.');
+        assert.equal(modal.isOpen, true);
+        assert.equal(root.hidden, false, 'The morph kept the browser\'s state attributes.');
+        assert.ok(root.hasAttribute('data-open'));
+        assert.ok(root.querySelector('[data-slot="modal-panel"]').hasAttribute('data-open'));
+        assert.equal(AcunUI.scrollLock.count, 1);
+    }
+
+    modal.close();
+    await settle();
+    assert.equal(root.hidden, true);
+    assert.equal(AcunUI.scrollLock.count, 0);
 });

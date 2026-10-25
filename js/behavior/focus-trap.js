@@ -2,11 +2,16 @@
 
 import { focusable, inOwnFocusLayer, isVisible } from '../core/dom.js';
 
-/** Focuses a shown [autofocus], else the first focusable element, else the container itself. */
+/**
+ * Focuses a shown [autofocus], else the first focusable element, else the container itself.
+ *
+ * @param {HTMLElement} container
+ * @returns {HTMLElement}
+ */
 export function focusFirst(container) {
     // An autofocus inside a hidden part (a closed tab, x-show) cannot take the focus.
     const autofocus = focusable(container).find((element) => element.hasAttribute('autofocus'))
-        ?? [...container.querySelectorAll('[autofocus]')].find((element) => isVisible(element) && !element.closest('[inert]'));
+        ?? [.../** @type {NodeListOf<HTMLElement>} */ (container.querySelectorAll('[autofocus]'))].find((element) => isVisible(element) && !element.closest('[inert]'));
     const target = autofocus ?? focusable(container)[0] ?? container;
     target.focus({ preventScroll: true });
 
@@ -16,9 +21,13 @@ export function focusFirst(container) {
 // A <dialog> shown with showModal() inside the container (the delete question of a form's action
 // bar): the browser makes everything else inert, so Tab goes round in it. A browser that cannot
 // tell a modal one (no :modal) takes any open one.
+/**
+ * @param {HTMLElement} container
+ * @returns {HTMLDialogElement | null}
+ */
 function modalDialogIn(container) {
     const canTell = typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('selector(:modal)');
-    const open = [...container.querySelectorAll('dialog[open]')].filter((dialog) => !canTell || dialog.matches(':modal'));
+    const open = [.../** @type {NodeListOf<HTMLDialogElement>} */ (container.querySelectorAll('dialog[open]'))].filter((dialog) => !canTell || dialog.matches(':modal'));
 
     return open.at(-1) ?? null;
 }
@@ -30,6 +39,10 @@ function modalDialogIn(container) {
  * over the dialog with its own focus handling) is left alone; below: the dialogs under
  * this one, where a focus counts as out. A modal <dialog> open inside container takes
  * its place.
+ *
+ * @param {KeyboardEvent} event
+ * @param {HTMLElement} container
+ * @param {Element[]} [below]
  */
 export function trapTab(event, container, below = []) {
     container = modalDialogIn(container) ?? container;

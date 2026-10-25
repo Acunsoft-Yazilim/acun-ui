@@ -11,8 +11,8 @@ use Illuminate\Support\ViewErrorBag;
 
 /**
  * The markup side of acun:drawer's binding and options; the behaviour (focus,
- * scroll lock, Escape, backdrop, events, the binding itself) is tested in the
- * browser by tests/js/drawer.test.mjs.
+ * scroll lock, Escape, backdrop, events, the binding itself) is the drawer plugin's
+ * (js/plugins/drawer.js), tested in the browser by tests/js/drawer.test.mjs.
  */
 final class DrawerBindingTest extends TestCase
 {
@@ -28,17 +28,21 @@ final class DrawerBindingTest extends TestCase
         foreach (['', ' docked'] as $variant) {
             $root = $this->root(Blade::render('<acun:drawer name="detay"'.$variant.' title="Detay" wire:model.live="showDetail">İçerik</acun:drawer>'));
 
+            // The root carries the binding; the Alpine adapter gives it the scope whose model it binds
+            // (x-modelable, in the browser: tests/js/drawer.test.mjs). No Alpine markup of its own.
             self::assertSame('showDetail', $root->getAttribute('wire:model.live'), $variant);
-            self::assertSame('model', $root->getAttribute('x-modelable'), $variant);
-            self::assertStringStartsWith('acunDrawer(', $root->getAttribute('x-data'), $variant);
+            self::assertFalse($root->hasAttribute('x-data'), $variant);
+            self::assertFalse($root->hasAttribute('x-modelable'), $variant);
             self::assertSame('detay', $root->getAttribute('data-acun-drawer'), $variant);
+            self::assertSame($variant !== '', $root->hasAttribute('data-docked'), $variant);
         }
     }
 
-    public function test_x_model_binds_it_too_and_an_unbound_drawer_is_not_modelable(): void
+    public function test_x_model_binds_it_too_and_lock_scroll_is_an_attribute(): void
     {
-        self::assertSame('model', $this->root(Blade::render('<acun:drawer name="d" x-model="detailOpen">İçerik</acun:drawer>'))->getAttribute('x-modelable'));
-        self::assertFalse($this->root(Blade::render('<acun:drawer name="d">İçerik</acun:drawer>'))->hasAttribute('x-modelable'));
+        self::assertSame('detailOpen', $this->root(Blade::render('<acun:drawer name="d" x-model="detailOpen">İçerik</acun:drawer>'))->getAttribute('x-model'));
+        self::assertSame('false', $this->root(Blade::render('<acun:drawer name="d" :lock-scroll="false">İçerik</acun:drawer>'))->getAttribute('data-lock-scroll'));
+        self::assertFalse($this->root(Blade::render('<acun:drawer name="d">İçerik</acun:drawer>'))->hasAttribute('data-lock-scroll'));
     }
 
     public function test_other_attributes_go_on_the_root(): void
@@ -59,27 +63,31 @@ final class DrawerBindingTest extends TestCase
             $closable = $this->backdrop(Blade::render('<acun:drawer name="d"'.$variant.'>İçerik</acun:drawer>'));
             $kept = $this->backdrop(Blade::render('<acun:drawer name="d"'.$variant.' :closable-on-backdrop="false">İçerik</acun:drawer>'));
 
-            self::assertSame('close()', $closable->getAttribute('x-on:click'), $variant);
-            self::assertFalse($kept->hasAttribute('x-on:click'), $variant);
+            self::assertTrue($closable->hasAttribute('data-acun-close'), $variant);
+            self::assertFalse($kept->hasAttribute('data-acun-close'), $variant);
+            self::assertFalse($closable->hasAttribute('x-on:click'), $variant);
         }
     }
 
     public function test_clicks_in_the_panel_bubble_and_a_followed_link_closes_it(): void
     {
-        $panel = (new DOMXPath($this->document(Blade::render('<acun:drawer name="d">İçerik</acun:drawer>'))))->query('//*[@x-ref="panel"]')->item(0);
+        $panel = (new DOMXPath($this->document(Blade::render('<acun:drawer name="d">İçerik</acun:drawer>'))))->query('//*[@data-slot="drawer-panel"]')->item(0);
 
-        // No .stop: a dropdown inside the panel still hears clicks outside it.
+        // No .stop: a dropdown inside the panel still hears clicks outside it. The plugin closes the
+        // panel on a followed link (not one the page handles itself, opens elsewhere or marks
+        // keep-open: tests/js/drawer.test.mjs).
         self::assertFalse($panel->hasAttribute('x-on:click.stop'));
-        // followLink(): not a link the page handles itself, opens elsewhere or marks keep-open (tests/js/drawer.test.mjs).
-        self::assertSame('followLink($event)', $panel->getAttribute('x-on:click'));
+        self::assertFalse($panel->hasAttribute('x-on:click'));
     }
 
     public function test_the_docked_panel_is_modal_only_as_the_mobile_overlay(): void
     {
-        $panel = (new DOMXPath($this->document(Blade::render('<acun:drawer name="f" docked title="Filtreler">İçerik</acun:drawer>'))))->query('//*[@x-ref="panel"]')->item(0);
+        $panel = (new DOMXPath($this->document(Blade::render('<acun:drawer name="f" docked title="Filtreler">İçerik</acun:drawer>'))))->query('//*[@data-slot="drawer-panel"]')->item(0);
 
+        // The plugin sets aria-modal as the window crosses lg (true only as the mobile overlay).
+        self::assertSame('dialog', $panel->getAttribute('role'));
         self::assertFalse($panel->hasAttribute('aria-modal'));
-        self::assertSame('overlay.toString()', $panel->getAttribute(':aria-modal'));
+        self::assertTrue($panel->hasAttribute('hidden'), 'Closed on the server: no flash of an open panel.');
     }
 
     private function root(string $html): DOMElement

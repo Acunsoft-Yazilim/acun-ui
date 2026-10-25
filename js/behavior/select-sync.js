@@ -2,6 +2,8 @@
 
 import { readConfig } from '../core/config.js';
 
+/** @import { LivewireLike } from '../core/types.js' */
+
 /**
  * Known browser/morph limitation: while a <select> is already in the DOM,
  * morph updates an <option>'s `selected` ATTRIBUTE but the browser does not
@@ -14,9 +16,11 @@ import { readConfig } from '../core/config.js';
  * user picked), from that component's current client state (ephemeral, which
  * the response has just updated). Nested paths ("editing.type") are supported;
  * a box whose value the component does not hold is left untouched.
+ *
+ * @param {LivewireLike} Livewire
  */
 export function syncSelectValues(Livewire) {
-    Livewire.hook('commit', ({ component, respond }) => {
+    Livewire.hook('commit', (/** @type {{ component: { el: HTMLElement, ephemeral: Record<string, any> }, respond: (callback: () => void) => void }} */ { component, respond }) => {
         respond(() => {
             const everywhere = readConfig(component.el.ownerDocument)?.selectSync === true;
 
@@ -35,7 +39,7 @@ export function syncSelectValues(Livewire) {
 
                 const rawValue = modelAttribute.value
                     .split('.')
-                    .reduce((data, key) => (data === null || data === undefined ? undefined : data[key]), component.ephemeral);
+                    .reduce((/** @type {any} */ data, key) => (data === null || data === undefined ? undefined : data[key]), component.ephemeral);
 
                 if (rawValue === undefined) {
                     return;

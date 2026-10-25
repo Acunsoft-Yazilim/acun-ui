@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Alpine, dispatch, document, mount, press, render, settle, sleep, viewport, window } from './browser.mjs';
 
-// acun:drawer in the browser: its parts, focus (initial, trap, restore), the page
-// scroll lock, Escape, the backdrop, the events and the wire:model / x-model binding.
+// acun:drawer in the browser, on a page with Livewire's Alpine (as in a Laravel app): its parts,
+// focus (initial, trap, restore), the page scroll lock, Escape, the backdrop, the events and the
+// wire:model / x-model binding. The behaviour is the drawer plugin (js/plugins/drawer.js); its
+// state shows on the markup (hidden, data-open). Without Alpine: plain-html.test.mjs.
 
 const html = render({
     parts: `
@@ -52,6 +54,11 @@ const html = render({
         <div id="alpine-host" x-data="{ open: true }">
             <acun:drawer name="alpine" title="Alpine" x-model="open">İçerik</acun:drawer>
         </div>`,
+    legacy: `
+        <acun:drawer name="eski" title="Eski">
+            <span id="eski-durum" x-text="opened ? 'açık' : 'kapalı'"></span>
+            <button id="eski-kapat" x-on:click="close()">Kapat</button>
+        </acun:drawer>`,
     docked: `
         <div id="docked-host" x-data="{ filters: false }">
             <acun:drawer.trigger name="filtre" toggle><acun:button id="filter-button">Filtreler</acun:button></acun:drawer.trigger>
@@ -63,8 +70,9 @@ const html = render({
 });
 
 const byId = (id) => document.getElementById(id);
-const drawer = (name) => Alpine.$data(byId(name));
-const isOpen = (name) => drawer(name).opened && byId(name).style.display !== 'none';
+const drawer = (name) => window.AcunUI.plugins.get(byId(name), 'drawer');
+const isOpen = (name) => drawer(name).isOpen && !byId(name).hidden && byId(name).hasAttribute('data-open');
+const panelOf = (name) => byId(name).querySelector('[data-slot="drawer-panel"]');
 const locks = () => window.AcunUI.scrollLock.count;
 const closed = () => sleep(250);
 
@@ -109,9 +117,10 @@ test('the header names the dialog and its X closes it', async () => {
     dialog.querySelector('[data-slot="drawer-header"] button[aria-label]').click();
     await settle();
 
-    assert.equal(drawer('detay').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
+    assert.equal(dialog.hasAttribute('data-open'), false, 'data-open goes at once (the slide out starts).');
     await closed();
-    assert.equal(dialog.style.display, 'none');
+    assert.equal(dialog.hidden, true, 'Hidden once the panel has slid out.');
 });
 
 test('drawer.close closes it from the footer', async () => {
@@ -121,7 +130,7 @@ test('drawer.close closes it from the footer', async () => {
     byId('cancel').click();
     await settle();
 
-    assert.equal(drawer('detay').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
 });
 
 // --- focus ---------------------------------------------------------------------
@@ -144,11 +153,11 @@ test('a drawer without focusable content focuses the panel', async () => {
     await mount(html.textOnly);
     await open('bilgi');
 
-    assert.equal(document.activeElement, drawer('bilgi').$refs.panel);
+    assert.equal(document.activeElement, panelOf('bilgi'));
 
     const tab = press('Tab');
     assert.ok(tab.defaultPrevented, 'Tab stays in the panel.');
-    assert.equal(document.activeElement, drawer('bilgi').$refs.panel);
+    assert.equal(document.activeElement, panelOf('bilgi'));
 });
 
 test('Tab wraps around inside the panel and skips hidden elements', async () => {
@@ -163,7 +172,7 @@ test('Tab wraps around inside the panel and skips hidden elements', async () => 
     assert.ok(press('Tab', { shiftKey: true }).defaultPrevented);
     assert.equal(document.activeElement, byId('save'), 'From the first element to the last.');
 
-    const order = drawer('detay').focusableElements().map((element) => element.id || element.getAttribute('aria-label'));
+    const order = drawer('detay').focusables().map((element) => element.id || element.getAttribute('aria-label'));
     assert.deepEqual(order, ['Kapat', 'first', 'link', 'menu', 'cancel', 'save'], 'The hidden button and the closed menu\'s items are skipped.');
 
     byId('first').focus();
@@ -191,7 +200,7 @@ test('a removed trigger does not break closing', async () => {
     drawer('detay').close();
     await settle();
 
-    assert.equal(drawer('detay').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
 });
 
 test('opening twice keeps the first trigger to return to', async () => {
@@ -236,8 +245,8 @@ test('two open drawers hold the lock until both close', async () => {
     dispatch('close-drawer');
     await settle();
 
-    assert.equal(drawer('detay').opened, false);
-    assert.equal(drawer('not').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
+    assert.equal(drawer('not').isOpen, false);
     assert.equal(locks(), 0);
 });
 
@@ -251,7 +260,7 @@ test('Escape inside the panel closes it', async () => {
     press('Escape');
     await settle();
 
-    assert.equal(drawer('detay').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
 });
 
 test('Escape with the focus nowhere closes it', async () => {
@@ -262,7 +271,7 @@ test('Escape with the focus nowhere closes it', async () => {
     press('Escape', {}, document.body);
     await settle();
 
-    assert.equal(drawer('detay').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
 });
 
 test('Escape in a window opened over the panel leaves the panel open', async () => {
@@ -294,7 +303,7 @@ test('Escape in an open menu inside the panel closes only the menu', async () =>
 
     press('Escape');
     await settle();
-    assert.equal(drawer('detay').opened, false, 'The next Escape closes the panel.');
+    assert.equal(drawer('detay').isOpen, false, 'The next Escape closes the panel.');
 });
 
 test('Escape in an open popover inside the panel closes only the popover', async () => {
@@ -323,7 +332,7 @@ test('a click on the backdrop closes it', async () => {
     backdrop('detay').click();
     await settle();
 
-    assert.equal(drawer('detay').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
 });
 
 test('closable-on-backdrop false keeps it open on a backdrop click', async () => {
@@ -358,7 +367,7 @@ test('a followed link closes it', async () => {
     byId('link').click();
     await settle();
 
-    assert.equal(drawer('detay').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
 });
 
 test('links the page handles itself, opens elsewhere or marks keep it open; wire:navigate closes it', async () => {
@@ -377,18 +386,18 @@ test('links the page handles itself, opens elsewhere or marks keep it open; wire
     for (const id of ['sayfa', 'yeni', 'indir', 'sekme']) {
         byId(id).dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
         await settle();
-        assert.equal(drawer('detay').opened, true, `#${id} keeps the panel open`);
+        assert.equal(drawer('detay').isOpen, true, `#${id} keeps the panel open`);
     }
 
     byId('first').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     const cmd = new window.MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true });
     document.querySelector('#link').dispatchEvent(cmd);
     await settle();
-    assert.equal(drawer('detay').opened, true, 'A link opened in a new tab (⌘-click) keeps it open.');
+    assert.equal(drawer('detay').isOpen, true, 'A link opened in a new tab (⌘-click) keeps it open.');
 
     byId('git').dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
     await settle();
-    assert.equal(drawer('detay').opened, false, 'A wire:navigate link leaves the page.');
+    assert.equal(drawer('detay').isOpen, false, 'A wire:navigate link leaves the page.');
 });
 
 // --- events ------------------------------------------------------------------------
@@ -402,14 +411,14 @@ test('toggle-drawer opens and closes; a quick double toggle stays closed', async
 
     dispatch('toggle-drawer', { name: 'detay' });
     await settle();
-    assert.equal(drawer('detay').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
     await closed();
 
     dispatch('toggle-drawer', { name: 'detay' });
     dispatch('toggle-drawer', { name: 'detay' });
     await closed();
-    assert.equal(drawer('detay').entered, false, 'It does not slide in after it was closed.');
-    assert.equal(byId('detay').style.display, 'none');
+    assert.equal(byId('detay').hasAttribute('data-open'), false, 'It does not slide in after it was closed.');
+    assert.equal(byId('detay').hidden, true);
     assert.equal(locks(), 0);
 });
 
@@ -418,7 +427,7 @@ test('events for another drawer are ignored', async () => {
 
     dispatch('open-drawer', { name: 'baska' });
     await settle();
-    assert.equal(drawer('detay').opened, false);
+    assert.equal(drawer('detay').isOpen, false);
 
     await open('detay');
     dispatch('close-drawer', { name: 'baska' });
@@ -454,7 +463,7 @@ test('a bound property opens and closes the drawer', async () => {
 
     host.show = false;
     await settle();
-    assert.equal(drawer('bagli').opened, false);
+    assert.equal(drawer('bagli').isOpen, false);
     assert.equal(locks(), 0);
 });
 
@@ -468,7 +477,7 @@ test('closing the drawer sets the bound property', async () => {
     await settle();
 
     assert.equal(host.show, false);
-    assert.equal(drawer('bagli').opened, false);
+    assert.equal(drawer('bagli').isOpen, false);
 });
 
 test('opening by event sets the bound property once', async () => {
@@ -495,7 +504,7 @@ test('a property that starts true opens the drawer on load', async () => {
 // --- docked ------------------------------------------------------------------------
 
 const dockedPanel = () => byId('docked-host').querySelector('.filter-panel');
-const docked = () => Alpine.$data(dockedPanel());
+const docked = () => window.AcunUI.plugins.get(byId('docked-host').querySelector('[data-acun-drawer]'), 'drawer');
 
 test('on a phone the docked panel is a modal overlay', async () => {
     viewport.width = 390;
@@ -504,7 +513,7 @@ test('on a phone the docked panel is a modal overlay', async () => {
     byId('filter-button').click();
     await settle();
 
-    assert.equal(docked().opened, true);
+    assert.equal(docked().isOpen, true);
     assert.equal(dockedPanel().getAttribute('aria-modal'), 'true');
     assert.equal(locks(), 1);
     assert.equal(document.activeElement, byId('filter-field'));
@@ -514,7 +523,7 @@ test('on a phone the docked panel is a modal overlay', async () => {
 
     press('Escape');
     await settle();
-    assert.equal(docked().opened, false);
+    assert.equal(docked().isOpen, false);
     assert.equal(Alpine.$data(byId('docked-host')).filters, false);
     assert.equal(document.activeElement, byId('filter-button'));
     assert.equal(locks(), 0);
@@ -529,7 +538,7 @@ test('on desktop the docked panel sits beside the page', async () => {
     host.filters = true;
     await settle();
 
-    assert.equal(docked().opened, true);
+    assert.equal(docked().isOpen, true);
     assert.equal(dockedPanel().getAttribute('aria-modal'), 'false');
     assert.equal(locks(), 0);
     assert.equal(document.activeElement, byId('filter-button'), 'The focus stays beside the panel.');
@@ -579,7 +588,7 @@ test('an open docked panel changes mode when the window crosses lg', async () =>
     // A rotated tablet: below lg it becomes a modal overlay at once, with the focus inside.
     setViewportWidth(800);
     await settle();
-    assert.equal(docked().opened, true);
+    assert.equal(docked().isOpen, true);
     assert.equal(dockedPanel().getAttribute('aria-modal'), 'true');
     assert.equal(locks(), 1);
     assert.ok(dockedPanel().contains(document.activeElement));
@@ -593,4 +602,43 @@ test('an open docked panel changes mode when the window crosses lg', async () =>
     Alpine.$data(byId('docked-host')).filters = false;
     await settle();
     setViewportWidth(390);
+});
+
+test('a docked panel is hidden while closed and carries data-open while open; the root stays', async () => {
+    viewport.width = 1280;
+    await mount(html.docked);
+    const root = byId('docked-host').querySelector('[data-acun-drawer]');
+    const backdrop = root.querySelector('[data-slot="drawer-backdrop"]');
+
+    assert.equal(root.hidden, false);
+    assert.equal(dockedPanel().hidden, true);
+    assert.equal(backdrop.hidden, true);
+
+    byId('filter-button').click();
+    await settle();
+    assert.equal(dockedPanel().hidden, false);
+    assert.ok(dockedPanel().hasAttribute('data-open'), 'The content area reads .filter-panel[data-open].');
+    assert.equal(byId('filter-button').getAttribute('aria-expanded'), 'true');
+
+    byId('filter-button').click();
+    await closed();
+    assert.equal(dockedPanel().hidden, true);
+    assert.equal(dockedPanel().hasAttribute('data-open'), false);
+    viewport.width = 390;
+});
+
+// --- the 2.0 Alpine scope (deprecated, until 3.0) -------------------------------------------------
+
+test('content written for the 2.0 Alpine drawer still works: close() and opened', async () => {
+    await mount(html.legacy);
+    assert.equal(byId('eski-durum').textContent, 'kapalı', 'Alpine starts the content: the drawer root is an Alpine root.');
+
+    await open('eski');
+    assert.equal(byId('eski-durum').textContent, 'açık');
+
+    byId('eski-kapat').click();
+    await settle();
+    assert.equal(drawer('eski').isOpen, false);
+    assert.equal(byId('eski-durum').textContent, 'kapalı');
+    assert.equal(locks(), 0);
 });

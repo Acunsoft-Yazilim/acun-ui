@@ -50,14 +50,18 @@
 @endphp
 
 {{--
-    The behaviour is acunModal of the @acunsoft/acun-ui runtime (js/components/modal.js); Escape,
-    Tab, the page scroll lock and the focus restore come from its overlay manager. One modal
+    The behaviour is the modal plugin of the @acunsoft/acun-ui runtime (js/plugins/modal.js), plain
+    JavaScript bound to this markup by data-* attributes, the same HTML the free npm package documents;
+    Escape, Tab, the page scroll lock and the focus restore come from its overlay manager. One modal
     is open at a time: opening one closes the other.
-    To open it from anywhere: AcunUI.modal.open('{{ $name }}'), $dispatch('acun:modal:open',
-    { name: '{{ $name }}' }) (the first name open-modal works too), or wrap the button in
-    <acun:modal.trigger name="{{ $name }}">.
+    To open it from anywhere: data-acun-open="{{ $name }}" on a button, AcunUI.modal.open('{{ $name }}'),
+    $dispatch('acun:modal:open', { name: '{{ $name }}' }) (the first name open-modal works too), or
+    wrap the button in <acun:modal.trigger name="{{ $name }}">.
     To close it: AcunUI.modal.close('{{ $name }}') or acun:modal:close (close-modal); without a
-    name every modal closes. Inside the modal: <acun:modal.close>, close() or requestClose().
+    name every modal closes. Inside the modal: data-acun-close on a button (the X, Escape and the
+    backdrop do the same: through request-close-event when there is one), data-acun-close-now
+    (no question), or <acun:modal.close>. (close() and requestClose() of the 2.0 Alpine scope still
+    work until 3.0.)
     It sends acun:modal:opened and acun:modal:closed / modal-closed ({ name }).
     wire:model / x-model bind the open state both ways: <acun:modal name="…" wire:model="showForm">
     opens when the property is true and sets it to false when the user closes it.
@@ -74,50 +78,37 @@
     The header's title names the dialog (aria-labelledby) and its description describes it.
     The parts may also be drawn by a nested Livewire component (<livewire:musteri-formu />
     as the modal's content, its root starting with acun:modal.header or acun:modal.body).
+
+    Closed, the root is hidden; open, it and its backdrop and panel carry data-open, and the
+    transitions are CSS (data-open: classes, motion-reduce: none).
 --}}
 <div
-    x-data="acunModal(@js(['name' => $name, 'closeAction' => $closeAction, 'requestCloseEvent' => $requestCloseEvent]))"
-    @if ($attributes->whereStartsWith(['wire:model', 'x-model'])->isNotEmpty()) x-modelable="model" @endif
     data-acun-modal="{{ $name }}"
-    :class="open ? 'pointer-events-auto' : 'pointer-events-none'"
-    x-cloak
-    {{ $attributes->merge(['class' => 'fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4']) }}
+    @if ($closeAction) data-close-action="{{ $closeAction }}" @endif
+    @if ($requestCloseEvent) data-request-close-event="{{ $requestCloseEvent }}" @endif
+    hidden
+    {{ $attributes->merge(['class' => 'pointer-events-none fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 data-open:pointer-events-auto']) }}
 >
     <div
-        x-show="open"
-        x-transition:enter="transition-opacity ease-out duration-150"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition-opacity ease-in duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        @if ($closableOnBackdrop)
-            x-on:click="if ($event.target === $event.currentTarget) requestClose()"
-        @endif
-        class="ui-backdrop fixed inset-0"
+        data-slot="modal-backdrop"
+        @if ($closableOnBackdrop) data-acun-close @endif
+        class="ui-backdrop fixed inset-0 opacity-0 transition-opacity duration-150 ease-in data-open:opacity-100 data-open:ease-out motion-reduce:transition-none"
         aria-hidden="true"
     ></div>
 
     <div
-        x-ref="panel"
-        x-show="open"
-        x-transition:enter="ease-out duration-200"
-        x-transition:enter-start="opacity-0 scale-95"
-        x-transition:enter-end="opacity-100 scale-100"
-        x-transition:leave="ease-in duration-150"
-        x-transition:leave-start="opacity-100 scale-100"
-        x-transition:leave-end="opacity-0 scale-95"
+        data-slot="modal-panel"
         role="{{ $alert ? 'alertdialog' : 'dialog' }}"
         aria-modal="true"
         @if ($labelledBy) aria-labelledby="{{ $labelledBy }}"@if ($describedBy) aria-describedby="{{ $describedBy }}"@endif @else aria-label="{{ $ariaLabel ?? __('Dialog') }}" @endif
         tabindex="-1"
         {{-- Written in parts, a nested Livewire component that starts with a part (body and footer after the header) is layout-neutral, so its parts are the panel's rows. --}}
-        class="relative z-10 flex max-h-[85vh] w-full flex-col {{ $widths[$maxWidth] ?? $widths['md'] }} overflow-hidden rounded-sm bg-surface shadow-xl{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=modal-header],[data-slot=modal-body],[data-slot=modal-footer]))]:contents' : '' }}"
+        class="relative z-10 flex max-h-[85vh] w-full flex-col {{ $widths[$maxWidth] ?? $widths['md'] }} overflow-hidden rounded-sm bg-surface shadow-xl scale-95 opacity-0 transition-[opacity,scale] duration-150 ease-in data-open:scale-100 data-open:opacity-100 data-open:duration-200 data-open:ease-out motion-reduce:transition-none{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=modal-header],[data-slot=modal-body],[data-slot=modal-footer]))]:contents' : '' }}"
     >
         @if ($titleRow)
             <div class="flex flex-none items-center justify-between border-b border-line px-5 py-4">
                 <h3 id="{{ $name }}-title" class="text-base font-semibold text-ink">{{ $title }}</h3>
-                <button type="button" x-on:click="requestClose()" aria-label="{{ __('Close') }}" class="cursor-pointer text-muted hover:text-danger-ink">
+                <button type="button" data-acun-close aria-label="{{ __('Close') }}" class="cursor-pointer text-muted hover:text-danger-ink">
                     <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>

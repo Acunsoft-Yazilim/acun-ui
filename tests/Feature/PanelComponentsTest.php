@@ -347,10 +347,10 @@ final class PanelComponentsTest extends TestCase
     {
         $html = Blade::render('<x-ui.confirmation-dialog :name="$name" />', ['name' => "x'); alert(1); ('"]);
 
-        $event = e(Js::from("x'); alert(1); ('-confirmed"));
-
-        self::assertStringContainsString('$dispatch('.$event.')', $html);
+        // The event name is an attribute value (data-acun-dispatch), escaped; no script is written.
+        self::assertStringContainsString('data-acun-dispatch="'.e("x'); alert(1); ('-confirmed").'"', $html);
         self::assertStringNotContainsString("alert(1); ('", $html);
+        self::assertStringNotContainsString('$dispatch(', $html);
     }
 
     public function test_head_lets_the_page_be_zoomed_and_takes_a_csp_nonce(): void

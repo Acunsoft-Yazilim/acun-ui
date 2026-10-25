@@ -68,8 +68,9 @@ test('one error names the problem; drawers, modals, the command palette and the 
     assert.deepEqual(alpineWarnings, []);
     assert.equal(consoleErrors.filter((message) => message.includes('[Acun UI] JavaScript is not loaded')).length, 1);
     assert.equal(document.getElementById('menu').textContent, 'dar', 'The stand-in store shows the saved setting.');
-    assert.equal(Alpine.$data(document.querySelector('[data-acun-drawer="d"]')).opened, false);
-    assert.equal(document.querySelector('[data-acun-drawer="d"]').style.display, 'none', 'The drawer stays closed.');
+    assert.equal(Alpine.$data(document.querySelector('[data-acun-drawer="d"]')).opened, false, 'The stand-in scope of the 2.0 drawer.');
+    assert.equal(document.querySelector('[data-acun-drawer="d"]').hidden, true, 'The drawer stays closed.');
+    assert.equal(document.querySelector('[data-acun-modal="m"]').hidden, true, 'The modal stays closed.');
 });
 
 test('the stand-ins have the names of the real components and stores', () => {

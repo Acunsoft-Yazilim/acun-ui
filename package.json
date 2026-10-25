@@ -17,22 +17,28 @@
   "author": "Acunsoft",
   "type": "module",
   "style": "./css/panel.css",
+  "types": "./types/index.d.ts",
   "jsdelivr": "./dist/acun-ui.js",
   "unpkg": "./dist/acun-ui.js",
   "exports": {
     ".": {
+      "types": "./types/index.d.ts",
       "style": "./css/panel.css",
       "default": "./js/index.js"
     },
     "./acun-ui.css": "./dist/acun-ui.css",
     "./acun-ui-core.css": "./dist/acun-ui-core.css",
     "./css/*": "./css/*",
-    "./js/*": "./js/*",
+    "./js/*": {
+      "types": "./types/*",
+      "default": "./js/*"
+    },
     "./vite": "./vite/index.js"
   },
   "files": [
     "css",
     "js",
+    "types",
     "dist",
     "vite",
     "CHANGELOG.md"

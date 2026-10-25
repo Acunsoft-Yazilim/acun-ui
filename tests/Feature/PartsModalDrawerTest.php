@@ -21,10 +21,13 @@ final class PartsModalDrawerTest extends TestCase
         'drawer' => 'flex-1 p-5 overflow-y-auto [&:has(>[wire\:id]>:first-child:is([data-slot=drawer-header],[data-slot=drawer-body],[data-slot=drawer-footer]))]:contents [&>[wire\:id]:has(>:first-child:is([data-slot=drawer-header],[data-slot=drawer-body],[data-slot=drawer-footer]))]:contents',
     ];
 
-    /** The click of modal.close / drawer.close: the dialog's close(), or a console error outside one (no ReferenceError). */
+    /**
+     * The trigger attribute of modal.close / drawer.close: the plugin closes the dialog the click is in
+     * (a console error outside one). modal.close closes without the request-close question.
+     */
     private const CLOSE = [
-        'modal' => "\$el.closest('[data-acun-modal]') ? close() : console.error('acun:modal.close is not inside an acun:modal.')",
-        'drawer' => "\$el.closest('[data-acun-drawer]') ? close() : console.error('acun:drawer.close is not inside an acun:drawer.')",
+        'modal' => 'data-acun-close-now',
+        'drawer' => 'data-acun-close',
     ];
 
     /** In a panel written in parts, a nested component's root that starts with a part is layout-neutral. */
@@ -86,15 +89,16 @@ final class PartsModalDrawerTest extends TestCase
         self::assertSame('alt', $footer->getAttribute('id'));
         self::assertSame('flex flex-none items-center justify-end gap-2 border-t border-line bg-sunken/50 px-5 py-4', $footer->getAttribute('class'));
 
-        // The header's X goes through requestClose() as the classic one does.
+        // The header's X goes through the request-close question as the classic one does (data-acun-close).
         $x = $xpath->query('.//button', $header)->item(0);
-        self::assertSame('requestClose()', $x->getAttribute('x-on:click'));
+        self::assertTrue($x->hasAttribute('data-acun-close'));
+        self::assertFalse($x->hasAttribute('x-on:click'));
         // Same label as the classic modal's X (translated by lang/tr.json).
         self::assertSame(__('Close'), $x->getAttribute('aria-label'));
 
-        // modal.close wraps the button without changing it and calls the modal's close().
+        // modal.close wraps the button without changing it and closes the modal it is in.
         $close = $xpath->query('//*[@data-slot="modal-close"]')->item(0);
-        self::assertSame(self::CLOSE['modal'], $close->getAttribute('x-on:click'));
+        self::assertTrue($close->hasAttribute(self::CLOSE['modal']));
         self::assertSame('contents', $close->getAttribute('class'));
         self::assertSame('Vazgeç', trim($xpath->query('./button', $close)->item(0)->textContent));
     }
@@ -178,7 +182,8 @@ final class PartsModalDrawerTest extends TestCase
         self::assertStringContainsString('<h3 id="siparis-title" class="text-base font-semibold text-ink">Sipariş</h3>', $html);
         self::assertStringContainsString('aria-label="Kapat"', $html);
         self::assertMatchesRegularExpression('#<div class="flex-1 overflow-y-auto p-5">\s*<p>Gövde</p>\s*</div>#', $html);
-        self::assertStringNotContainsString('data-slot', $html);
+        // Only the backdrop and the panel the plugin drives carry a slot: no header, body or footer part.
+        self::assertSame(['modal-backdrop', 'modal-panel'], array_map(fn ($node) => $node->value, iterator_to_array($this->xpath($html)->query('//@data-slot'))));
         self::assertStringNotContainsString('aria-describedby', $html);
     }
 
@@ -272,9 +277,11 @@ final class PartsModalDrawerTest extends TestCase
 
         self::assertSame('ac', $trigger->getAttribute('id'));
         self::assertSame('contents sm:hidden', $trigger->getAttribute('class'));
-        self::assertTrue($trigger->hasAttribute('x-data'));
-        self::assertSame("\$dispatch('acun:modal:open', { name: 'musteri-ekle' })", $trigger->getAttribute('x-on:click'));
-        // The modal it opens listens to acun:modal:open (and open-modal) under its name (acunModal, tests/js).
+        // A click opens the modal of that name (the plugin's trigger, no Alpine).
+        self::assertSame('musteri-ekle', $trigger->getAttribute('data-acun-open'));
+        self::assertFalse($trigger->hasAttribute('x-data'));
+        self::assertFalse($trigger->hasAttribute('x-on:click'));
+        // The modal it opens is found by that name; it also listens to acun:modal:open (and open-modal) under it (tests/js).
         self::assertStringContainsString('data-acun-modal="musteri-ekle"', $html);
 
         // The button keeps its role and says it opens a dialog.
@@ -313,26 +320,26 @@ final class PartsModalDrawerTest extends TestCase
             </acun:confirmation-dialog>
         BLADE);
 
-        // They share the acun:modal:open event.
-        self::assertStringContainsString("x-on:click=\"\$dispatch('acun:modal:open', { name: 'siparis-sil' })\"", $html);
-        // The modal it opens listens to acun:modal:open (and open-modal) under its name (acunModal, tests/js).
+        // The trigger opens it by its name.
+        self::assertStringContainsString('data-acun-open="siparis-sil"', $html);
         self::assertStringContainsString('data-acun-modal="siparis-sil"', $html);
         // modal.close works in its confirm slot too: the confirm button also closes it.
-        self::assertMatchesRegularExpression('#<span data-slot="modal-close" x-on:click="'.preg_quote(self::CLOSE['modal'], '#').'" class="contents"><button[^>]*wire:click="sil"#', $html);
+        self::assertMatchesRegularExpression('#<span data-slot="modal-close" '.self::CLOSE['modal'].' class="contents"><button[^>]*wire:click="sil"#', $html);
     }
 
     public function test_modal_close_works_in_the_classic_footer_slot(): void
     {
         $html = Blade::render('<acun:modal name="siparis" title="Sipariş">Gövde<acun:slot:footer><acun:modal.close><button>Vazgeç</button></acun:modal.close></acun:slot:footer></acun:modal>');
 
-        self::assertStringContainsString('<span data-slot="modal-close" x-on:click="'.self::CLOSE['modal'].'" class="contents"><button>Vazgeç</button></span>', $html);
+        self::assertStringContainsString('<span data-slot="modal-close" '.self::CLOSE['modal'].' class="contents"><button>Vazgeç</button></span>', $html);
         self::assertStringContainsString('<div class="flex-1 overflow-y-auto p-5">', $html);
     }
 
     /**
      * A nested Livewire component that re-renders on its own is drawn without the modal
-     * around it: header and close need no name then. close() and requestClose() come from
-     * the modal's Alpine scope; the browser gives the header the modal's ids.
+     * around it: header and close need no name then. The modal plugin closes the modal the
+     * click is in and gives the title and description the modal's ids in the browser
+     * (data-slot="modal-title" / "modal-description", js/behavior/dialog-name.js).
      */
     public function test_modal_parts_without_the_modal_around_them_render_for_the_browser(): void
     {
@@ -342,18 +349,17 @@ final class PartsModalDrawerTest extends TestCase
 
         $title = $xpath->query('//*[@data-slot="modal-header"]//h3')->item(0);
         self::assertFalse($title->hasAttribute('id'), 'No name, no id of its own.');
-        self::assertSame("\$el.id || (\$el.closest('[data-acun-modal]') ? \$el.closest('[data-acun-modal]').dataset.acunModal + '-title' : null)", $title->getAttribute('x-bind:id'));
+        self::assertSame('modal-title', $title->getAttribute('data-slot'));
         $description = $xpath->query('//*[@data-slot="modal-header"]//p')->item(0);
-        self::assertSame("\$el.id || (\$el.closest('[data-acun-modal]') ? \$el.closest('[data-acun-modal]').dataset.acunModal + '-description' : null)", $description->getAttribute('x-bind:id'));
-        // Its X calls the modal's requestClose(); outside a modal it says so (no ReferenceError).
-        self::assertSame(
-            "\$el.closest('[data-acun-modal]') ? requestClose() : console.error('acun:modal.header is not inside an acun:modal.')",
-            $xpath->query('//*[@data-slot="modal-header"]//button')->item(0)->getAttribute('x-on:click'),
-        );
-        self::assertStringContainsString('<span data-slot="modal-close" x-on:click="'.self::CLOSE['modal'].'" class="contents">', $html);
+        self::assertFalse($description->hasAttribute('id'));
+        self::assertSame('modal-description', $description->getAttribute('data-slot'));
+        // Its X closes the modal it is in, through the request-close question; outside a modal the plugin says so.
+        self::assertTrue($xpath->query('//*[@data-slot="modal-header"]//button')->item(0)->hasAttribute('data-acun-close'));
+        self::assertStringContainsString('<span data-slot="modal-close" '.self::CLOSE['modal'].' class="contents">', $html);
+        self::assertStringNotContainsString('x-bind:id', $html);
 
         // With the modal around them they keep their plain ids (the modal reads them).
-        self::assertStringNotContainsString('x-bind:id', Blade::render('<acun:modal name="m"><acun:modal.header title="T" description="D" /></acun:modal>'));
+        self::assertStringContainsString('<h3 id="m-title" data-slot="modal-title"', Blade::render('<acun:modal name="m"><acun:modal.header title="T" description="D" /></acun:modal>'));
 
         // body and footer only style: they need no modal.
         self::assertStringContainsString('data-slot="modal-body"', Blade::render('<acun:modal.body>x</acun:modal.body>'));
@@ -378,8 +384,8 @@ final class PartsModalDrawerTest extends TestCase
         Livewire::test(NestedModalForm::class)
             ->call('$refresh')
             ->assertSeeHtml('data-slot="modal-header"')
-            ->assertSeeHtml("x-bind:id=\"\$el.id || (\$el.closest('[data-acun-modal]') ? \$el.closest('[data-acun-modal]').dataset.acunModal + '-title' : null)\"")
-            ->assertSeeHtml('<span data-slot="modal-close" x-on:click="'.self::CLOSE['modal'].'" class="contents">');
+            ->assertSeeHtml('<h3 data-slot="modal-title"')
+            ->assertSeeHtml('<span data-slot="modal-close" '.self::CLOSE['modal'].' class="contents">');
     }
 
     /**
@@ -469,7 +475,7 @@ final class PartsModalDrawerTest extends TestCase
 
         $xpath = $this->xpath($html);
         $dialog = $xpath->query('//*[@role="dialog"]')->item(0);
-        $panel = $xpath->query('//*[@x-ref="panel"]')->item(0);
+        $panel = $xpath->query('//*[@data-slot="drawer-panel"]')->item(0);
 
         self::assertSame('siparis-detay', $dialog->getAttribute('id'));
         self::assertSame('siparis-detay-title', $dialog->getAttribute('aria-labelledby'));
@@ -489,12 +495,12 @@ final class PartsModalDrawerTest extends TestCase
         self::assertStringContainsString('items-start', $header->getAttribute('class'));
         self::assertSame('Sipariş #4821', trim($xpath->query('.//h3[@id="siparis-detay-title"]', $header)->item(0)->textContent));
         $x = $xpath->query('.//button', $header)->item(0);
-        self::assertSame('close()', $x->getAttribute('x-on:click'));
+        self::assertTrue($x->hasAttribute('data-acun-close'));
         self::assertSame('Kapat', $x->getAttribute('aria-label'));
 
         self::assertSame('flex-1 overflow-y-auto p-5 space-y-4', $xpath->query('//*[@data-slot="drawer-body"]')->item(0)->getAttribute('class'));
         self::assertSame('flex items-center justify-end gap-2 px-5 py-4 bg-sunken/50 border-t border-line', $xpath->query('//*[@data-slot="drawer-footer"]')->item(0)->getAttribute('class'));
-        self::assertSame(self::CLOSE['drawer'], $xpath->query('//*[@data-slot="drawer-close"]')->item(0)->getAttribute('x-on:click'));
+        self::assertTrue($xpath->query('//*[@data-slot="drawer-close"]')->item(0)->hasAttribute(self::CLOSE['drawer']));
     }
 
     public function test_drawer_footer_follows_compact_and_docked(): void
@@ -583,24 +589,24 @@ final class PartsModalDrawerTest extends TestCase
         $trigger = $xpath->query('//*[@data-slot="drawer-trigger"]')->item(0);
 
         self::assertSame('contents lg:hidden', $trigger->getAttribute('class'));
-        self::assertSame("\$dispatch('acun:drawer:open', { name: 'siparis-detay' })", $trigger->getAttribute('x-on:click'));
-        self::assertSame("if (\$event.detail.name === 'siparis-detay') drawerOpen = true", $trigger->getAttribute('x-on:acun:drawer:opened.window'));
-        self::assertSame("if (\$event.detail.name === 'siparis-detay') drawerOpen = false", $trigger->getAttribute('x-on:acun:drawer:closed.window'));
+        // A click opens the drawer of that name (the plugin's trigger, no Alpine).
+        self::assertSame('siparis-detay', $trigger->getAttribute('data-acun-open'));
+        self::assertFalse($trigger->hasAttribute('x-data'));
 
         $button = $xpath->query('./button', $trigger)->item(0);
         self::assertSame('dialog', $button->getAttribute('aria-haspopup'));
+        // The plugin keeps it in step with the drawer (tests/js/drawer-parts.test.mjs).
         self::assertSame('false', $button->getAttribute('aria-expanded'));
-        self::assertSame('drawerOpen.toString()', $button->getAttribute('x-bind:aria-expanded'));
 
         $toggle = Blade::render('<acun:drawer.trigger name="siparis-filtreleri" toggle><button :aria-expanded="acik">Filtreler</button></acun:drawer.trigger>');
-        self::assertStringContainsString("x-on:click=\"\$dispatch('acun:drawer:toggle', { name: 'siparis-filtreleri' })\"", $toggle);
-        self::assertStringNotContainsString('drawerOpen.toString()', $toggle, 'An aria-expanded of its own is kept.');
+        self::assertStringContainsString('data-acun-toggle="siparis-filtreleri"', $toggle);
+        self::assertSame(1, substr_count($toggle, 'aria-expanded'), 'An aria-expanded of its own is kept.');
     }
 
     /**
      * A nested Livewire component that re-renders on its own is drawn without the drawer
-     * around it: header and close need no name then. close() comes from the drawer's
-     * Alpine scope; the browser gives the header the drawer's ids.
+     * around it: header and close need no name then. The drawer plugin closes the drawer the
+     * click is in and gives the title and description the drawer's ids in the browser.
      */
     public function test_drawer_parts_without_the_drawer_around_them_render_for_the_browser(): void
     {
@@ -610,19 +616,18 @@ final class PartsModalDrawerTest extends TestCase
 
         $title = $xpath->query('//*[@data-slot="drawer-header"]//h3')->item(0);
         self::assertFalse($title->hasAttribute('id'), 'No name, no id of its own.');
-        self::assertSame("\$el.id || (\$el.closest('[data-acun-drawer]') ? \$el.closest('[data-acun-drawer]').dataset.acunDrawer + '-title' : null)", $title->getAttribute('x-bind:id'));
+        self::assertSame('drawer-title', $title->getAttribute('data-slot'));
         $description = $xpath->query('//*[@data-slot="drawer-header"]//p')->item(0);
-        self::assertSame("\$el.id || (\$el.closest('[data-acun-drawer]') ? \$el.closest('[data-acun-drawer]').dataset.acunDrawer + '-description' : null)", $description->getAttribute('x-bind:id'));
-        // Its X calls the drawer's close(); outside a drawer it says so (no ReferenceError).
-        self::assertSame(
-            "\$el.closest('[data-acun-drawer]') ? close() : console.error('acun:drawer.header is not inside an acun:drawer.')",
-            $xpath->query('//*[@data-slot="drawer-header"]//button')->item(0)->getAttribute('x-on:click'),
-        );
-        self::assertStringContainsString('<span data-slot="drawer-close" x-on:click="'.self::CLOSE['drawer'].'" class="contents">', $html);
+        self::assertFalse($description->hasAttribute('id'));
+        self::assertSame('drawer-description', $description->getAttribute('data-slot'));
+        // Its X closes the drawer it is in; outside a drawer the plugin says so.
+        self::assertTrue($xpath->query('//*[@data-slot="drawer-header"]//button')->item(0)->hasAttribute('data-acun-close'));
+        self::assertStringContainsString('<span data-slot="drawer-close" '.self::CLOSE['drawer'].' class="contents">', $html);
+        self::assertStringNotContainsString('x-bind:id', $html);
 
         // With the drawer around them they keep their plain ids (the drawer reads them), docked too.
-        self::assertStringNotContainsString('x-bind:id', Blade::render('<acun:drawer name="d"><acun:drawer.header title="T" description="D" /></acun:drawer>'));
-        self::assertStringNotContainsString('x-bind:id', Blade::render('<acun:drawer name="f" docked><acun:drawer.header title="T" description="D" /></acun:drawer>'));
+        self::assertStringContainsString('<h3 id="d-title" data-slot="drawer-title"', Blade::render('<acun:drawer name="d"><acun:drawer.header title="T" description="D" /></acun:drawer>'));
+        self::assertStringContainsString('<h3 id="f-title" data-slot="drawer-title"', Blade::render('<acun:drawer name="f" docked><acun:drawer.header title="T" description="D" /></acun:drawer>'));
 
         // body and footer only style: they need no drawer.
         self::assertStringContainsString('data-slot="drawer-body"', Blade::render('<acun:drawer.body>x</acun:drawer.body>'));
@@ -647,8 +652,8 @@ final class PartsModalDrawerTest extends TestCase
         Livewire::test(NestedDrawerDetail::class)
             ->call('$refresh')
             ->assertSeeHtml('data-slot="drawer-header"')
-            ->assertSeeHtml("x-bind:id=\"\$el.id || (\$el.closest('[data-acun-drawer]') ? \$el.closest('[data-acun-drawer]').dataset.acunDrawer + '-title' : null)\"")
-            ->assertSeeHtml('<span data-slot="drawer-close" x-on:click="'.self::CLOSE['drawer'].'" class="contents">');
+            ->assertSeeHtml('<h3 data-slot="drawer-title"')
+            ->assertSeeHtml('<span data-slot="drawer-close" '.self::CLOSE['drawer'].' class="contents">');
     }
 
     /** As in the modal: a nested component written in parts names the drawer and keeps one panel markup. */
@@ -666,7 +671,7 @@ final class PartsModalDrawerTest extends TestCase
 
         $body = $first->query('//div[./*[@*[name()="wire:name"]="siparis-detayi"]]')->item(0);
         self::assertSame(self::COMPONENT_BODY['drawer'], $body->getAttribute('class'));
-        self::assertSame('panel', $body->parentNode->getAttribute('x-ref'));
+        self::assertSame('drawer-panel', $body->parentNode->getAttribute('data-slot'));
 
         // The page's own update: the same panel, with a stub in the same place.
         $update = $this->xpath($page->call('$refresh')->html());

@@ -1,13 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AcunUI, Alpine, dispatch, document, mount, render, settle, sleep, window } from './browser.mjs';
+import { AcunUI, dispatch, document, mount, render, settle, sleep, window } from './browser.mjs';
 
 // Closing a modal or a drawer from one of its parts (the X of the header, acun:modal.close,
 // acun:drawer.close, the backdrop) gives the page back: the scroll lock is released and the
-// dialog leaves the overlay stack. Alpine binds this.$el to the element whose directive runs,
-// so a component that used this.$el in close() looked for the X instead of the dialog, kept
-// the page locked (it could not scroll) and left a stale entry that stopped the next opening
-// from locking at all.
+// dialog leaves the overlay stack. (The 2.0 Alpine components once looked for the X instead of
+// the dialog: Alpine binds this.$el to the element whose directive runs. They kept the page
+// locked and left a stale entry that stopped the next opening from locking at all.) Since 2.1
+// the parts are data-acun-close / data-acun-close-now and the plugin closes the dialog the
+// click is in; the same checks run on a page without Alpine in plain-html.test.mjs.
 
 const html = render({
     modals: `
@@ -32,18 +33,19 @@ const html = render({
 const locked = () => document.documentElement.classList.contains('scroll-locked');
 const modal = (name) => document.querySelector(`[data-acun-modal="${name}"]`);
 const drawer = (name) => document.querySelector(`[data-acun-drawer="${name}"]`);
+const isOpen = (element, kind) => AcunUI.plugins.get(element, kind).isOpen && element.hasAttribute('data-open') && !element.hidden;
 
 async function openModal(name) {
     dispatch('acun:modal:open', { name });
     await settle();
-    assert.ok(Alpine.$data(modal(name)).open, `${name} opened`);
+    assert.ok(isOpen(modal(name), 'modal'), `${name} opened`);
     assert.ok(locked(), `${name} locks the page`);
 }
 
 async function openDrawer(name) {
     dispatch('acun:drawer:open', { name });
     await settle();
-    assert.ok(Alpine.$data(drawer(name)).opened, `${name} opened`);
+    assert.ok(isOpen(drawer(name), 'drawer'), `${name} opened`);
     assert.ok(locked(), `${name} locks the page`);
 }
 
@@ -60,7 +62,8 @@ test('the X of a classic modal releases the page, and the next opening locks it 
         await openModal('klasik');
         modal('klasik').querySelector('button[aria-label]').click();
         await settle();
-        assert.equal(Alpine.$data(modal('klasik')).open, false);
+        assert.equal(isOpen(modal('klasik'), 'modal'), false);
+        assert.equal(modal('klasik').hidden, true, 'Hidden after its leave transition.');
         assertReleased(`round ${round}`);
     }
 });

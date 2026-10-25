@@ -64,5 +64,8 @@ test('examples/html/index.html needs no Tailwind: every class it uses is in dist
 
     assert.match(example, /<link rel="stylesheet" href="[^"]*dist\/acun-ui\.css">/);
     assert.doesNotMatch(example, /cdn\.tailwindcss|<script[^>]+tailwind/i);
+    // Its modal and drawer run on the runtime's browser build alone (plain-html-chrome.test.mjs): no Alpine, no Livewire.
+    assert.match(example, /<script src="[^"]*dist\/acun-ui\.js"><\/script>/);
+    assert.doesNotMatch(example, /<script[^>]+(alpine|livewire)/i);
     assert.deepEqual([...used].filter((name) => !compiled.has(name)), []);
 });

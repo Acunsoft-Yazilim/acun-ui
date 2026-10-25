@@ -5,8 +5,13 @@
  * response into the old page's DETACHED component, and unscoped Alpine
  * expressions produced dozens of console errors. Morph is skipped for detached trees.
  */
+/** @import { LivewireLike } from '../core/types.js' */
+
+/**
+ * @param {LivewireLike} Livewire
+ */
 export function skipDetachedMorphs(Livewire) {
-    Livewire.hook('morph.updating', ({ component, skip }) => {
+    Livewire.hook('morph.updating', (/** @type {{ component: { el: Element }, skip: () => void }} */ { component, skip }) => {
         if (!component.el.isConnected) {
             skip();
         }

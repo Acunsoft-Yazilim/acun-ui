@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Alpine, document, mount, settle, window } from './browser.mjs';
+import { AcunUI, document, mount, settle, window } from './browser.mjs';
 import { chrome, inChrome } from './chrome.mjs';
 import { component, morphComponent, renderLivewire } from './livewire.mjs';
 import { kitCss } from './tailwind.mjs';
@@ -49,14 +49,14 @@ test('the parts of a nested component take the panel in place of the padded body
     const body = () => component('siparis-detayi').parentElement;
 
     // As in the modal: the padded body stays and gives way to the parts in the browser (CSS :has).
-    assert.equal(body().parentElement, drawer().querySelector('[x-ref="panel"]'));
+    assert.equal(body().parentElement, drawer().querySelector('[data-slot="drawer-panel"]'));
     const classes = body().getAttribute('class');
     assert.match(classes, /\[&:has\(>\[wire\\:id\]>:first-child:is\(\[data-slot=drawer-header\],\[data-slot=drawer-body\],\[data-slot=drawer-footer\]\)\)\]:contents/);
 
     morphComponent(component('siparis-sayfasi'), page.updates['siparis-sayfasi']);
     await settle();
 
-    assert.equal(body().parentElement, drawer().querySelector('[x-ref="panel"]'), 'the nested component stays in the same place');
+    assert.equal(body().parentElement, drawer().querySelector('[data-slot="drawer-panel"]'), 'the nested component stays in the same place');
     assert.equal(body().getAttribute('class'), classes);
 });
 
@@ -71,9 +71,12 @@ test('Chrome lays out a nested component\'s parts as the drawer\'s rows, also af
         // The kit's classes as the application's Tailwind builds them (its @source of the views).
         css: await kitCss(['drawer.blade.php', 'drawer/header.blade.php', 'drawer/body.blade.php', 'drawer/footer.blade.php'].map((file) => `packages/acun-ui/resources/views/components/ui/${file}`), '@import "tailwindcss";'),
         body: [page.first, updated].map((html) => `<section>${html}</section>`).join(''),
+        // Shown as when open (the server renders the dialog closed: hidden).
         measure: `
+            document.querySelectorAll('[hidden]').forEach((element) => element.removeAttribute('hidden'));
+            document.querySelectorAll('[data-acun-drawer], [data-slot="drawer-backdrop"], [data-slot="drawer-panel"]').forEach((element) => element.setAttribute('data-open', ''));
             return [...document.querySelectorAll('section')].map((section) => {
-                const panel = section.querySelector('[x-ref="panel"]');
+                const panel = section.querySelector('[data-slot="drawer-panel"]');
                 const root = [...panel.querySelectorAll('*')].find((element) => element.hasAttribute('wire:id'));
                 const left = (element) => Math.round(element.getBoundingClientRect().left - panel.getBoundingClientRect().left);
                 return {
@@ -96,19 +99,20 @@ test('the parts still close the drawer after the nested component\'s own update'
     morphComponent(component('siparis-detayi'), page.updates['siparis-detayi']);
     await settle();
 
-    Alpine.$data(drawer()).openPanel();
+    const instance = AcunUI.plugins.get(drawer(), 'drawer');
+    instance.open();
     await settle();
-    assert.equal(Alpine.$data(drawer()).opened, true);
+    assert.equal(instance.isOpen, true);
 
     document.querySelector('[data-slot="drawer-close"] button').click();
     await settle();
-    assert.equal(Alpine.$data(drawer()).opened, false, 'drawer.close calls the drawer close() from its Alpine scope.');
+    assert.equal(instance.isOpen, false, 'drawer.close (data-acun-close) closes the drawer the click is in.');
 
-    Alpine.$data(drawer()).openPanel();
+    instance.open();
     await settle();
     document.querySelector('[data-slot="drawer-header"] button[aria-label]').click();
     await settle();
-    assert.equal(Alpine.$data(drawer()).opened, false, 'The header X closes it too.');
+    assert.equal(instance.isOpen, false, 'The header X closes it too.');
 });
 
 test('a header that ends up outside a drawer says so instead of throwing', async () => {
@@ -135,6 +139,26 @@ test('a header that ends up outside a drawer says so instead of throwing', async
         window.removeEventListener('error', onError);
     }
 
-    assert.deepEqual(uncaught, [], 'no ReferenceError (close is not defined)');
-    assert.deepEqual(errors, ['acun:drawer.header is not inside an acun:drawer.', 'acun:drawer.close is not inside an acun:drawer.']);
+    assert.deepEqual(uncaught, [], 'no ReferenceError');
+    assert.equal(errors.length, 2);
+    errors.forEach((message) => assert.match(message, /^\[Acun UI\] data-acun-close is not inside a component it can close\./));
+});
+
+test('a page update while the drawer is open keeps it open', async () => {
+    await mount(page.first);
+    const instance = AcunUI.plugins.get(drawer(), 'drawer');
+
+    instance.open();
+    await settle();
+    morphComponent(component('siparis-sayfasi'), page.updates['siparis-sayfasi']);
+    await settle();
+
+    assert.equal(AcunUI.plugins.get(drawer(), 'drawer'), instance);
+    assert.equal(instance.isOpen, true);
+    assert.equal(drawer().hidden, false);
+    assert.ok(drawer().querySelector('[data-slot="drawer-panel"]').hasAttribute('data-open'));
+
+    instance.close();
+    await settle();
+    assert.equal(drawer().hidden, true);
 });

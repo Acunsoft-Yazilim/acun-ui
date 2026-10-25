@@ -8,14 +8,17 @@ import { readConfig } from './core/config.js';
 import { registerFallbacks } from './core/fallback.js';
 import { applyInitialAppearance, watchSections } from './appearance/theme.js';
 
+/** @import { AcunWindow } from './core/types.js' */
+
 const config = readConfig();
 watchSections(applyInitialAppearance(config), config);
 
 // The runtime has to be there before Alpine starts. Without it: one error that says
 // what to do, and stand-ins instead of an error from every expression.
 document.addEventListener('alpine:init', () => {
-    if (window.AcunUI?.initialized || !window.Alpine) return;
+    const page = /** @type {AcunWindow} */ (window);
+    if (page.AcunUI?.initialized || !page.Alpine) return;
 
     console.error('[Acun UI] JavaScript is not loaded: add "import \'@acunsoft/acun-ui\';" to resources/js/app.js and build the assets (npm run build), or add @acunUiScripts to your layout. Drawers, modals and the theme settings will not work.');
-    registerFallbacks(window.Alpine, config);
+    registerFallbacks(page.Alpine, config);
 }, { once: true });

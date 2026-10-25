@@ -1,10 +1,12 @@
 // Stand-ins for the runtime's Alpine components and stores, for a page whose runtime
 // did not load: the boot script registers them next to the one console error that names
-// the problem. Drawers and modals stay closed, the layout shows the saved appearance,
+// the problem. Drawers and modals stay closed (hidden), the layout shows the saved appearance,
 // and no expression throws "acunDrawer is not defined" or reads an undefined store.
 // Same names as the real ones (tests/js/runtime.test.mjs compares them).
 
 import { initialPreferences } from '../appearance/theme.js';
+
+/** @import { AlpineLike } from './types.js' */
 
 const noop = () => {};
 
@@ -13,6 +15,7 @@ export const fallbackComponents = {
     acunModal: () => ({ open: false, model: false, show: noop, close: noop, requestClose: noop, focusables: () => [] }),
 };
 
+/** @param {Record<string, any> | null} config */
 export function fallbackStores(config) {
     const start = initialPreferences(config);
 
@@ -25,7 +28,15 @@ export function fallbackStores(config) {
     };
 }
 
+/**
+ * @param {AlpineLike} Alpine
+ * @param {Record<string, any> | null} config
+ */
 export function registerFallbacks(Alpine, config) {
     Object.entries(fallbackComponents).forEach(([name, component]) => Alpine.data(name, component));
+    // The modal and drawer roots carry no x-data since 2.1: their content's close() finds a stand-in, not window.close().
+    const roots = '[data-acun-modal],[data-acun-drawer]';
+    Alpine.addRootSelector(() => roots);
+    Alpine.interceptInit((element) => element.matches(roots) && !element.hasAttribute('x-data') && Alpine.bind(element, { 'x-data': () => ({ ...fallbackComponents.acunDrawer(), ...fallbackComponents.acunModal() }) }));
     if (config) Object.entries(fallbackStores(config)).forEach(([name, store]) => Alpine.store(name, store));
 }

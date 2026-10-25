@@ -154,7 +154,7 @@ test('a choice that reloads the page opens the drawer again at once', async () =
     // The next page: the drawer is open without the user asking, and the note is gone.
     await mount(html.drawer);
     await sleep(60);
-    assert.equal(Alpine.$data(document.querySelector('[data-acun-drawer="theme-switcher"]')).opened, true);
+    assert.equal(window.AcunUI.plugins.get(document.querySelector('[data-acun-drawer="theme-switcher"]'), 'drawer').isOpen, true);
     assert.equal(window.sessionStorage.getItem('acun-ui:shop:open'), null);
     window.sessionStorage.clear();
 });
@@ -173,15 +173,23 @@ test('the drawer: the gear opens it, Tab stays in it, Escape closes it and the f
     assert.ok(dialog.contains(document.activeElement), 'The focus moves into the drawer.');
 
     // Tab from the last control wraps to the first.
-    const focusable = window.AcunUI.focus.focusable(dialog.querySelector('[x-ref=panel]'));
+    const focusable = window.AcunUI.focus.focusable(dialog.querySelector('[data-slot=drawer-panel]'));
     focusable.at(-1).focus();
     press('Tab');
     assert.ok(dialog.contains(document.activeElement), 'Tab stays inside.');
 
     press('Escape');
     await sleep(250);
-    assert.equal(Alpine.$data(dialog).opened, false);
+    assert.equal(window.AcunUI.plugins.get(dialog, 'drawer').isOpen, false);
+    assert.equal(dialog.hidden, true);
     assert.equal(document.activeElement, gear, 'The focus goes back to the gear.');
+
+    // Done (data-acun-close) closes it too.
+    gear.click();
+    await settle();
+    [...dialog.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Tamam').click();
+    await settle();
+    assert.equal(window.AcunUI.plugins.get(dialog, 'drawer').isOpen, false);
 });
 
 test('Acun\\Ui\\Support\\Contrast measures as the runtime does', () => {

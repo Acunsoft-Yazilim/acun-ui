@@ -1,89 +1,120 @@
-// acun:modal: x-data="acunModal({ name, closeAction, requestCloseEvent })" (the
-// Blade component prints it). The markup binds open; slots call close() or
-// requestClose().
+// Deprecated until 3.0: the Alpine side of acun:modal from before 2.1. The behaviour is the modal
+// plugin's (plugins/modal.js), with no Alpine; these delegate to it.
+// - modal(): Alpine.data('acunModal'), for markup of its own written with
+//   x-data="acunModal({ name, closeAction, requestCloseEvent })" (x-ref="panel", x-show="open").
+// - modalScope(): the Alpine scope adapters/alpine.js gives every modal root, so content that calls
+//   close() / requestClose() or reads open keeps working, and wire:model / x-model bind its model.
+//   New markup: data-acun-close (the user's close, through the guard) and data-acun-close-now.
 
-import { EVENTS, dispatch, isFor, listen } from '../core/events.js';
-import { focusable } from '../core/dom.js';
-import { keepHeaderName } from '../behavior/dialog-name.js';
-import { focusFirst } from '../behavior/focus-trap.js';
-import { overlays } from '../behavior/overlay-manager.js';
+import { plugins } from '../core/plugins.js';
+import { followState } from '../adapters/alpine.js';
 
-// Sent by a modal that opens: the open ones that do not hold its opener close.
-const REPLACE = 'acun:modal:replace';
+/** @import { AlpineLike } from '../core/types.js' */
+/** @import { ModalInstance } from '../plugins/modal.js' */
+/** @import { AlpineMagics } from './drawer.js' */
 
+let warned = false;
+const warn = () => {
+    if (!warned) console.warn('[Acun UI] x-data="acunModal(…)" is deprecated and goes in 3.0: use the modal markup with data-acun-modal (it needs no Alpine).');
+    warned = true;
+};
+
+/**
+ * @param {Element} root
+ * @returns {ModalInstance | null}
+ */
+const instanceOf = (root) => /** @type {ModalInstance | null} */ (/** @type {unknown} */ (plugins.get(root, 'modal') ?? plugins.mount(root, 'modal')));
+
+/**
+ * What modalScope() and modal() share: the 2.0 names, on the plugin instance of root.
+ *
+ * @param {Element} root
+ */
+function methods(root) {
+    return {
+        show() {
+            instanceOf(root)?.open();
+        },
+        /** notifyServer: false when closed by an event (no close-action). */
+        close(notifyServer = true) {
+            instanceOf(root)?.close({ notify: notifyServer });
+        },
+        requestClose() {
+            instanceOf(root)?.requestClose();
+        },
+        /** @returns {HTMLElement[]} */
+        focusables() {
+            return instanceOf(root)?.focusables() ?? [];
+        },
+    };
+}
+
+/**
+ * The scope of a modal root (adapters/alpine.js).
+ *
+ * @param {HTMLElement} root
+ * @param {AlpineLike} Alpine
+ */
+export function modalScope(root, Alpine) {
+    const open = instanceOf(root)?.isOpen ?? false;
+    const scope = Alpine.reactive({ open, model: open, ...methods(root) });
+    const stopFollowing = followState(root, 'modal', (value) => {
+        scope.open = value;
+        scope.model = value;
+    });
+    // The bound property (wire:model / x-model through x-modelable): true opens, false closes (no close-action).
+    const stopWatching = Alpine.watch(() => scope.model, (value) => (value ? instanceOf(root)?.open() : instanceOf(root)?.close({ notify: false })));
+
+    return {
+        scope,
+        stop() {
+            stopFollowing();
+            stopWatching();
+        },
+    };
+}
+
+/**
+ * Alpine.data('acunModal'): deprecated, see above.
+ *
+ * @param {{ name?: string, closeAction?: string | null, requestCloseEvent?: string | null }} [options]
+ */
 export function modal({ name, closeAction = null, requestCloseEvent = null } = {}) {
-    const stop = [];
-    // The component root. Alpine binds this.$el to the element whose directive runs, so a
-    // method called from a part (the X, acun:modal.close) would see that part instead.
-    let root = null;
+    let stop = () => {};
 
     return {
         open: false,
         // The value wire:model / x-model binds (x-modelable): true opens the modal, false closes it.
         model: false,
 
+        /** @this {AlpineMagics & Record<string, any>} */
         init() {
-            root = this.$el;
-            stop.push(
-                listen(EVENTS.modal.open, (event) => isFor(event, name) && this.show()),
-                listen(EVENTS.modal.close, (event) => isFor(event, name, { all: true }) && this.close(false)),
-                // Replaced by another modal: the server is told, as when the user closes it.
-                listen(REPLACE, (event) => event.detail?.modal !== root && !root.contains(event.detail?.opener) && this.close()),
-                // The panel (the first dialog inside: a nested modal's comes later) keeps the
-                // name of a header that a nested Livewire component draws.
-                keepHeaderName(root.querySelector('[role="dialog"], [role="alertdialog"]'), root, 'modal'),
-            );
+            warn();
+            const root = this.$el;
+            if (!root.hasAttribute('data-acun-modal') && name) root.setAttribute('data-acun-modal', name);
+            if (closeAction && !root.hasAttribute('data-close-action')) root.setAttribute('data-close-action', closeAction);
+            if (requestCloseEvent && !root.hasAttribute('data-request-close-event')) root.setAttribute('data-request-close-event', requestCloseEvent);
+            Object.assign(this, methods(root));
 
+            stop = followState(root, 'modal', (value) => {
+                this.open = value;
+                this.model = value;
+            });
             this.$watch('model', (value) => (value ? this.show() : this.close(false)));
             // Bound open from the start (a property already true): it opens once Alpine has set it.
             this.$nextTick(() => { if (this.model && !this.open) this.show(); });
         },
 
         destroy() {
-            stop.splice(0).forEach((stopListening) => stopListening());
-            overlays.close(root);
+            stop();
         },
 
-        show() {
-            if (this.open) return;
-
-            // One modal at a time (no doubt about which X belongs to which modal): another
-            // open one closes first. One opened from inside an open modal (a confirmation
-            // over an edit form) goes on top of it instead; Escape closes the top one.
-            dispatch(REPLACE, { modal: root, opener: document.activeElement });
-
-            this.open = this.model = true;
-            overlays.open(root, {
-                close: () => this.requestClose(),
-                trap: () => this.$refs.panel,
-            });
-            // The panel's x-transition holds $nextTick until the panel is shown.
-            this.$nextTick(() => focusFirst(this.$refs.panel));
-            dispatch(EVENTS.modal.opened, { name }, root);
-        },
-
-        /** notifyServer: false when closed by an event (the server asked for it). */
-        close(notifyServer = true) {
-            if (!this.open) return;
-
-            this.open = this.model = false;
-            overlays.close(root);
-
-            if (notifyServer && closeAction) this.$wire[closeAction]();
-
-            dispatch(EVENTS.modal.closed, { name }, root);
-            dispatch('modal-closed', { name }, root);
-        },
-
-        /** X, Escape and the backdrop: closes, or asks first (request-close-event, e.g. unsaved changes). */
-        requestClose() {
-            if (requestCloseEvent) dispatch(requestCloseEvent, {}, root);
-            else this.close();
-        },
-
-        /** The panel's elements that Tab reaches. */
+        show() {},
+        close() {},
+        requestClose() {},
+        /** @returns {HTMLElement[]} */
         focusables() {
-            return focusable(this.$refs.panel);
+            return [];
         },
     };
 }

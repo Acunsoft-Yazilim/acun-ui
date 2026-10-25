@@ -16,7 +16,7 @@ import { readConfig } from '../core/config.js';
 export const page = { reload: () => window.location.reload() };
 
 export function reloadWhenLeavingForcedLayout() {
-    window.addEventListener('livewire:navigate', (event) => {
+    window.addEventListener('livewire:navigate', (/** @type {Event & { detail?: { url?: string } }} */ event) => {
         const url = event.detail?.url;
         if (event.defaultPrevented || !url || !readConfig()?.forced) return;
 
@@ -24,7 +24,7 @@ export function reloadWhenLeavingForcedLayout() {
         window.location.href = url;
     });
 
-    document.addEventListener('livewire:navigating', (event) => {
+    document.addEventListener('livewire:navigating', (/** @type {Event & { detail?: { onSwap?: (callback: () => void) => void } }} */ event) => {
         if (typeof event.detail?.onSwap !== 'function') return;
 
         event.detail.onSwap(() => {

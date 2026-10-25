@@ -1,3 +1,6 @@
+// @ts-nocheck: not type-checked yet; typed progressively (ARCHITECTURE.md, ADR-008). Its exports used
+// by the public API carry JSDoc types for the declaration files.
+//
 // The Alpine stores of the layouts: sidebar, navbar, customizer, brand and appearance.
 // Registered once, on the first page with acun:layout.head (its config island). The choices
 // are kept per scope (localStorage 'acun-ui:{scope}'), so two products on one origin never

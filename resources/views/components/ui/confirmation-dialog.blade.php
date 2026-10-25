@@ -21,20 +21,19 @@
     @endif
 
     <acun:slot:footer>
-        <acun:button variant="white" x-on:click="close()">{{ $cancelText }}</acun:button>
+        <acun:button variant="white" data-acun-close-now="">{{ $cancelText }}</acun:button>
 
         {{--
             Confirm button: customise it by passing your own wire:click action, e.g.
             <acun:confirmation-dialog name="delete-product" ...>
                 <acun:button variant="danger" wire:click="delete">Sil</acun:button>
             </acun:confirmation-dialog>
-            If the slot is empty, only the '{{ $name }}-confirmed' event is dispatched.
+            If the slot is empty, the modal closes and the '{{ $name }}-confirmed' event is dispatched.
         --}}
         @if ($slot->isNotEmpty())
             {{ $slot }}
         @else
-            @php($confirmedEvent = \Illuminate\Support\Js::from($name.'-confirmed'))
-            <acun:button variant="danger" x-on:click="close(); $dispatch({{ $confirmedEvent }})">
+            <acun:button variant="danger" data-acun-close-now="" data-acun-dispatch="{{ $name }}-confirmed">
                 {{ $confirmText }}
             </acun:button>
         @endif

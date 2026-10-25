@@ -1,3 +1,6 @@
+// @ts-nocheck: not type-checked yet; typed progressively (ARCHITECTURE.md, ADR-008). Its exports used
+// by the public API carry JSDoc types for the declaration files.
+//
 // The look of the page, on <html>: the mode and theme (data-theme), the user's colour
 // (--ac-user-*), the skin and the menu width. The boot script applies it before the first
 // paint; the stores keep it.
@@ -171,7 +174,12 @@ export const prefersDark = () => window.matchMedia?.('(prefers-color-scheme: dar
 /** Whether the mode shows the dark member: dark, or system while the operating system is dark. */
 export const isDarkMode = (mode) => mode === 'dark' || (mode === 'system' && prefersDark());
 
-/** Whether element is in a dark theme: the nearest data-theme ends in "dark" (AcunUI.isDark). */
+/**
+ * Whether element is in a dark theme: the nearest data-theme ends in "dark" (AcunUI.isDark).
+ *
+ * @param {Element | null} [element]
+ * @returns {boolean}
+ */
 export function isDark(element = document.documentElement) {
     return element?.closest?.('[data-theme]')?.dataset.theme.endsWith('dark') ?? false;
 }
@@ -192,6 +200,10 @@ export function applyMode(mode, theme = DEFAULT_THEME) {
 /**
  * The colour of a token on element as rgb() (AcunUI.tokenColor(element, '--ac-line')): custom
  * properties hold unresolved text (color-mix(…), var(…)), so a hidden probe resolves it.
+ *
+ * @param {Element | null | undefined} element
+ * @param {string} name  a custom property: '--ac-line'
+ * @returns {string}
  */
 export function tokenColor(element, name) {
     const host = element?.nodeType === 1 ? element : document.documentElement;
