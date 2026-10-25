@@ -1,0 +1,71 @@
+/*
+ * Acun UI - the global base (optional).
+ *
+ * The rules here reach every element of the page, not only the kit's components: the theme's line colour
+ * for a border without a colour class, the pointer cursor on everything clickable, the headings'
+ * letter spacing, the monospace font of code, the font smoothing of dark themes and the page texture of
+ * a theme. css/panel.css (the package's default entry) imports it after css/core.css, so applications see
+ * no change; an application that wants no global rules from the kit imports css/core.css alone.
+ */
+@layer base {
+    /*
+     * The text colour, the headings' colour, the browser's own parts (color-scheme) and the page's
+     * font follow each element's theme (themes.css). Public Sans keeps the system's text rendering
+     * on light backgrounds; light text in a dark theme (the page or a section) is smoothed so it
+     * does not look heavier than it is.
+     */
+    [data-theme$='dark'] {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    [data-theme$='dark'] [data-theme]:not([data-theme$='dark']) {
+        -webkit-font-smoothing: auto;
+        -moz-osx-font-smoothing: auto;
+    }
+
+    /*
+     * The page's texture: a theme's --ac-page-pattern (none in the built-in themes; a paper texture in
+     * Acun Pro's Atelier) over the body's colour (the layouts paint bg-page).
+     */
+    body {
+        background-image: var(--ac-page-pattern);
+        background-size: var(--ac-page-pattern-size);
+    }
+
+    :is(h1, h2, h3, h4, h5, h6) {
+        letter-spacing: -0.011em;
+    }
+
+    code, kbd, samp, pre {
+        font-family: var(--ac-font-mono);
+    }
+
+    /* A border without a colour class is the theme's line. */
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--ac-line, currentColor);
+    }
+
+    /* Tailwind v4 sets the cursor to `default` on buttons; use the pointer cursor on everything clickable. */
+    a[href],
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    summary,
+    label[for],
+    select:not(:disabled),
+    input:is([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='file']):not(:disabled),
+    ::file-selector-button {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    input:disabled,
+    select:disabled,
+    [aria-disabled='true'] {
+        cursor: not-allowed;
+    }
+}

@@ -176,7 +176,7 @@ test('the tone is the colour itself when it reads on the light target, the dark 
  * hovers and dark-theme tones keep the fill.
  */
 test('the presets through the pipeline give today\'s tuned values', () => {
-    const panelCss = read('../css/panel.css');
+    const panelCss = read('../css/core.css');
     const palette = (name) => {
         const value = (panelCss.match(new RegExp(`--color-${name}: ([^;]+);`)) ?? themesCss.match(new RegExp(`--ac-${name}: ([^;]+);`)))[1].trim();
         const shade = value.match(/^color-mix\(in srgb, var\(--color-([\w-]+)\) (\d+)%, (black|white)\)$/);

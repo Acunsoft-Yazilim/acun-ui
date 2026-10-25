@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 // 18.66px); text on white reaches 4.5:1. Values are #rrggbb or
 // color-mix(in srgb, <value> N%, black|white), resolved the way the browser mixes them.
 const cssDirectory = path.join(path.dirname(fileURLToPath(import.meta.url)), '../css');
-const css = fs.readFileSync(path.join(cssDirectory, 'panel.css'), 'utf8');
+const css = fs.readFileSync(path.join(cssDirectory, 'core.css'), 'utf8');
 const rootBlock = css.slice(css.indexOf('@theme'));
 const declarations = new Map();
 

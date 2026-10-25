@@ -21,7 +21,7 @@ import { chrome, inChrome, stylesheet } from './js/chrome.mjs';
 const read = (file) => fs.readFileSync(new URL(file, import.meta.url), 'utf8');
 const themesCss = read('../css/themes.css');
 const tokensCss = read('../css/tokens.css');
-const panelCss = read('../css/panel.css');
+const panelCss = read('../css/core.css');
 const proCss = read('../../acun-pro/resources/css/panel.css');
 
 const TONES = ['primary', 'secondary', 'success', 'info', 'warning', 'danger', 'dark', 'accent'];

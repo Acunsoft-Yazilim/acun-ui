@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-// The Acun DataTable theme bridge (css/acun-datatable.css, imported by css/panel.css): the package's
+// The Acun DataTable theme bridge (css/acun-datatable.css, imported by css/core.css): the package's
 // stylesheet (@acunsoft/datatable-dom/styles.css) reads --adt-* custom properties and turns itself dark
 // under data-theme="dark", .dark or the system setting. The bridge maps those properties to the kit's
 // tokens, so the theme decides, never the package's own switch. It is in the free kit: an application
@@ -13,10 +13,10 @@ const css = read('acun-datatable.css');
 const roots = '.adt, .adt-table-wrap, .adt-paging, .adt-info, .adt-length, .adt-search, .adt-selection, .adt-columns, .adt-toolbar, .adt-import';
 const block = css.match(/^(:is\(\.adt,[^{]+)\{([^}]*)\}/m);
 
-test('panel.css imports the bridge outside any cascade layer', () => {
-    const panel = read('panel.css');
+test('core.css imports the bridge outside any cascade layer', () => {
+    const panel = read('core.css');
     const line = panel.match(/^@import '\.\/acun-datatable\.css'([^;]*);/m);
-    assert.ok(line, 'panel.css imports acun-datatable.css.');
+    assert.ok(line, 'core.css imports acun-datatable.css.');
     // No layer(): an unlayered package stylesheet would beat a layered bridge whatever its specificity.
     assert.equal(line[1].trim(), '');
     // Among the imports at the top, before the first rule.

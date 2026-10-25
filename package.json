@@ -1,7 +1,7 @@
 {
   "name": "@acunsoft/acun-ui",
   "version": "2.2.0",
-  "description": "Acun UI: Tailwind CSS theme and Alpine.js components for admin panels.",
+  "description": "Acun UI: design tokens, Tailwind CSS v4 sources, a compiled stylesheet and the browser runtime of the Acun UI components.",
   "homepage": "https://ui.acunsoft.com",
   "keywords": [
     "tailwindcss",
@@ -24,6 +24,8 @@
       "style": "./css/panel.css",
       "default": "./js/index.js"
     },
+    "./acun-ui.css": "./dist/acun-ui.css",
+    "./acun-ui-core.css": "./dist/acun-ui-core.css",
     "./css/*": "./css/*",
     "./js/*": "./js/*",
     "./vite": "./vite/index.js"
@@ -42,10 +44,15 @@
   ],
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "prepublishOnly": "node --test tests/js/assets.test.mjs"
+    "prepublishOnly": "node --test tests/js/assets.test.mjs tests/js/css-dist.test.mjs"
   },
   "peerDependencies": {
     "tailwindcss": "^4.1.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"
