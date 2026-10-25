@@ -101,7 +101,8 @@
             class="filter-panel fixed inset-y-0 left-0 z-50 flex h-full w-[85vw] max-w-xs -translate-x-full flex-col overflow-hidden bg-surface shadow-xl transition-transform duration-200 ease-out data-open:translate-x-0 motion-reduce:transition-none lg:w-0 lg:max-w-none lg:translate-x-0 lg:border lg:border-line lg:shadow-lg lg:transition-[width] lg:data-open:w-(--menu-width)"
             tabindex="-1"
             role="dialog"
-            {!! $dialogName($title ?? __('Filters')) !!}
+            {{-- Named as the classic drawer: a header part first, then aria-label, the title, "Filters". --}}
+            {!! $dialogName($ariaLabel ?? $title ?? __('Filters')) !!}
         >
             <div class="flex w-full flex-1 flex-col overflow-hidden lg:w-(--menu-width){{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=drawer-header],[data-slot=drawer-body],[data-slot=drawer-footer]))]:contents' : '' }}">
 @if ($parts)

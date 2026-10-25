@@ -90,6 +90,20 @@ final class DrawerBindingTest extends TestCase
         self::assertTrue($panel->hasAttribute('hidden'), 'Closed on the server: no flash of an open panel.');
     }
 
+    public function test_the_docked_panel_takes_its_aria_label(): void
+    {
+        $dialog = fn (string $blade) => (new DOMXPath($this->document(Blade::render($blade))))->query('//*[@role="dialog"]')->item(0);
+
+        // aria-label wins over the title (it used to be ignored: the panel was named by the title or "Filters").
+        self::assertSame('Sipariş filtreleri', $dialog('<acun:drawer name="f" docked title="Filtreler" aria-label="Sipariş filtreleri">İçerik</acun:drawer>')->getAttribute('aria-label'));
+        self::assertSame('Filtreler', $dialog('<acun:drawer name="f" docked title="Filtreler">İçerik</acun:drawer>')->getAttribute('aria-label'));
+        self::assertSame(__('Filters'), $dialog('<acun:drawer name="f" docked>İçerik</acun:drawer>')->getAttribute('aria-label'));
+        // A header part still names it (aria-labelledby), as in the classic drawer.
+        $named = $dialog('<acun:drawer name="f" docked aria-label="Yok sayılır"><acun:drawer.header title="Filtreler" /></acun:drawer>');
+        self::assertSame('f-title', $named->getAttribute('aria-labelledby'));
+        self::assertFalse($named->hasAttribute('aria-label'));
+    }
+
     private function root(string $html): DOMElement
     {
         return (new DOMXPath($this->document($html)))->query('/html/body/*[1]')->item(0);
