@@ -30,7 +30,8 @@
         data-acun-control
         id="{{ $radioId }}"
         type="radio"
-        name="{{ $fieldName }}"
+        {{-- No name without one (x-model alone): an empty name="" groups nothing and submits nothing either. --}}
+        @if (filled($fieldName)) name="{{ $fieldName }}" @endif
         value="{{ $value }}"
         @checked($checked)
         @if ($error) aria-invalid="true" @endif

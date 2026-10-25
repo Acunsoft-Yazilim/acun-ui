@@ -110,6 +110,10 @@ final class FormFieldsTest extends TestCase
         $radios = Blade::render('<x-ui.radio x-model="plan" value="aylik" label="Aylık" /><x-ui.radio x-model="plan" value="yillik" label="Yıllık" />');
         self::assertStringContainsString('id="plan-aylik"', $radios);
         self::assertStringContainsString('id="plan-yillik"', $radios);
+        // Bound only with x-model: no name="" (Alpine groups them by the model); wire:model and name still name them.
+        self::assertStringNotContainsString('name=', $radios);
+        self::assertStringContainsString('name="plan"', Blade::render('<x-ui.radio wire:model.live="plan" value="aylik" label="Aylık" />'));
+        self::assertStringContainsString('name="donem"', Blade::render('<x-ui.radio name="donem" x-model="plan" value="aylik" label="Aylık" />'));
 
         $searches = Blade::render('<x-ui.search label="Sipariş ara" /><x-ui.search label="Kişi ara" />');
         preg_match_all('/<input[^>]*\sid="([^"]+)"/', $searches, $ids);
