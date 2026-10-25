@@ -57,6 +57,8 @@ Without the `@source` line the components render unstyled. If Laravel's default 
 
 The kit draws its own form controls: every `<input>`, `<select>` and `<textarea>` a component renders carries `data-acun-control`, and `css/forms.css` styles only those (the `@tailwindcss/forms` plugin is not needed, and the application's other fields are left alone). Your own markup (the npm path) puts `data-acun-control` on a field to get the same base.
 
+Acun DataTable (`acunsoft/datatable-laravel`, a separate MIT package for server-side Livewire tables) brings its own stylesheet (`@import '@acunsoft/datatable-dom/styles.css';`); `css/acun-datatable.css` (imported by `css/panel.css`) sets its `--adt-*` colours, corners and font from the tokens, so it follows the theme, the dark theme and the primary colour. Docs: https://ui.acunsoft.com/components/acun-datatable.html
+
 ### Theming
 
 The components paint with design tokens, not palette shades, so each one follows the theme by itself. Use the same utilities in your own markup instead of `gray-*`, `zinc-*` and `dark:` classes: `bg-page`, `bg-surface`, `text-ink`, `text-muted`, `border-line`, and per tone (primary, secondary, success, info, warning, danger, dark, accent) `bg-primary text-on-primary`, `text-primary-ink`, `bg-danger-tint text-danger-tint-ink`…
@@ -107,7 +109,7 @@ The JS of the PRO components (charts, maps, date ranges, the unsaved-changes gua
 |---|---|
 | `@acunsoft/acun-ui` (CSS, `style` condition) | `css/panel.css` — tokens, themes and component layer |
 | `@acunsoft/acun-ui` (JS) | `js/index.js` — sets up `window.AcunUI`; exports `VERSION`, `EVENTS`, `scrollLock`, `overlays`, `focusFirst`, `trapTab`, `rememberFocus`, `focusable`, `drawer`, `modal`, `syncSelectValues`, `skipDetachedMorphs` |
-| `@acunsoft/acun-ui/css/*` | `panel.css` (imports `tokens.css` and `themes.css`) |
+| `@acunsoft/acun-ui/css/*` | `panel.css` (imports `tokens.css`, `themes.css`, `forms.css` and `acun-datatable.css`) |
 | `@acunsoft/acun-ui/js/*` | individual modules, e.g. `js/behavior/select-sync.js` |
 | `@acunsoft/acun-ui/vite` | `woff2Only()` — a Vite plugin that keeps only the WOFF2 files of laravel-vite-plugin's font build |
 

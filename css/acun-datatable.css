@@ -1,0 +1,38 @@
+/*
+ * Acun UI - the theme bridge for Acun DataTable (acunsoft/datatable-laravel, @acunsoft/datatable-dom:
+ * a separate MIT package by Acunsoft). Imported by panel.css, so every application that imports
+ * Acun UI has it, with or without Acun Pro, and it does nothing on a page without the table.
+ *
+ * The package's stylesheet (@acunsoft/datatable-dom/styles.css, which the application imports)
+ * draws every colour, radius and font from --adt-* custom properties declared on its outermost
+ * element; here they read the kit's tokens (themes.css) instead, so the table follows the theme,
+ * its dark member, a section with its own data-theme and the user's primary colour.
+ *
+ * The package turns itself dark under data-theme="dark", data-bs-theme="dark" or .dark, and under
+ * data-theme="auto" by the system setting; those rules have zero specificity (:where), so this
+ * block (one class) wins in every case and the tokens decide alone: a light section in a dark
+ * page stays light, a named dark theme (atelier-dark) is dark. The block is outside any @layer, as
+ * the package's stylesheet is, so the import order does not matter. Only colours, corners, the
+ * font and the shadow: the sizes (adt-size--sm, adt-size--lg) stay the package's.
+ */
+:is(.adt, .adt-table-wrap, .adt-paging, .adt-info, .adt-length, .adt-search, .adt-selection, .adt-columns, .adt-toolbar, .adt-import):not(:where(.adt, .adt-table-wrap, .adt-paging, .adt-info, .adt-length, .adt-search, .adt-selection, .adt-columns, .adt-toolbar, .adt-import) *) {
+    --adt-bg: var(--ac-surface);
+    --adt-surface: var(--ac-surface);
+    --adt-fg: var(--ac-body);
+    --adt-muted: var(--ac-muted);
+    --adt-line: var(--ac-line);
+    --adt-head-bg: color-mix(in srgb, var(--ac-sunken) 40%, transparent);
+    --adt-head-fg: var(--ac-muted);
+    --adt-hover: var(--ac-hover);
+    --adt-selected: color-mix(in srgb, var(--ac-p) 8%, var(--ac-surface));
+    --adt-accent: var(--ac-primary);
+    --adt-accent-fg: var(--ac-on-primary);
+    --adt-focus: color-mix(in srgb, var(--ac-focus) 25%, transparent);
+    --adt-danger: var(--ac-danger-ink);
+    --adt-radius: var(--ac-radius);
+    --adt-control-radius: var(--ac-radius);
+    --adt-shadow: var(--ac-shadow-xs);
+    --adt-font: var(--ac-font-sans);
+
+    color-scheme: inherit;
+}

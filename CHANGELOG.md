@@ -8,6 +8,8 @@
 
 - `acun:datatables` (Acun Pro's new DataTables component) is in the list of Acun Pro tags: without `acunsoft/acun-pro` it stops with the error that says where the component is.
 
+- Acun DataTable theme bridge: the new `css/acun-datatable.css` (imported by `css/panel.css`, outside any cascade layer) sets the `--adt-*` custom properties of Acun DataTable (`acunsoft/datatable-laravel`'s Livewire table and `@acunsoft/datatable-dom`, a separate MIT package by Acunsoft) from the kit's tokens (`--ac-surface`, `--ac-body`, `--ac-line`, `--ac-primary`, `--ac-radius`, `--ac-font-sans`…) on the table's outermost element. With the package's own stylesheet imported, the table follows the theme, its dark member, a section's `data-theme` and the user's primary colour; the package's own dark switch (`data-theme="dark"`, `.dark`, the system setting under `data-theme="auto"`) no longer decides. Colours, corners, the font and the shadow only: the package's sizes stay. Nothing changes on pages without the package, and it works the same with or without `acunsoft/acun-pro`. Docs: https://ui.acunsoft.com/components/acun-datatable.html
+
 ## 2.1.1 (2026-10-22)
 
 - `php artisan acun:install`: Laravel's skeleton sets its own font (`--font-sans` in an `@theme` block of `app.css`), which overrides Acun UI's (Public Sans, DM Mono). An interactive run now asks to remove it (yes by default) and shows the removed lines; the block goes too when nothing else is left in it. `--remove-font` removes it without asking. Without interaction the line is left with a warning, as before (a script never changes the design by itself).

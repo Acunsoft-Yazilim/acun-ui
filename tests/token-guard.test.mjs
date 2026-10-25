@@ -49,7 +49,8 @@ test('the guard finds what it is for', () => {
  * The kit's stylesheets read the tokens too: no palette variable, hex colour, .dark rule or 1.x kit
  * variable (--ui-*, --btn-*). panel.css keeps the palette scales in its @theme block for application
  * code and data colours; themes.css holds the built-in themes' own values (hex allowed there);
- * forms.css, the form controls' base, reads the tokens too.
+ * forms.css, the form controls' base, and acun-datatable.css, the Acun DataTable bridge, read the
+ * tokens too.
  */
 test('no palette variable, hex colour, .dark rule or 1.x kit variable in the kit\'s CSS', () => {
     const css = (file) => fs.readFileSync(new URL(`../css/${file}`, import.meta.url), 'utf8');
@@ -61,7 +62,8 @@ test('no palette variable, hex colour, .dark rule or 1.x kit variable in the kit
         'tokens.css': cssViolations(css('tokens.css')),
         'themes.css': cssViolations(css('themes.css'), { hex: false }),
         'forms.css': cssViolations(css('forms.css')),
-    }, { 'panel.css': [], 'tokens.css': [], 'themes.css': [], 'forms.css': [] });
+        'acun-datatable.css': cssViolations(css('acun-datatable.css')),
+    }, { 'panel.css': [], 'tokens.css': [], 'themes.css': [], 'forms.css': [], 'acun-datatable.css': [] });
 });
 
 test('the CSS guard finds what it is for', () => {
