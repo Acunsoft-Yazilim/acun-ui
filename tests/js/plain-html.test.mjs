@@ -362,3 +362,63 @@ test('a close button outside any component says so in the console instead of thr
 
     assert.deepEqual(messages, ['[Acun UI] data-acun-close is not inside a component it can close.', '[Acun UI] Nothing named "yok" to open on this page.']);
 });
+
+// A modal <dialog> the page opens inside a modal (its own confirmation): Escape is the browser's, it
+// closes the native dialog (the cancel event), not the modal around it.
+test('Escape inside a native modal <dialog> in a modal leaves the modal open', async () => {
+    await mount(modalHtml('icteki', { body: '<dialog id="yerli"><button id="yerli-tamam">Tamam</button></dialog>' }));
+    AcunUI.modal.open('icteki');
+    await settle();
+    const native = byId('yerli');
+    native.setAttribute('open', '');
+    byId('yerli-tamam').focus();
+
+    const escape = press('Escape');
+    await settle();
+    assert.equal(escape.defaultPrevented, false, "the browser's own close of the <dialog> is not cancelled");
+    assert.equal(isOpen('icteki'), true, 'the modal stays open');
+
+    native.removeAttribute('open');
+    byId('icteki-x').focus();
+    press('Escape');
+    await sleep(250);
+    assert.equal(isOpen('icteki'), false, 'without the native dialog, Escape closes the modal');
+});
+
+// The opener of a menu item hides with the menu, which gives the focus to its own button (a dropdown
+// item with data-acun-open): after the dialog, the focus goes to that visible button, not to <body>.
+test('when the opener is hidden by the time the dialog closes, the focus goes to the element focused at opening', async () => {
+    await mount(`
+        <button type="button" id="menu-dugme">İşlemler</button>
+        <div id="menu"><button type="button" id="menu-oge" data-acun-open="menuden">Düzenle</button></div>
+        ${modalHtml('menuden', { title: 'Düzenle' })}`);
+    // The menu closes on the item's click (before the document's trigger handler) and focuses its button.
+    byId('menu-oge').addEventListener('click', () => {
+        byId('menu').hidden = true;
+        byId('menu-dugme').focus();
+    });
+
+    byId('menu-oge').focus();
+    byId('menu-oge').click();
+    await settle();
+    assert.equal(isOpen('menuden'), true);
+
+    press('Escape');
+    await sleep(250);
+    assert.equal(isOpen('menuden'), false);
+    assert.equal(document.activeElement, byId('menu-dugme'), 'the menu button, not <body>');
+});
+
+test('a hidden opener without a visible fallback: the focus does not stay inside the closed dialog', async () => {
+    await mount(`
+        <button type="button" id="tek-ac" data-acun-open="tek">Aç</button>
+        ${modalHtml('tek', { title: 'Tek' })}`);
+    byId('tek-ac').focus();
+    byId('tek-ac').click();
+    await settle();
+    byId('tek-ac').hidden = true;
+
+    press('Escape');
+    await sleep(250);
+    assert.equal(root('tek').contains(document.activeElement), false);
+});

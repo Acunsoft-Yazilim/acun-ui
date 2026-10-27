@@ -8,6 +8,8 @@
 - TypeScript declaration files for the runtime: `types/` (`"types"` in `package.json` and `exports`). The runtime stays plain JavaScript with JSDoc types, checked by TypeScript in strict mode.
 - Fixed: `x-data="acunDrawer({ docked: true })"` and `lockScroll: false` were ignored on a real page, where the runtime starts before Alpine: the docked panel became a modal overlay and locked the page. The drawer is mounted again with the options.
 - Fixed: after wire:navigate from one scope to another and back (panel → store → panel), the runtime kept the other page's settings (theme, colours, the browser storage key). The settings island of `acun:layout.head` now carries an id per response (`data-acun-ui-config="…"`), so the page shown always has the newest island, and the runtime removes the older ones.
+- Fixed: Escape inside a modal `<dialog>` the page opened in an `acun:modal` or `acun:drawer` closed the outer dialog and cancelled the browser's own close of the `<dialog>`, leaving the page inert. The browser now closes the `<dialog>` and the outer dialog stays open.
+- Fixed: a dialog opened from a menu item (a dropdown item with `data-acun-open`) gave the focus back to the hidden item when it closed, so the focus was lost. It now goes to the element focused when the dialog opened (the menu's button); with nowhere to go, the focus leaves the closed dialog.
 - Fixed: `acun:search` with a value that is not text (`:value="request('q')"` and `?q[]=x` in the URL) failed the page; the field is now empty.
 
 ## 2.2.0 (2026-10-22)

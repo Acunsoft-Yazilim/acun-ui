@@ -6,7 +6,7 @@
 // another is lifted above it (z-index).
 
 import { scrollLock } from './scroll-lock.js';
-import { trapTab } from './focus-trap.js';
+import { modalDialogIn, trapTab } from './focus-trap.js';
 import { rememberFocus } from './focus-restore.js';
 
 /**
@@ -70,6 +70,8 @@ function onKeydown(event) {
         // A list, menu or search box inside the dialog took the Escape (and stopped it or marked it).
         if (event.defaultPrevented || /** @type {Element | null} */ (event.target)?.closest?.('[role="combobox"][aria-expanded="true"]')) return;
         if (!ownsEscape(top, event)) return;
+        // A modal <dialog> the page opened inside the dialog: the browser's Escape closes it (cancel).
+        if (modalDialogIn(top.element)) return;
         // Handled: nothing else (a fullscreen video, the page) acts on the same Escape.
         event.preventDefault();
         top.close();
@@ -114,7 +116,7 @@ export const overlays = {
             trap: options.trap ?? null,
             escape: options.escape ?? 'inside',
             locked: options.lockScroll !== false,
-            restore: options.restoreFocus === false ? null : rememberFocus(options.opener ?? document.activeElement),
+            restore: options.restoreFocus === false ? null : rememberFocus(options.opener ?? document.activeElement, element),
             zIndex: null,
         };
 

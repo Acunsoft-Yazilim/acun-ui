@@ -6,6 +6,11 @@
  */
 export declare function focusFirst(container: HTMLElement): HTMLElement;
 /**
+ * @param {HTMLElement} container
+ * @returns {HTMLDialogElement | null}
+ */
+export declare function modalDialogIn(container: HTMLElement): HTMLDialogElement | null;
+/**
  * Handles a Tab keydown for container: from the last element back to the first and
  * the other way round; a focus that got out (to the page behind) comes back in. In
  * between the browser moves the focus itself. A focus in another window (one opened

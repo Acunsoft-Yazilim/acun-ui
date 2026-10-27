@@ -25,7 +25,7 @@ export function focusFirst(container) {
  * @param {HTMLElement} container
  * @returns {HTMLDialogElement | null}
  */
-function modalDialogIn(container) {
+export function modalDialogIn(container) {
     const canTell = typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('selector(:modal)');
     const open = [.../** @type {NodeListOf<HTMLDialogElement>} */ (container.querySelectorAll('dialog[open]'))].filter((dialog) => !canTell || dialog.matches(':modal'));
 

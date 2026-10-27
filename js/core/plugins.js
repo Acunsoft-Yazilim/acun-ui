@@ -33,6 +33,8 @@
 // A trigger's aria-expanded (on itself, or on its direct child when it is a display: contents
 // wrapper) follows its component.
 
+import { isVisible } from './dom.js';
+
 /**
  * What open() and toggle() take: opener is where the focus goes back when the component closes
  * (default: the element focused when it opened).
@@ -308,7 +310,9 @@ export function observe(enabled = true) {
 function openerOf(trigger) {
     const active = document.activeElement;
     if (active && active !== document.body && trigger.contains(active)) return active;
-    if (trigger.matches('button, a[href], [tabindex]')) return trigger;
+    // A trigger hidden by its own click (a menu item: the menu closed and focused its button) cannot
+    // take the focus back: the element focused now does.
+    if (trigger.matches('button, a[href], [tabindex]') && (isVisible(trigger) || !active || active === document.body)) return trigger;
 
     return trigger.querySelector('button, a[href], [tabindex]') ?? active;
 }
