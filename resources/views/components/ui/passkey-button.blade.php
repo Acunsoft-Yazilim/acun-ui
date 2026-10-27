@@ -51,7 +51,9 @@
         :variant="$variant"
         :size="$size"
         x-on:click="run()"
-        x-bind:disabled="busy || ! supported"
+        {{-- While it works it stays focusable (aria-disabled; run() does nothing then): disabled, it dropped the keyboard focus. --}}
+        x-bind:disabled="! supported"
+        x-bind:aria-disabled="busy ? 'true' : null"
         x-bind:aria-busy="busy ? 'true' : 'false'"
         {{ $attributes->except('class') }}
     >

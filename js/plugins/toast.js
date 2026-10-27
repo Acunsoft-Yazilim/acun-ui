@@ -10,7 +10,7 @@
 // toast from the template; the toasts the server flashed for this page (data-flashed) show when it mounts. A toast
 // goes after 5 seconds and stays while the pointer or the focus is on it; one with a link (an action, a download)
 // stays until it is closed, so there is time to reach it with the keyboard or a screen reader (WCAG 2.2.1). An error is
-// announced at once (role="alert"), the others wait their turn (status). The type is read as the server reads it
+// announced at once (role="alert"), the others by the container (aria-live="polite"; no status region inside it). The type is read as the server reads it
 // (danger is error, any case; anything else is info). A link passes the rule of Acun\Ui\Support\Url (javascript:,
 // data:… and another site's //host are dropped), opens with wire:navigate when Livewire is on the page and the link
 // is on this site, and download: true (or a file name) downloads it instead.
@@ -118,7 +118,8 @@ function createToasts(root) {
         const element = /** @type {HTMLElement | null} */ (template?.content.firstElementChild?.cloneNode(true) ?? null);
         if (!element) return;
 
-        element.setAttribute('role', toast.type === 'error' ? 'alert' : 'status');
+        // The container is the polite live region: it says the others; an error is said at once (alert).
+        if (toast.type === 'error') element.setAttribute('role', 'alert');
         element.dataset.type = toast.type;
         element.classList.add(...(typeClasses[toast.type] ?? '').split(/\s+/).filter(Boolean));
         const message = element.querySelector('[data-slot="toast-message"]');

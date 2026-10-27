@@ -95,7 +95,7 @@
 
             <div
                 x-show="open"
-                x-transition:enter="ease-out duration-150"
+                x-transition:enter="ease-out duration-150 motion-reduce:transition-none"
                 x-transition:enter-start="opacity-0 -translate-y-2"
                 x-transition:enter-end="opacity-100 translate-y-0"
                 role="dialog"
@@ -103,7 +103,8 @@
                 aria-label="{{ $placeholder }}"
                 class="relative w-full max-w-xl overflow-hidden rounded-sm bg-surface shadow-xl"
             >
-                <div class="flex items-center gap-3 border-b border-line px-4">
+                {{-- The row shows the search box's focus (the box itself has no ring). --}}
+                <div class="flex items-center gap-3 border-b border-line px-4 focus-within:shadow-[inset_0_-2px_0_var(--ac-focus)]">
                     <acun:icon name="magnifying-glass" size="5" class="text-faint" />
                     <input
                         data-acun-control
@@ -115,6 +116,7 @@
                         x-on:keydown.enter.prevent="go(results[highlighted])"
                         type="text"
                         placeholder="{{ $placeholder }}"
+                        aria-label="{{ $placeholder }}"
                         role="combobox"
                         aria-autocomplete="list"
                         :aria-expanded="(results.length > 0).toString()"
@@ -154,8 +156,10 @@
                             </a>
                         </li>
                     </template>
-                    <li x-show="results.length === 0" role="none" class="px-3 py-8 text-center text-sm text-muted"><span role="status">{{ $empty }}</span></li>
+                    <li x-show="results.length === 0" role="none" class="px-3 py-8 text-center text-sm text-muted">{{ $empty }}</li>
                 </ul>
+                {{-- Said as typing goes (always on the page: a region added with its text is not read everywhere). --}}
+                <p class="sr-only" role="status" x-text="query.trim() === '' ? '' : (results.length ? @js(__(':count results')).replace(':count', results.length) : @js($empty))"></p>
 
                 <div class="flex items-center gap-4 border-t border-line px-4 py-2.5 text-2xs text-muted">
                     <span><kbd class="font-mono">↑↓</kbd> {{ __('to navigate') }}</span>

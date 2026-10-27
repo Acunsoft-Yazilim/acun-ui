@@ -28,8 +28,9 @@
     $inputName = $multiple && ! str_ends_with($fieldName, '[]') && $binding->isEmpty() ? $fieldName.'[]' : $fieldName;
 @endphp
 
+{{-- A group is named (label, aria-label or aria-labelledby); without a name it takes no group role. --}}
 <div
-    role="{{ $multiple ? 'group' : 'radiogroup' }}"
+    @if ($label || $attributes->has('aria-label') || $attributes->has('aria-labelledby')) role="{{ $multiple ? 'group' : 'radiogroup' }}" @endif
     @if ($label) aria-label="{{ $label }}" @endif
     {{ $attributes->whereDoesntStartWith(['wire:model', 'x-model'])->class('flex flex-wrap gap-2') }}
 >

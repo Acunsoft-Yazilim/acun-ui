@@ -27,8 +27,9 @@
     $sizeClass = $size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm';
 @endphp
 
+{{-- A group is named (label, aria-label or aria-labelledby); without a name it is no radiogroup (the radios share a name). --}}
 <div
-    role="radiogroup"
+    @if ($label || $attributes->has('aria-label') || $attributes->has('aria-labelledby')) role="radiogroup" @endif
     @if ($label) aria-label="{{ $label }}" @endif
     {{ $attributes->whereDoesntStartWith(['wire:model', 'x-model'])->class(['gap-0.5 rounded-sm bg-sunken p-0.5', 'flex w-full' => $fullWidth, 'inline-flex' => ! $fullWidth]) }}
 >

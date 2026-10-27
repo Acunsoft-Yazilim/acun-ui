@@ -95,5 +95,12 @@
     "The light theme is on.": "Açık tema seçildi.",
     "The appearance is back to its defaults.": "Görünüm varsayılana döndü.",
     "(current theme)": "(geçerli tema)",
-    "Table": "Tablo"
+    "Table": "Tablo",
+    ":count results": ":count sonuç",
+    "Online": "Çevrimiçi",
+    "Offline": "Çevrimdışı",
+    "Away": "Uzakta",
+    "Busy": "Meşgul",
+    "Collapse / expand :title": ":title: daralt / genişlet",
+    "Close :title": ":title kapat"
 }

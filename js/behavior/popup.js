@@ -74,7 +74,10 @@ export function createPopup(root, { kind, attribute }) {
         if (!root.contains(/** @type {Node | null} */ (event.target))) popup.close({}, 'user');
     };
     const onDocumentKeydown = (/** @type {KeyboardEvent} */ event) => {
-        if (event.key === 'Escape' && !root.contains(/** @type {Node | null} */ (event.target))) popup.close({}, 'user');
+        if (event.key !== 'Escape' || root.contains(/** @type {Node | null} */ (event.target))) return;
+        // Marked handled: the same Escape does not also close the dialog it was pressed in.
+        event.preventDefault();
+        popup.close({}, 'user');
     };
     const listen = (/** @type {boolean} */ on) => {
         if (on) {

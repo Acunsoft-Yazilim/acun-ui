@@ -104,7 +104,7 @@
             <button
                 type="button"
                 data-slot="search-clear"
-                class="hidden flex-none items-center px-2 text-muted hover:text-body focus-visible:text-body focus-visible:outline-none peer-[:not(:placeholder-shown)]:flex"
+                class="hidden flex-none items-center px-2 text-muted hover:text-body focus-visible:text-body focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus rounded-sm peer-[:not(:placeholder-shown)]:flex"
                 aria-label="{{ __('Clear search') }}"
                 title="{{ __('Clear search') }}"
             >

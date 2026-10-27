@@ -23,6 +23,8 @@
         'dark' => 'bg-dark text-on-dark',
     ][\Acun\Ui\Support\Tone::name($color)];
     $statusClass = ['online' => 'bg-success-line', 'offline' => 'bg-faint', 'away' => 'bg-warning-line', 'busy' => 'bg-danger-line'][$status] ?? null;
+    // The status as words in the page's language (it was the raw key: "online").
+    $statusLabel = ['online' => __('Online'), 'offline' => __('Offline'), 'away' => __('Away'), 'busy' => __('Busy')][$status] ?? null;
     $initials = $name ? \Illuminate\Support\Str::of($name)->explode(' ')->filter()->take(2)->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->implode('') : null;
 @endphp
 
@@ -30,12 +32,13 @@
     @if ($src)
         <img src="{{ $src }}" alt="{{ $name ?? '' }}" class="size-full object-cover {{ $radiusClass }}">
     @else
-        <span class="flex size-full items-center justify-center font-semibold {{ $radiusClass }} {{ $colorClass }}" @if ($name) title="{{ $name }}" @endif>
-            {{ $initials ?? $slot }}
+        {{-- Initials name nobody: with a name, the avatar is an image named by it. --}}
+        <span class="flex size-full items-center justify-center font-semibold {{ $radiusClass }} {{ $colorClass }}" @if ($name) title="{{ $name }}" role="img" aria-label="{{ $name }}" @endif>
+            @if ($name)<span aria-hidden="true">{{ $initials }}</span>@else{{ $initials ?? $slot }}@endif
         </span>
     @endif
 
     @if ($statusClass)
-        <span class="absolute right-0 bottom-0 block size-2.5 rounded-full ring-2 ring-surface {{ $statusClass }}" role="img" aria-label="{{ $status }}"></span>
+        <span class="absolute right-0 bottom-0 block size-2.5 rounded-full ring-2 ring-surface {{ $statusClass }}" role="img" aria-label="{{ $statusLabel }}"></span>
     @endif
 </span>

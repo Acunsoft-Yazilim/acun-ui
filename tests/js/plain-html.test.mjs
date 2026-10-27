@@ -734,7 +734,7 @@ test('a toast event shows a toast from the template, with its type, a safe link 
         </div>`);
     const toasts = () => [...document.querySelectorAll('[data-slot="toast"]')].filter((toast) => !toast.closest('template'));
     assert.equal(toasts().length, 1, 'the flashed toast');
-    assert.equal(toasts()[0].getAttribute('role'), 'status');
+    assert.equal(toasts()[0].hasAttribute('role'), false, 'Said by the container (polite), not a status region inside it.');
     assert.ok(toasts()[0].classList.contains('bg-success'));
 
     dispatch('toast', { type: 'Danger', message: 'Silinemedi', link: 'javascript:alert(1)', linkLabel: 'Aç' });
@@ -894,4 +894,93 @@ test('a toast with a link stays until it is closed; one without goes on its time
     assert.ok(container.timers.get(plain.id).handle, 'the plain toast runs its timer');
     container.dismiss(withLink.id);
     container.dismiss(plain.id);
+});
+
+test('while a modal is open the page behind it is inert, except what it says (toasts, live regions); it all comes back on close', async () => {
+    await mount(`
+        <header id="ust"><a href="/">Anasayfa</a><p id="durum" role="status"></p></header>
+        <section id="icerik"><button type="button" id="ac" data-acun-open="siparis">Aç</button><p id="zaten" inert>Zaten kapalı</p>
+            ${modalHtml('siparis', { body: '<button type="button" id="ic-ac" data-acun-open="onay">Sil</button>' })}
+            ${modalHtml('onay', { title: 'Silinsin mi?', body: '<button id="evet">Evet</button>' })}
+        </section>
+        <div data-acun-toasts aria-live="polite" id="bildirimler"></div>`);
+    const inert = (id) => byId(id).hasAttribute('inert');
+
+    byId('ac').click();
+    await settle();
+    assert.equal(isOpen('siparis'), true);
+    assert.equal(byId('ust').querySelector('a').closest('[inert]') !== null, true, 'The header\'s link is out of reach.');
+    assert.equal(inert('durum') || byId('durum').closest('[inert]') !== null, false, 'Its status line is still heard.');
+    assert.equal(inert('ac'), true, 'The rest of the section around the modal.');
+    assert.equal(root('siparis').closest('[inert]'), null, 'Not the modal itself.');
+    assert.equal(byId('bildirimler').closest('[inert]'), null, 'Toasts are still heard.');
+
+    // A modal on top: the one under it is out of reach too.
+    byId('ic-ac').click();
+    await settle();
+    assert.equal(root('siparis').hasAttribute('inert'), true);
+    assert.equal(root('onay').closest('[inert]'), null);
+
+    press('Escape');
+    await settle();
+    assert.equal(root('siparis').hasAttribute('inert'), false, 'The top one closed: the one under it is back.');
+    press('Escape');
+    await settle();
+    assert.deepEqual([...document.querySelectorAll('[inert]')].map((element) => element.id), ['zaten'], 'Only what the page made inert itself.');
+});
+
+test('the Escape that hides a tooltip or closes a menu does not also close the modal it is in', async () => {
+    await mount(`
+        <button type="button" id="ac" data-acun-open="siparis">Aç</button>
+        ${modalHtml('siparis', { body: `
+            <input id="alan">
+            <span data-acun-tooltip><button type="button" id="ipucu">?</button><span role="tooltip" data-slot="tooltip-content" popover="manual" hidden>Sipariş numarası</span></span>
+            <div data-acun-dropdown data-slot="dropdown"><button type="button" id="menu" data-slot="dropdown-trigger">İşlemler</button><div data-slot="dropdown-content" role="menu" hidden><button type="button" role="menuitem">Düzenle</button></div></div>` })}`);
+    byId('ac').click();
+    await settle();
+
+    // A tooltip the pointer opened, the focus elsewhere in the modal.
+    document.querySelector('[data-acun-tooltip]').dispatchEvent(new window.MouseEvent('mouseenter'));
+    await settle();
+    byId('alan').focus();
+    press('Escape');
+    await sleep(150);
+    assert.equal(document.querySelector('[role="tooltip"]').hasAttribute('data-open'), false, 'The tooltip went.');
+    assert.equal(isOpen('siparis'), true, 'The modal stays.');
+
+    // A menu left open, the focus elsewhere in the modal.
+    byId('menu').click();
+    await settle();
+    byId('alan').focus();
+    press('Escape');
+    await settle();
+    assert.equal(AcunUI.plugins.get(document.querySelector('[data-acun-dropdown]'), 'dropdown').isOpen, false, 'The menu closed.');
+    assert.equal(isOpen('siparis'), true, 'The modal stays.');
+
+    press('Escape');
+    await settle();
+    assert.equal(isOpen('siparis'), false, 'The next Escape closes the modal.');
+});
+
+test('a stacked table keeps its table roles, also on rows added later', async () => {
+    await mount(`
+        <div class="ui-table-box" data-table-stack="sm" data-acun-table-scroll data-scroll-label="Tablo">
+            <table class="ui-table"><thead><tr><th>Ürün</th><th>Tutar</th></tr></thead>
+            <tbody><tr><th scope="row">Kulaklık</th><td data-label="Tutar">₺1.299</td></tr></tbody></table>
+        </div>`);
+    const table = document.querySelector('table');
+    const roles = () => [...table.querySelectorAll('*')].filter((element) => element.hasAttribute('role')).map((element) => `${element.tagName.toLowerCase()}:${element.getAttribute('role')}`);
+
+    assert.equal(table.getAttribute('role'), 'table');
+    assert.deepEqual(roles(), ['thead:rowgroup', 'tr:row', 'th:columnheader', 'th:columnheader', 'tbody:rowgroup', 'tr:row', 'th:rowheader', 'td:cell']);
+
+    // A Livewire update adds a row (and redraws one without its roles).
+    table.tBodies[0].insertAdjacentHTML('beforeend', '<tr><th scope="row">Mouse</th><td data-label="Tutar">₺499</td></tr>');
+    table.tBodies[0].rows[0].removeAttribute('role');
+    await settle();
+    assert.deepEqual(roles().slice(4), ['tbody:rowgroup', 'tr:row', 'th:rowheader', 'td:cell', 'tr:row', 'th:rowheader', 'td:cell']);
+
+    // Not stacked: the table's own semantics, nothing added.
+    await mount('<div class="ui-table-box" data-acun-table-scroll><table class="ui-table"><tbody><tr><td>1</td></tr></tbody></table></div>');
+    assert.equal(document.querySelector('[role]'), null);
 });

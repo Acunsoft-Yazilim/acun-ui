@@ -31,3 +31,10 @@ export declare function inOwnFocusLayer(element: Element | null | undefined): bo
  * @returns {HTMLElement | null}
  */
 export declare function ownPart(root: HTMLElement, attribute: string, slot: string, fallback?: string): HTMLElement | null;
+/**
+ * Focuses element without scrolling (a dialog still moving in would jump), then, once the enter
+ * transitions are over, brings it into view when it ended up outside the window (WCAG 2.4.11).
+ *
+ * @param {HTMLElement} element
+ */
+export declare function focusAndReveal(element: HTMLElement): void;

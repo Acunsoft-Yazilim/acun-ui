@@ -137,8 +137,9 @@ test('a toast stays while the pointer or the focus is on it; an error is announc
     dispatch('toast', { type: 'success', message: 'Kaydedildi' });
     await settle();
 
-    const [error, success] = container.querySelectorAll('[role]');
-    assert.deepEqual([error.getAttribute('role'), success.getAttribute('role')], ['alert', 'status']);
+    const [error, success] = container.querySelectorAll('[data-slot="toast"]:not(template *)');
+    // The container is the polite live region; only an error is a region of its own (alert).
+    assert.deepEqual([error.getAttribute('role'), success.getAttribute('role')], ['alert', null]);
 
     const id = data.toasts[0].id;
     error.dispatchEvent(new window.MouseEvent('mouseenter'));
@@ -186,10 +187,10 @@ test('a danger toast is an error toast; an unknown type is shown as info', async
     await settle();
 
     assert.deepEqual(data.toasts.map((toast) => toast.type), ['error', 'info', 'info']);
-    const [danger, unknown] = container.querySelectorAll('[role]');
+    const [danger, unknown] = container.querySelectorAll('[data-slot="toast"]:not(template *)');
     assert.equal(danger.getAttribute('role'), 'alert');
     assert.ok(danger.classList.contains('bg-danger'));
-    assert.equal(unknown.getAttribute('role'), 'status');
+    assert.equal(unknown.hasAttribute('role'), false);
     assert.ok(unknown.classList.contains('bg-inverse'));
 
     data.toasts.map((toast) => toast.id).forEach((toastId) => data.dismiss(toastId));

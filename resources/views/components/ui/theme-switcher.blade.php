@@ -287,7 +287,8 @@
             aria-haspopup="dialog"
             aria-controls="{{ $name }}"
         >
-            <acun:icon name="cog-6-tooth" size="5" class="animate-[spin_6s_linear_infinite] motion-reduce:animate-none" />
+            {{-- It turns while the pointer or the focus is on it, not on its own forever (WCAG 2.2.2). --}}
+            <acun:icon name="cog-6-tooth" size="5" class="transition-transform duration-700 group-hover:rotate-90 group-focus-visible:rotate-90 motion-reduce:transition-none" />
         </button>
     @elseif ($trigger === 'button')
         <button

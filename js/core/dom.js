@@ -86,3 +86,20 @@ export function ownPart(root, attribute, slot, fallback) {
 
     return part ?? (fallback ? root.querySelector(fallback) : null);
 }
+
+/**
+ * Focuses element without scrolling (a dialog still moving in would jump), then, once the enter
+ * transitions are over, brings it into view when it ended up outside the window (WCAG 2.4.11).
+ *
+ * @param {HTMLElement} element
+ */
+export function focusAndReveal(element) {
+    element.focus({ preventScroll: true });
+    if (typeof window === 'undefined') return;
+    setTimeout(() => {
+        if (document.activeElement !== element || !element.isConnected) return;
+        const box = element.getBoundingClientRect();
+        if (box.top < 0 || box.bottom > window.innerHeight || box.left < 0 || box.right > window.innerWidth) element.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    }, 250);
+}
+

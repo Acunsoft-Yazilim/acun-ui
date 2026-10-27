@@ -1,6 +1,6 @@
 // Keeps the keyboard focus inside a dialog and gives it its first focus.
 
-import { focusable, inOwnFocusLayer, isVisible } from '../core/dom.js';
+import { focusAndReveal, focusable, inOwnFocusLayer, isVisible } from '../core/dom.js';
 
 /**
  * Focuses a shown [autofocus], else the first focusable element, else the container itself.
@@ -13,7 +13,7 @@ export function focusFirst(container) {
     const autofocus = focusable(container).find((element) => element.hasAttribute('autofocus'))
         ?? [.../** @type {NodeListOf<HTMLElement>} */ (container.querySelectorAll('[autofocus]'))].find((element) => isVisible(element) && !element.closest('[inert]'));
     const target = autofocus ?? focusable(container)[0] ?? container;
-    target.focus({ preventScroll: true });
+    focusAndReveal(target);
 
     return target;
 }

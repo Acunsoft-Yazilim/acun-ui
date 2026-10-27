@@ -442,6 +442,8 @@ html.scroll-locked {
 
         [data-table-stack='sm'] > .ui-table > :is(tbody, tfoot) > tr > td[data-label]::before {
             content: attr(data-label);
+            /* Read once: the cell's header (its role above) already names it for screen readers. */
+            content: attr(data-label) / '';
             color: var(--ac-muted);
             text-align: start;
         }
@@ -524,6 +526,8 @@ html.scroll-locked {
 
         [data-table-stack='md'] > .ui-table > :is(tbody, tfoot) > tr > td[data-label]::before {
             content: attr(data-label);
+            /* Read once: the cell's header (its role above) already names it for screen readers. */
+            content: attr(data-label) / '';
             color: var(--ac-muted);
             text-align: start;
         }
@@ -558,3 +562,19 @@ html.scroll-locked {
         animation: none;
     }
 }
+
+/*
+ * Windows high contrast (forced colours) drops the shadows that draw the edge of cards, dialogs, drawers,
+ * menus and table boxes: they get a 1px outline in the system's text colour there (WCAG 1.4.11), no layout change.
+ */
+@media (forced-colors: active) {
+    [data-acun-surface],
+    .ui-table-box,
+    [data-slot='modal-panel'],
+    [data-slot='drawer-panel'],
+    [data-slot='popover-content'],
+    [data-slot='dropdown-content'] {
+        outline: 1px solid CanvasText;
+    }
+}
+

@@ -62,7 +62,8 @@
             data-acun-close
             @if ($dismissAction) wire:click="{{ $dismissAction }}" @endif
             aria-label="{{ __('Close') }}"
-            class="flex-none cursor-pointer text-current opacity-60 hover:opacity-100"
+            {{-- A 24px target (WCAG 2.5.8) in the alert's own colour, at full strength (3:1). --}}
+            class="-m-1 inline-flex size-6 flex-none cursor-pointer items-center justify-center rounded-sm text-current hover:bg-current/10 focus-visible:outline-2 focus-visible:outline-current"
         >
             <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>

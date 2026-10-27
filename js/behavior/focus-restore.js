@@ -1,6 +1,6 @@
 // Gives the focus back to where it was before a dialog opened.
 
-import { isVisible } from '../core/dom.js';
+import { focusAndReveal, isVisible } from '../core/dom.js';
 
 /**
  * @param {Element | null | undefined} element
@@ -26,7 +26,7 @@ export function rememberFocus(element = document.activeElement, within = null) {
         for (const candidate of candidates) {
             if (!canTakeFocus(candidate) || within?.contains(candidate)) continue;
 
-            candidate.focus({ preventScroll: true });
+            focusAndReveal(candidate);
             if (document.activeElement === candidate) return;
         }
         // Nowhere to go back to: at least the focus does not stay in the dialog that is being hidden.

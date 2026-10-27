@@ -97,6 +97,7 @@
         --}}
         <div
             data-slot="drawer-panel"
+            id="{{ $name }}"
             hidden
             class="filter-panel fixed inset-y-0 left-0 z-50 flex h-full w-[85vw] max-w-xs -translate-x-full flex-col overflow-hidden bg-surface shadow-xl transition-transform duration-200 ease-out data-open:translate-x-0 motion-reduce:transition-none lg:w-0 lg:max-w-none lg:translate-x-0 lg:border lg:border-line lg:shadow-lg lg:transition-[width] lg:data-open:w-(--menu-width)"
             tabindex="-1"

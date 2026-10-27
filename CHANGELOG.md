@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- While a modal dialog is open the page behind it is inert (pointer, keyboard and screen readers reach only the dialog; before, Tab alone was kept in). Toasts and other live regions stay heard, and only what the runtime made inert comes back when the dialog closes.
+- The Escape that hides a tooltip or closes a dropdown or popover no longer also closes the modal or drawer it is in.
+- A dialog's first focus and the focus given back when it closes are brought into view once the transitions are over, when they ended up outside the window.
+- A stacked table (`acun:table stack`) keeps its table roles on a narrow screen (and on rows a Livewire update adds), and the cells' labels are not read twice.
+- In Windows high contrast mode cards, dialogs, drawers, menus and table boxes keep a 1px edge.
+- Close buttons of alerts and toasts are 24px targets at full strength; the search field's clear button and the command palette's search row show their focus; the command palette's input has a name and its result count is announced; the theme switcher's gear turns only under the pointer or the focus instead of forever.
+- The checkbox's tick and dash are drawn only by the component, in the theme's colour (the base's white mark showed a halo on light primary colours).
+- A card's collapse and close buttons are named with its title ("Siparişler: daralt / genişlet"); acun:collapse ties its button to its content (`aria-controls`).
+- The avatar's status is read in the page's language ("Çevrimiçi"), and an initials avatar is an image named by the person's name.
+- A toast other than an error no longer carries its own `role="status"` inside the container's live region (it was announced twice by some screen readers); an error stays `role="alert"`.
+- `acun:segmented` and `acun:chip-group` take the radio group role only when they have a name (`label`, `aria-label` or `aria-labelledby`).
+- The passkey button stays focusable while it works (`aria-disabled`), so the keyboard focus is not lost.
+- The docked drawer's panel has the drawer's name as its id (`aria-controls` of its buttons can point at it).
 - Accessibility (WCAG 2.2 AA): the resting frame of the text fields (`acun:input`, `acun:textarea`, `acun:select`, `acun:input-group`, `acun:search`) and the switch's off track use the `control` colour, which reaches 3:1 against the page (WCAG 1.4.11); they used `line-strong`. `--ac-line-hover` is darker (light `#71717b`, dark `#9a9a9a`) and the success, info and warning `-line` colours reach 3:1 too (`tests/tokens.test.mjs`). An invalid field keeps a red ring when focused, the focus outline is `outline-hidden` (still visible in forced colours), and in forced colours (Windows high contrast) the fields keep a frame and the switch an edge, a thumb and a Highlight fill when on. The selected option of `acun:segmented` and the theme switcher has an edge besides its fill.
 - A table wider than its box (`acun:table`) can be scrolled with the keyboard: the new `table-scroll` plugin makes the box a focusable, named region (the caption, else `data-scroll-label`) while the table overflows, and removes it when it fits.
 - A toast with a link (an action, a download) stays until it is closed, so there is time to reach the link with the keyboard or a screen reader (WCAG 2.2.1); the others still go after 5 seconds.

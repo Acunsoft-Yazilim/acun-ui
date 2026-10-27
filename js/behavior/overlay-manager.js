@@ -8,6 +8,7 @@
 import { scrollLock } from './scroll-lock.js';
 import { modalDialogIn, trapTab } from './focus-trap.js';
 import { rememberFocus } from './focus-restore.js';
+import { plugins } from '../core/plugins.js';
 
 /**
  * How a dialog takes part (overlays.open's options).
@@ -81,6 +82,42 @@ function onKeydown(event) {
     }
 }
 
+// The page behind the newest dialog that keeps Tab inside it is inert (the WAI-ARIA modal dialog): the
+// pointer, the keyboard and screen readers reach nothing else (Tab alone was kept in before). What the
+// page says (toasts, live regions) stays heard. Only what this made inert goes back when it closes,
+// and a Livewire morph does not take it away meanwhile (plugins.own).
+const LIVE = '[data-acun-toasts], [aria-live], [role="status"], [role="alert"]';
+/** @type {Set<Element>} */
+const madeInert = new Set();
+
+/** @param {Element} element */
+function shut(element) {
+    if (element.hasAttribute('inert') || element.matches('script, style, template, link, meta') || element.matches(LIVE)) return;
+    // A part of the page with a live region in it: its other parts go, the region stays.
+    if (element.querySelector(LIVE)) {
+        [...element.children].forEach(shut);
+        return;
+    }
+    element.setAttribute('inert', '');
+    plugins.own(element, 'inert');
+    madeInert.add(element);
+}
+
+function updateInert() {
+    madeInert.forEach((element) => element.removeAttribute('inert'));
+    madeInert.clear();
+
+    const top = stack[stack.length - 1];
+    if (!top || !resolve(top.trap) || typeof document === 'undefined') return;
+
+    // Every sibling of the dialog and of each of its ancestors up to <body>.
+    for (let node = /** @type {Element} */ (top.element); node.parentElement && node !== document.body; node = node.parentElement) {
+        for (const sibling of node.parentElement.children) {
+            if (sibling !== node) shut(sibling);
+        }
+    }
+}
+
 /** @param {OverlayEntry} entry */
 function lift(entry) {
     const below = stack[stack.length - 1];
@@ -123,6 +160,7 @@ export const overlays = {
         if (entry.locked) scrollLock.lock();
         lift(entry);
         stack.push(entry);
+        updateInert();
     },
 
     /**
@@ -136,6 +174,7 @@ export const overlays = {
         if (!entry) return;
 
         stack.splice(stack.indexOf(entry), 1);
+        updateInert();
         if (entry.locked) scrollLock.unlock();
         if (entry.zIndex !== null) entry.element.style.zIndex = entry.zIndex;
 
@@ -175,6 +214,7 @@ export function forgetDetachedOverlays() {
     for (const entry of [...stack]) {
         if (!entry.element.isConnected) stack.splice(stack.indexOf(entry), 1);
     }
+    updateInert();
 
     scrollLock.reset();
     stack.filter((entry) => entry.locked).forEach(() => scrollLock.lock());

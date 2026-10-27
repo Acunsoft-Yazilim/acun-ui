@@ -38,7 +38,7 @@
                 {{-- A download (download: true) gets the download attribute and is never opened with wire:navigate. --}}
                 <a data-slot="toast-link" hidden class="mt-1.5 inline-flex font-semibold underline underline-offset-2 hover:no-underline"></a>
             </div>
-            <button type="button" data-slot="toast-close" aria-label="{{ __('Close') }}" class="opacity-70 hover:opacity-100">
+            <button type="button" data-slot="toast-close" aria-label="{{ __('Close') }}" class="-m-1 inline-flex size-6 flex-none cursor-pointer items-center justify-center rounded-sm hover:bg-current/10 focus-visible:outline-2 focus-visible:outline-current">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>

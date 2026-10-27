@@ -24,14 +24,17 @@ final class NewComponentsTest extends TestCase
 
     public function test_chip_group_shows_counts_and_takes_one_or_many(): void
     {
-        $html = Blade::render('<acun:chip-group name="durum" value="kargoda" :options="[\'hepsi\' => [\'label\' => \'Tümü\', \'count\' => 1480], \'kargoda\' => [\'label\' => \'Kargoda\', \'count\' => 35]]" />');
+        $html = Blade::render('<acun:chip-group name="durum" label="Durum" value="kargoda" :options="[\'hepsi\' => [\'label\' => \'Tümü\', \'count\' => 1480], \'kargoda\' => [\'label\' => \'Kargoda\', \'count\' => 35]]" />');
 
         self::assertStringContainsString('role="radiogroup"', $html);
+        self::assertStringContainsString('aria-label="Durum"', $html);
         self::assertStringContainsString('>1.480</span>', $html, 'Counts in the page\'s number format.');
         self::assertMatchesRegularExpression('/value="kargoda" class="peer sr-only" checked/', $html);
 
-        $many = Blade::render('<acun:chip-group name="etiketler" multiple :value="[\'yeni\']" :options="[\'yeni\' => \'Yeni\', \'indirim\' => \'İndirimli\']" />');
+        $many = Blade::render('<acun:chip-group name="etiketler" multiple aria-labelledby="etiket-baslik" :value="[\'yeni\']" :options="[\'yeni\' => \'Yeni\', \'indirim\' => \'İndirimli\']" />');
         self::assertStringContainsString('role="group"', $many);
+        // Without a name it is no (unnamed) group: the radios still share their name.
+        self::assertStringNotContainsString('role=', Blade::render('<acun:chip-group name="durum" :options="[\'a\' => \'A\']" />'));
         self::assertSame(2, substr_count($many, 'type="checkbox" name="etiketler[]"'));
     }
 

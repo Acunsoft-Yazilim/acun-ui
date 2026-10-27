@@ -7,10 +7,12 @@
     Standalone expandable/collapsible area. The trigger text is label, the content is the slot.
     Works without Alpine (the collapse plugin of the runtime); the height animates in CSS.
 --}}
+@php($contentId = \Acun\Ui\Support\Field::id('collapse', $attributes->only('id'), null, $label).'-content')
 <div {{ $attributes->merge(['data-acun-collapse' => '']) }}>
     <button
         type="button"
         data-slot="collapse-trigger"
+        aria-controls="{{ $contentId }}"
         aria-expanded="{{ $open ? 'true' : 'false' }}"
         class="group inline-flex cursor-pointer items-center gap-1.5 rounded-sm text-sm font-medium text-primary-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
     >
@@ -19,6 +21,7 @@
     </button>
     <div
         data-slot="collapse-content"
+        id="{{ $contentId }}"
         @if ($open) data-open @else hidden @endif
         class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out data-open:grid-rows-[1fr] motion-reduce:transition-none"
     >

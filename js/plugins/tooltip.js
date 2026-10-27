@@ -76,8 +76,13 @@ function createTooltip(root) {
         content.style.top = `${above ? box.top - GAP : box.bottom + GAP}px`;
     };
 
+    // Before the dialogs' Escape (capture): the Escape that hides the tooltip is marked handled, so it
+    // does not also close the modal or drawer around (or under) it.
     const onWindowKeydown = (/** @type {KeyboardEvent} */ event) => {
-        if (event.key === 'Escape') instance.close();
+        // With the focus inside, the root's own handler takes it (below).
+        if (event.key !== 'Escape' || !shown || root.contains(/** @type {Node | null} */ (event.target))) return;
+        event.preventDefault();
+        instance.close();
     };
 
     /** @type {TooltipInstance} */
@@ -99,7 +104,7 @@ function createTooltip(root) {
             content.removeAttribute('hidden');
             topLayer(content, true);
             enter([content], [content]);
-            window.addEventListener('keydown', onWindowKeydown);
+            window.addEventListener('keydown', onWindowKeydown, true);
         },
 
         close({ delay = 0 } = {}) {
@@ -107,7 +112,7 @@ function createTooltip(root) {
             const hide = () => {
                 if (!content || !shown) return;
                 shown = false;
-                window.removeEventListener('keydown', onWindowKeydown);
+                window.removeEventListener('keydown', onWindowKeydown, true);
                 cancelLeave = leave([content], [content], () => topLayer(content, false));
             };
             if (delay > 0) timer = setTimeout(hide, delay);
@@ -117,7 +122,7 @@ function createTooltip(root) {
         destroy() {
             clearTimeout(timer);
             cancelLeave();
-            window.removeEventListener('keydown', onWindowKeydown);
+            window.removeEventListener('keydown', onWindowKeydown, true);
             stop.splice(0).forEach((undo) => undo());
             if (content && shown) topLayer(content, false);
             shown = false;
