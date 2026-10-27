@@ -3,7 +3,8 @@
     To trigger it from any Livewire component:
         $this->dispatch('toast', type: 'success', message: 'Kaydedildi.');
     type: success | error | warning | info; danger is error (the palette's name), an unknown type shows as info.
-    Optional link (opened with wire:navigate when Livewire is on the page, as a normal link otherwise):
+    Optional link (opened with wire:navigate when Livewire is on the page, as a normal link otherwise); a toast
+    with a link stays until it is closed:
         $this->dispatch('toast', type: 'error', message: '...', link: $url, linkLabel: 'Göster');
     A file download link (never opened with wire:navigate): add download: true.
     Shortcuts: the Acun\Ui\Livewire\Concerns\WithToasts trait ($this->toast('Kaydedildi.')).

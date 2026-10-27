@@ -8,6 +8,7 @@
 
 import { dispatch } from '../core/events.js';
 import { plugins } from '../core/plugins.js';
+import { moveFocusOut } from '../behavior/focus-neighbour.js';
 
 /** @import { PluginDefinition } from '../core/plugins.js' */
 
@@ -24,6 +25,7 @@ function createDismissible(root) {
         },
         close() {
             if (root.hidden) return;
+            moveFocusOut(root);
             root.hidden = true;
             dispatch('acun:dismissed', {}, root);
         },

@@ -37,7 +37,8 @@
             <input data-acun-control type="radio" name="{{ $fieldName }}" value="{{ $key }}" class="peer sr-only" @checked($current !== null && $current === (string) $key) {{ $binding }}>
             <span @class([
                 'flex cursor-pointer items-center justify-center rounded-sm font-medium whitespace-nowrap text-dim transition-colors select-none hover:text-ink',
-                'peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm',
+                // The chosen segment: a surface with a 3:1 edge (ring-control), not only a faint fill (WCAG 1.4.11).
+                'peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm peer-checked:ring-1 peer-checked:ring-control peer-checked:ring-inset',
                 'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-focus peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
                 $sizeClass,
             ])>{{ $text }}</span>

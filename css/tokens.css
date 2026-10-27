@@ -19,9 +19,10 @@
  *   hover           row and menu item hover
  *   track           progress and skeleton tracks
  *   inverse         tooltip and toast background, on-inverse its text
- *   line            borders and dividers; line-soft (inner dividers), line-strong (field
- *                   frame, switch off), line-hover (field frame on hover)
- *   control         the edge of a checkbox and a radio (3:1)
+ *   line            borders and dividers; line-soft (inner dividers), line-strong (strong
+ *                   dividers, scrollbars), line-hover (a control's edge on hover)
+ *   control         the edge of a control: text fields, selects, the switch track, checkboxes
+ *                   and radios (3:1 on the page, the surface and a field: WCAG 1.4.11)
  *   ink             headings and titles
  *   body            body text
  *   dim             secondary text

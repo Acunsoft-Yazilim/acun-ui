@@ -34,7 +34,8 @@
     // wrapper. The rest (name, wire:model, required, aria-*, data-*, events…) belong to the
     // <select>; input-class styles it, never over the error frame (Acun\Ui\Support\Field).
     $controlAttributes = \Acun\Ui\Support\Field::controlAttributes($attributes);
-    $errorRing = 'ring-danger-line focus:ring-danger-line focus:shadow-(--ac-focus-shadow-danger)';
+    // Focused, an invalid frame doubles in width: the red alone would not show the keyboard focus (WCAG 2.4.7).
+    $errorRing = 'ring-danger-line focus:ring-2 focus:ring-danger-line focus:shadow-(--ac-focus-shadow-danger)';
 @endphp
 
 <div {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex flex-col gap-1.5') }}>
@@ -67,8 +68,8 @@
                 'class' => \Acun\Ui\Support\Field::controlClass('block w-full appearance-none rounded-sm border-0 bg-field text-ink ring-1 ring-inset transition-colors '
                     . ($floating ? 'peer flex h-[45px] items-center pl-3 pr-9' : 'flex h-10 items-center pl-3 pr-9')
                     . ' '
-                    . ($error ? $errorRing : 'ring-line-strong hover:ring-line-hover focus:ring-focus focus:shadow-(--ac-focus-shadow)')
-                    . ' focus:outline-none sm:text-sm disabled:cursor-not-allowed disabled:bg-field-disabled disabled:text-muted'
+                    . ($error ? $errorRing : 'ring-control hover:ring-line-hover focus:ring-focus focus:shadow-(--ac-focus-shadow)')
+                    . ' focus:outline-hidden sm:text-sm disabled:cursor-not-allowed disabled:bg-field-disabled disabled:text-muted'
                     . ($floating ? ' rounded-sm' : ''), $inputClass, $error ? $errorRing : ''),
             ]) }}
         >

@@ -852,3 +852,46 @@ test('the password field shows and hides its value; the search box clears itself
     assert.equal(slash.defaultPrevented, true);
     assert.equal(document.activeElement, byId('ara'), 'the shortcut focuses the search');
 });
+
+// --- accessibility fixes (2026-10-27) ------------------------------------------------------------------------
+
+test('a dismissed alert with the focus inside gives the focus to the next control, not to <body>', async () => {
+    await mount(`
+        <button type="button" id="once">Önce</button>
+        <div data-acun-dismissible id="uyari2">Uyarı <button type="button" data-acun-close id="kapat2">×</button></div>
+        <button type="button" id="sonra">Sonra</button>`);
+    byId('kapat2').focus();
+    byId('kapat2').click();
+    assert.equal(byId('uyari2').hidden, true);
+    assert.equal(document.activeElement, byId('sonra'));
+});
+
+test('a table box that scrolls sideways becomes a named, focusable region; one that fits does not', async () => {
+    await mount(`
+        <div class="ui-table-box" data-acun-table-scroll data-scroll-label="Tablo" id="genis"><table><caption>Siparişler</caption><tr><td>…</td></tr></table></div>
+        <div class="ui-table-box" data-acun-table-scroll data-scroll-label="Tablo" id="dar"><table><tr><td>…</td></tr></table></div>`);
+    const wide = byId('genis');
+    Object.defineProperty(wide, 'scrollWidth', { configurable: true, value: 900 });
+    Object.defineProperty(wide, 'clientWidth', { configurable: true, value: 300 });
+    AcunUI.destroy(wide);
+    AcunUI.init(wide);
+    assert.equal(wide.getAttribute('tabindex'), '0');
+    assert.equal(wide.getAttribute('role'), 'region');
+    assert.equal(wide.getAttribute('aria-label'), 'Siparişler', 'named by its caption');
+    assert.equal(byId('dar').hasAttribute('tabindex'), false, 'a box that fits stays out of the Tab order');
+});
+
+test('a toast with a link stays until it is closed; one without goes on its timer', async () => {
+    await mount(`
+        <div data-acun-toasts aria-live="polite" data-type-classes='{}'>
+            <template data-slot="toast-template"><div data-slot="toast"><p data-slot="toast-message"></p><a data-slot="toast-link" hidden></a><button type="button" data-slot="toast-close" aria-label="Kapat">×</button></div></template>
+        </div>`);
+    const container = AcunUI.plugins.get(document.querySelector('[data-acun-toasts]'), 'toasts');
+    dispatch('toast', { message: 'Rapor hazır', link: '/rapor.pdf', linkLabel: 'İndir' });
+    dispatch('toast', { message: 'Kaydedildi' });
+    const [withLink, plain] = container.toasts;
+    assert.equal(container.timers.has(withLink.id), false, 'no timer: it waits to be closed');
+    assert.ok(container.timers.get(plain.id).handle, 'the plain toast runs its timer');
+    container.dismiss(withLink.id);
+    container.dismiss(plain.id);
+});

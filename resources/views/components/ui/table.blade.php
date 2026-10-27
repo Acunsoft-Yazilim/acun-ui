@@ -46,7 +46,8 @@
 @php
     $stack = $stack === true ? 'sm' : (in_array($stack, ['sm', 'md'], true) ? $stack : null);
 @endphp
-<div {{ $attributes->merge(['class' => 'ui-table-box relative overflow-x-auto overflow-y-hidden rounded-sm bg-surface shadow-sm', 'data-table-stack' => $stack]) }}>
+{{-- While the table is wider than the box, the runtime makes the box a focusable, named region (js/plugins/table-scroll.js). --}}
+<div {{ $attributes->merge(['class' => 'ui-table-box relative overflow-x-auto overflow-y-hidden rounded-sm bg-surface shadow-sm', 'data-table-stack' => $stack, 'data-acun-table-scroll' => '', 'data-scroll-label' => __('Table')]) }}>
 @if (\Acun\Ui\Support\Parts::used($slot, 'table'))
     <table class="ui-table">{{ $slot }}</table>
 @else

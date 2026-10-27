@@ -13,6 +13,7 @@
 import { dispatch } from '../core/events.js';
 import { ownPart } from '../core/dom.js';
 import { plugins } from '../core/plugins.js';
+import { moveFocusOut } from '../behavior/focus-neighbour.js';
 import { setRegion } from '../behavior/disclosure.js';
 
 /** @import { PluginDefinition } from '../core/plugins.js' */
@@ -51,6 +52,7 @@ function createCard(root) {
         },
         close() {
             if (root.hidden) return;
+            moveFocusOut(root);
             root.hidden = true;
             dispatch('acun:dismissed', {}, root);
         },

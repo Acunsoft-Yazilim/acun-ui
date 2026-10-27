@@ -45,8 +45,8 @@
     <div @class([
         'group/input-group flex h-10 overflow-hidden rounded-sm border bg-field transition-[border-color,box-shadow] duration-150',
         'has-[input:disabled]:cursor-not-allowed has-[input:disabled]:bg-field-disabled has-[input[readonly]]:bg-field-disabled',
-        'border-danger-line focus-within:border-danger-line focus-within:shadow-(--ac-focus-shadow-danger)' => $error,
-        'border-line-strong focus-within:border-focus focus-within:shadow-(--ac-focus-shadow)' => ! $error,
+        'border-danger-line focus-within:border-danger-line focus-within:ring-1 focus-within:ring-danger-line focus-within:shadow-(--ac-focus-shadow-danger)' => $error,
+        'border-control focus-within:border-focus focus-within:shadow-(--ac-focus-shadow)' => ! $error,
     ])>
         @if ($prefix || isset($before))
             <span class="{{ $addonClass }} after:end-0">{{ $before ?? $prefix }}</span>

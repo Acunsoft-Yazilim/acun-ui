@@ -184,6 +184,14 @@
         input:where([data-acun-control]):where([type='checkbox']):indeterminate {
             appearance: auto;
         }
+
+        /* Windows high contrast removes box-shadows: the fields' frame (a ring) would vanish. A real border in
+           the system's colour keeps every text field, select and textarea visible (the components' border-0 is a
+           utility, so this needs !important); the focus shows as the transparent outline (outline-hidden) the
+           system paints. */
+        :is(input:where([data-acun-control]):not([type='checkbox'], [type='radio'], [type='file'], [type='range'], [type='color'], [type='hidden']), select:where([data-acun-control]), textarea:where([data-acun-control])) {
+            border: 1px solid CanvasText !important;
+        }
     }
 
     /* File inputs (the kit's are hidden; a visible one keeps the browser's button). */

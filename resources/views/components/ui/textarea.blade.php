@@ -23,8 +23,9 @@
     $describedBy = trim($attributes->get('aria-describedby').' '.($error || $hint ? $messageId : '')) ?: null;
     // The error frame (input-class never replaces it); the neutral dark ring only without an
     // error: in the dark theme it would hide the red one.
-    $errorRing = 'ring-danger-line focus:ring-danger-line focus:shadow-(--ac-focus-shadow-danger)';
-    $ring = $error ? $errorRing : 'ring-line-strong focus:ring-focus focus:shadow-(--ac-focus-shadow)';
+    // Focused, an invalid frame doubles in width: the red alone would not show the keyboard focus (WCAG 2.4.7).
+    $errorRing = 'ring-danger-line focus:ring-2 focus:ring-danger-line focus:shadow-(--ac-focus-shadow-danger)';
+    $ring = $error ? $errorRing : 'ring-control focus:ring-focus focus:shadow-(--ac-focus-shadow)';
     $keep = $error ? $errorRing : '';
     // Layout attributes (class, style, x-show, wire:key…) place the whole field: they go on the
     // wrapper. The rest (name, wire:model, required, aria-*, data-*, events…) belong to the
@@ -53,8 +54,8 @@
                 @if ($error) aria-invalid="true" @endif
                 @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
                 {{ $controlAttributes->except(['id', 'label', 'hint', 'rows', 'value', 'aria-describedby'])->merge([
-                    'class' => \Acun\Ui\Support\Field::controlClass('peer block w-full resize-y rounded-sm border-0 bg-transparent px-3 pt-6 pb-2 text-ink ring-1 ring-inset transition placeholder:text-transparent focus:outline-none sm:text-sm disabled:cursor-not-allowed disabled:opacity-60 '
-                        . ($error ? $errorRing : 'ring-line-strong hover:ring-line-hover focus:ring-focus focus:shadow-(--ac-focus-shadow)'), $inputClass, $keep),
+                    'class' => \Acun\Ui\Support\Field::controlClass('peer block w-full resize-y rounded-sm border-0 bg-transparent px-3 pt-6 pb-2 text-ink ring-1 ring-inset transition placeholder:text-transparent focus:outline-hidden sm:text-sm disabled:cursor-not-allowed disabled:opacity-60 '
+                        . ($error ? $errorRing : 'ring-control hover:ring-line-hover focus:ring-focus focus:shadow-(--ac-focus-shadow)'), $inputClass, $keep),
                 ]) }}
             >{{ $content }}</textarea>
 
@@ -80,7 +81,7 @@
                 {{ $controlAttributes->except(['id', 'label', 'hint', 'rows', 'value', 'aria-describedby'])->merge([
                     'class' => \Acun\Ui\Support\Field::controlClass('block w-full rounded-sm border-0 py-1.5 px-3 bg-field text-ink ring-1 ring-inset '
                         . $ring
-                        . ' placeholder:text-muted focus:outline-none sm:text-sm disabled:cursor-not-allowed disabled:bg-field-disabled disabled:text-muted [&[readonly]]:bg-field-disabled', $inputClass, $keep),
+                        . ' placeholder:text-muted focus:outline-hidden sm:text-sm disabled:cursor-not-allowed disabled:bg-field-disabled disabled:text-muted [&[readonly]]:bg-field-disabled', $inputClass, $keep),
                 ]) }}
             >{{ $content }}</textarea>
         @endif

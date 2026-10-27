@@ -92,14 +92,15 @@ final class ComponentBehaviourTest extends TestCase
     public function test_the_error_ring_stays_red_in_the_dark_theme(string $blade): void
     {
         $valid = Blade::render(sprintf($blade, ''));
-        self::assertMatchesRegularExpression('/\b(ring|border)-line-strong\b/', $valid);
+        // The resting frame is the control edge (3:1, WCAG 1.4.11).
+        self::assertMatchesRegularExpression('/\b(ring|border)-control\b/', $valid);
         self::assertDoesNotMatchRegularExpression('/dark:(ring|border)-/', $valid);
 
         $this->withErrors(['email' => 'E-posta geçersiz.']);
         $invalid = Blade::render(sprintf($blade, ''));
 
         self::assertMatchesRegularExpression('/\b(ring|border)-danger-line\b/', $invalid);
-        self::assertDoesNotMatchRegularExpression('/\b(ring|border)-line-strong\b|dark:(ring|border)-/', $invalid);
+        self::assertDoesNotMatchRegularExpression('/\b(ring|border)-control\b|dark:(ring|border)-/', $invalid);
     }
 
     /**

@@ -21,18 +21,23 @@
             <acun:button variant="danger" size="sm" wire:click="deleteSelected">Delete</acun:button>
         </acun:selection-bar>
 --}}
-@if ($count > 0 || $allMatching)
+@php
+    $sentence = $allMatching
+        ? trans_choice(':count record (all matching the filters) selected.|:count records (all matching the filters) selected.', (int) ($total ?? $count), ['count' => \Acun\Ui\Support\Format::number((int) ($total ?? $count))])
+        : trans_choice(':count record selected.|:count records selected.', (int) $count, ['count' => \Acun\Ui\Support\Format::number((int) $count)]);
+    $shown = $count > 0 || $allMatching;
+@endphp
+{{-- Always on the page, so a screen reader hears the count change (a status added together with its text is often
+     not read); the visible bar with its buttons is a plain box. --}}
+<p class="sr-only" role="status" data-selection-status>{{ $shown ? $sentence : '' }}</p>
+@if ($shown)
     <div {{ $attributes->class([
         'flex flex-wrap items-center gap-3 rounded-sm border border-primary/25 px-4 py-3 text-sm',
         // Floating over the rows: solid in the dark theme (a see-through tint would show the rows below).
         'sticky bottom-4 z-20 bg-surface bg-linear-to-r from-primary-tint to-primary-tint shadow-lg' => $floating,
         'bg-primary-tint' => ! $floating,
-    ]) }} role="status" data-selection-bar>
-        <span class="font-medium text-primary-tint-ink">
-            {{ $allMatching
-                ? trans_choice(':count record (all matching the filters) selected.|:count records (all matching the filters) selected.', (int) ($total ?? $count), ['count' => \Acun\Ui\Support\Format::number((int) ($total ?? $count))])
-                : trans_choice(':count record selected.|:count records selected.', (int) $count, ['count' => \Acun\Ui\Support\Format::number((int) $count)]) }}
-        </span>
+    ]) }} data-selection-bar>
+        <span class="font-medium text-primary-tint-ink" aria-hidden="true">{{ $sentence }}</span>
 
         <div class="ms-auto flex flex-wrap items-center gap-2">
             {{ $slot }}

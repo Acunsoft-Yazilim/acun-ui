@@ -42,8 +42,9 @@
             @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
             {{ $attributes->filter(fn ($value, $key) => ! $isLayout($key))->except(['id', 'label', 'checked', 'aria-describedby'])->merge(['value' => '1', 'class' => 'peer sr-only'.($controlClass !== '' ? ' '.$controlClass : '')]) }}
         />
-        <span class="{{ $trackClass }} rounded-full bg-line-strong transition-colors peer-checked:bg-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-aria-invalid:ring-2 peer-aria-invalid:ring-danger-line"></span>
-        <span class="{{ $thumbClass }} {{ $slideClass }} absolute top-0.5 left-0.5 rounded-full bg-on-primary shadow transition-transform motion-reduce:transition-none"></span>
+        {{-- In forced colors (Windows high contrast) the track keeps an edge, the thumb a fill and an on switch the Highlight colour. --}}
+        <span class="{{ $trackClass }} rounded-full bg-control transition-colors peer-checked:bg-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-aria-invalid:ring-2 peer-aria-invalid:ring-danger-line forced-colors:border forced-colors:border-[ButtonText] forced-colors:peer-checked:bg-[Highlight]"></span>
+        <span class="{{ $thumbClass }} {{ $slideClass }} absolute top-0.5 left-0.5 rounded-full bg-on-primary shadow transition-transform motion-reduce:transition-none forced-colors:bg-[ButtonText]"></span>
     </span>
 
     @if ($label || $description || $slot->isNotEmpty() || $showsMessage)

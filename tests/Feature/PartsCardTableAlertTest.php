@@ -213,7 +213,7 @@ final class PartsCardTableAlertTest extends TestCase
             </acun:table>
         BLADE);
 
-        self::assertMatchesRegularExpression('/^\s*<div class="ui-table-box relative overflow-x-auto overflow-y-hidden rounded-sm bg-surface shadow-sm mt-2" id="siparisler">\s*<table class="ui-table">\s*<!--[^>]*-->\s*<thead data-slot="table-columns" class="sticky top-0">\s*<tr>\s*<th data-slot="table-column" scope="col"\s*>Müşteri<\/th>/', $html);
+        self::assertMatchesRegularExpression('/^\s*<div class="ui-table-box relative overflow-x-auto overflow-y-hidden rounded-sm bg-surface shadow-sm mt-2"[^>]*id="siparisler">\s*<table class="ui-table">\s*<!--[^>]*-->\s*<thead data-slot="table-columns" class="sticky top-0">\s*<tr>\s*<th data-slot="table-column" scope="col"\s*>Müşteri<\/th>/', $html);
         self::assertStringContainsString('<th data-slot="table-column" scope="col" class="text-center">Durum</th>', $html);
         self::assertStringContainsString('<th data-slot="table-column" scope="col" class="text-end w-24">Sipariş</th>', $html);
         self::assertStringContainsString('<tbody data-slot="table-rows" wire:sort="sirala">', $html);
@@ -228,7 +228,7 @@ final class PartsCardTableAlertTest extends TestCase
     {
         $html = Blade::render('<acun:table><table class="ui-table"><tbody><acun:table.row><acun:table.cell>A</acun:table.cell></acun:table.row></tbody></table></acun:table>');
 
-        self::assertMatchesRegularExpression('/<div class="ui-table-box relative overflow-x-auto[^"]*">\s*<table class="ui-table"><tbody><tr data-slot="table-row"\s*>/', $html);
+        self::assertMatchesRegularExpression('/<div class="ui-table-box relative overflow-x-auto[^"]*"[^>]*>\s*<table class="ui-table"><tbody><tr data-slot="table-row"\s*>/', $html);
         self::assertSame(1, substr_count($html, '<table'));
     }
 
@@ -245,7 +245,7 @@ final class PartsCardTableAlertTest extends TestCase
             BLADE);
 
         // panel.css turns the rows into cards below the breakpoint of the box's own width.
-        self::assertMatchesRegularExpression('/<div class="ui-table-box [^"]*" data-table-stack="sm">/', $html);
+        self::assertMatchesRegularExpression('/<div class="ui-table-box [^"]*" data-table-stack="sm"[^>]*>/', $html);
         self::assertStringContainsString('<td data-slot="table-cell" data-label="Şehir">İzmir</td>', $html);
 
         self::assertStringContainsString('data-table-stack="md"', Blade::render('<acun:table stack="md"><table class="ui-table"></table></acun:table>'));
@@ -312,7 +312,7 @@ final class PartsCardTableAlertTest extends TestCase
             </acun:card>
         BLADE);
 
-        self::assertMatchesRegularExpression('/<div data-slot="card-body" class="flex-1">\s*<div class="ui-table-box relative[^"]*rounded-none shadow-none">\s*<table class="ui-table"><tbody data-slot="table-rows"/', $html);
+        self::assertMatchesRegularExpression('/<div data-slot="card-body" class="flex-1">\s*<div class="ui-table-box relative[^"]*rounded-none shadow-none"[^>]*>\s*<table class="ui-table"><tbody data-slot="table-rows"/', $html);
     }
 
     // ── alert ────────────────────────────────────────────────────────────

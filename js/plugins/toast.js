@@ -8,7 +8,8 @@
 //
 // A 'toast' event on window ({ type, message, link, linkLabel, download }: Livewire's dispatch('toast', …)) shows a
 // toast from the template; the toasts the server flashed for this page (data-flashed) show when it mounts. A toast
-// goes after 5 seconds (8 with a link), and stays while the pointer or the focus is on it (WCAG 2.2.1). An error is
+// goes after 5 seconds and stays while the pointer or the focus is on it; one with a link (an action, a download)
+// stays until it is closed, so there is time to reach it with the keyboard or a screen reader (WCAG 2.2.1). An error is
 // announced at once (role="alert"), the others wait their turn (status). The type is read as the server reads it
 // (danger is error, any case; anything else is info). A link passes the rule of Acun\Ui\Support\Url (javascript:,
 // data:… and another site's //host are dropped), opens with wire:navigate when Livewire is on the page and the link
@@ -180,9 +181,11 @@ function createToasts(root) {
             };
             toasts = [...toasts, toast];
             draw(toast);
-            // Toasts with a link stay a little longer so the link can be clicked.
-            timers.set(toast.id, { left: link ? 8000 : 5000, handle: null });
-            instance.resume(toast.id);
+            // A toast with a link stays until it is closed; the others go after 5 seconds.
+            if (!link) {
+                timers.set(toast.id, { left: 5000, handle: null });
+                instance.resume(toast.id);
+            }
         },
 
         pause(id) {

@@ -349,6 +349,12 @@ html.scroll-locked {
         @variant dark {
             --table-box-shadow: rgb(0 0 0 / 0.7);
         }
+
+    /* Reachable with the keyboard while it scrolls (js/plugins/table-scroll.js): the focus shows inside its edge. */
+    .ui-table-box:focus-visible {
+        outline: 2px solid var(--ac-focus);
+        outline-offset: -2px;
+    }
     }
 }
 

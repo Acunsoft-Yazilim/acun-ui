@@ -57,7 +57,8 @@
         --ac-line: #e4e4e7;
         --ac-line-soft: #f4f4f5;
         --ac-line-strong: #d4d4d8;
-        --ac-line-hover: #9f9fa9;
+        /* A control's edge on hover: darker than control (below). */
+        --ac-line-hover: #71717b;
         /* 3:1 against the surface and the field, as a control's edge must be. */
         --ac-control: color-mix(in srgb, #71717b 80%, white);
         --ac-ink: #18181b;
@@ -100,7 +101,8 @@
         --ac-success-hover: color-mix(in srgb, var(--ac-success) 88%, black);
         --ac-on-success: #fff;
         --ac-success-ink: color-mix(in srgb, var(--ac-tone-success) 66%, black);
-        --ac-success-line: var(--ac-tone-success);
+        /* The -line roles reach 3:1 on the page, the surface and their own -soft tint (WCAG 1.4.11). */
+        --ac-success-line: color-mix(in srgb, var(--ac-tone-success) 78%, black);
         --ac-success-tint: color-mix(in srgb, var(--ac-tone-success) 8%, white);
         --ac-success-soft: color-mix(in srgb, var(--ac-tone-success) 14%, white);
         --ac-success-tint-ink: color-mix(in srgb, var(--ac-tone-success) 54%, black);
@@ -109,7 +111,7 @@
         --ac-info-hover: color-mix(in srgb, var(--ac-info) 88%, black);
         --ac-on-info: #fff;
         --ac-info-ink: color-mix(in srgb, var(--ac-tone-info) 70%, black);
-        --ac-info-line: var(--ac-tone-info);
+        --ac-info-line: color-mix(in srgb, var(--ac-tone-info) 80%, black);
         --ac-info-tint: color-mix(in srgb, var(--ac-tone-info) 8%, white);
         --ac-info-soft: color-mix(in srgb, var(--ac-tone-info) 14%, white);
         --ac-info-tint-ink: color-mix(in srgb, var(--ac-tone-info) 56%, black);
@@ -118,7 +120,7 @@
         --ac-warning-hover: color-mix(in srgb, var(--ac-warning) 88%, black);
         --ac-on-warning: #fff;
         --ac-warning-ink: color-mix(in srgb, var(--ac-tone-warning) 62%, black);
-        --ac-warning-line: var(--ac-tone-warning);
+        --ac-warning-line: color-mix(in srgb, var(--ac-tone-warning) 72%, black);
         --ac-warning-tint: color-mix(in srgb, var(--ac-tone-warning) 10%, white);
         --ac-warning-soft: color-mix(in srgb, var(--ac-tone-warning) 18%, white);
         --ac-warning-tint-ink: color-mix(in srgb, var(--ac-tone-warning) 50%, black);
@@ -210,7 +212,7 @@
         --ac-line: #2e2e2e;
         --ac-line-soft: #1f1f1f;
         --ac-line-strong: #474747;
-        --ac-line-hover: #787878;
+        --ac-line-hover: #9a9a9a;
         --ac-control: #787878;
         --ac-ink: #f5f5f5;
         --ac-body: #d4d4d4;

@@ -66,7 +66,7 @@
                             <span class="block text-xs text-muted">{{ $option['description'] }}</span>
                         </span>
                     @else
-                        <span class="flex cursor-pointer items-center justify-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium text-muted transition-colors select-none hover:text-ink peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-focus">
+                        <span class="flex cursor-pointer items-center justify-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium text-muted transition-colors select-none hover:text-ink peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm peer-checked:ring-1 peer-checked:ring-control peer-checked:ring-inset peer-focus-visible:outline-2 peer-focus-visible:outline-offset-1 peer-focus-visible:outline-focus">
                             @if ($option['icon'])
                                 <acun:icon :name="$option['icon']" size="4" />
                             @endif

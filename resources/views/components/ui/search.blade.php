@@ -70,7 +70,7 @@
     @endif
 
     <div @class([
-        'flex items-stretch rounded-sm border border-line-strong bg-field transition-[border-color,box-shadow] duration-150 focus-within:border-focus focus-within:shadow-(--ac-focus-shadow)',
+        'flex items-stretch rounded-sm border border-control bg-field transition-[border-color,box-shadow] duration-150 focus-within:border-focus focus-within:shadow-(--ac-focus-shadow)',
         'has-[input:disabled]:cursor-not-allowed has-[input:disabled]:bg-field-disabled',
         $large ? 'h-12' : 'h-10',
     ])>
@@ -95,7 +95,7 @@
                 'placeholder' => $placeholder,
                 'autocomplete' => 'off',
                 'enterkeyhint' => 'search',
-                'class' => \Acun\Ui\Support\Field::controlClass('peer w-full min-w-0 flex-1 border-0 bg-transparent px-2.5 text-ink placeholder:text-muted focus:ring-0 focus:outline-none disabled:cursor-not-allowed disabled:text-muted [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none '
+                'class' => \Acun\Ui\Support\Field::controlClass('peer w-full min-w-0 flex-1 border-0 bg-transparent px-2.5 text-ink placeholder:text-muted focus:ring-0 focus:outline-hidden disabled:cursor-not-allowed disabled:text-muted [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none '
                     .($large ? 'text-base' : 'text-base sm:text-sm'), $inputClass),
             ]) }}
         />

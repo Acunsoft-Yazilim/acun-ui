@@ -344,6 +344,13 @@ test('the built-in values are the colours of today\'s components', () => {
     // A step darker than today, for 4.5:1 (light theme): role → [today's shade, the token's colour].
     const darker = { muted: ['gray-500', '#6f6f79'], 'success-ink': ['emerald-600', '#008532'], 'danger-ink': ['red-600', '#d53737'], 'accent-ink': ['accent-600', '#3370d4'] };
     const lighter = { 'accent-ink': ['accent-500', '#4387f6'], 'accent-line': ['accent-500', '#4387f6'] };
+    // Changed on purpose for WCAG 2.2 AA (2026-10-27; 'the control edges and the -line roles reach 3:1' below):
+    // the -line roles of success, info and warning drew borders and icons at 1.9-2.4:1, and line-hover, the
+    // hovered frame of a field, was lighter than its resting frame (control). Mode → role → the token now.
+    const contrastFixes = {
+        light: { 'line-hover': '#71717b', 'success-line': '#009e3b', 'info-line': '#0392aa', 'warning-line': '#b57a16' },
+        dark: { 'line-hover': '#9a9a9a' },
+    };
 
     const today = (shade, scope) => {
         if (shade.startsWith('color-mix(')) return colour(shade, scope);
@@ -358,7 +365,8 @@ test('the built-in values are the colours of today\'s components', () => {
         const scope = overlay(legacyScopes[mode], scopes[mode]);
         for (const [role, pair] of Object.entries(shades)) {
             const exception = (i === 0 ? darker : lighter)[role];
-            const expected = toHex(exception ? colour(exception[1], scope) : today(pair[i], legacyScopes[mode]));
+            const fixed = contrastFixes[mode][role];
+            const expected = fixed ?? toHex(exception ? colour(exception[1], scope) : today(pair[i], legacyScopes[mode]));
             const actual = toHex(token(role, scope));
             if (actual !== expected) mismatches.push(`${mode} ${role}: ${actual}, today ${expected}`);
             if (exception) {
@@ -370,6 +378,33 @@ test('the built-in values are the colours of today\'s components', () => {
         }
     }
     assert.deepEqual(mismatches, []);
+});
+
+/**
+ * WCAG 1.4.11 (non-text contrast, 3:1): the edge that shows where a control is (the frame of a text field and a
+ * select, the switch's off track, a checkbox's and a radio's box: control; the hovered frame: line-hover) and the
+ * -line roles that draw outline borders, icons and progress bars, against what they sit on: the page, a surface
+ * and a field, and a -line on its own -soft tint (an alert's icon, a progress track). In both themes.
+ */
+test('the control edges and the -line roles reach 3:1 on what they sit on', () => {
+    const failures = [];
+    for (const [mode, scope] of Object.entries(scopes)) {
+        for (const role of ['control', 'line-hover']) {
+            for (const background of ['page', 'surface', 'field']) {
+                const ratio = contrast(token(role, scope), token(background, scope));
+                if (ratio < 3) failures.push(`${mode} ${role} on ${background}: ${ratio.toFixed(2)}:1`);
+            }
+        }
+        for (const tone of ['success', 'info', 'warning', 'danger']) {
+            for (const background of ['page', 'surface', `${tone}-soft`]) {
+                // A see-through tint (the dark theme's -soft) as it shows on a surface.
+                const ground = over(token(background, scope), token('surface', scope));
+                const ratio = contrast(token(`${tone}-line`, scope), ground);
+                if (ratio < 3) failures.push(`${mode} ${tone}-line on ${background}: ${ratio.toFixed(2)}:1`);
+            }
+        }
+    }
+    assert.deepEqual(failures, []);
 });
 
 test('the shadows, backdrop, focus shadow, corner and fonts are the 1.x values', () => {
