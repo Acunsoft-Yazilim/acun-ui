@@ -104,6 +104,15 @@ final class SearchComponentTest extends TestCase
         self::assertSame(1, substr_count($html, 'wire:key="s1"'));
     }
 
+    /** :value="request('q')" with ?q[]=x in the URL: an empty field, not a failing page. */
+    public function test_a_value_that_is_not_text_leaves_the_field_empty(): void
+    {
+        $html = Blade::render('<x-ui.search name="q" :value="$term" />', ['term' => ['x']]);
+
+        self::assertMatchesRegularExpression('/<input[^>]*value=""/s', $html);
+        self::assertMatchesRegularExpression('/<input[^>]*value="kulaklık"/s', Blade::render('<x-ui.search name="q" :value="$term" />', ['term' => 'kulaklık']));
+    }
+
     public function test_the_clear_button_and_the_shortcut_hint_follow_the_field(): void
     {
         $html = Blade::render('<x-ui.search name="q" shortcut="/" />');

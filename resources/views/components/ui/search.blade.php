@@ -26,6 +26,11 @@
     $isForm = filled($action);
     $action = $isForm ? \Acun\Ui\Support\Url::safe((string) $action) : null;
     $post = $action !== null && strtoupper($method) === 'POST';
+    // A term from the query string may be an array (?q[]=x, :value="request('q')"): the field
+    // is left empty instead of the page failing.
+    if (is_array($attributes->get('value'))) {
+        $attributes['value'] = '';
+    }
     $model = $attributes->whereStartsWith('wire:model')->first();
     $fieldName = $name ?? $model;
     // Two searches without a name no longer share id="search-field".

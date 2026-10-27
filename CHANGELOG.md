@@ -6,6 +6,7 @@
 - Nothing changes for Livewire and Alpine pages: `AcunUI.modal.open/close`, `AcunUI.drawer.open/close/toggle`, the `acun:modal:*` and `acun:drawer:*` events and their first names (`open-modal`, `close-modal`, `open-drawer`, `close-drawer`, `toggle-drawer`, `modal-closed`, `drawer-state-changed`), `wire:model` / `x-model` on the component, `close-action`, and `close()` / `requestClose()` called from the content (the component's root gets that scope from the Alpine adapter) keep working. `x-data="acunModal(…)"` and `x-data="acunDrawer(…)"` in markup of your own are deprecated (a console warning; they go in 3.0) and delegate to the new core. The docked panel's open state is `data-open` on `.filter-panel` (was `data-filter-open="true"`).
 - `AcunUI.plugins` (`define`, `get`, `find`, `mount`…) lets other packages add components the same way; `AcunUI.init(root)`, `AcunUI.destroy(root)` and `AcunUI.observe(false)` start and stop them by hand. `data-acun-dispatch="event"` on a trigger also sends that event (the confirmation dialog's `{name}-confirmed`).
 - TypeScript declaration files for the runtime: `types/` (`"types"` in `package.json` and `exports`). The runtime stays plain JavaScript with JSDoc types, checked by TypeScript in strict mode.
+- Fixed: `acun:search` with a value that is not text (`:value="request('q')"` and `?q[]=x` in the URL) failed the page; the field is now empty.
 
 ## 2.2.0 (2026-10-22)
 
