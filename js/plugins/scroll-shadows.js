@@ -23,15 +23,14 @@ function createScrollShadows(root) {
     let mask = 'none';
 
     const measure = () => {
-        const x = Math.abs(root.scrollLeft);
+        const x = root.scrollLeft;
         const top = ramp(root.scrollTop);
         const bottom = ramp(root.scrollHeight - root.clientHeight - root.scrollTop);
         const start = ramp(x);
         const end = ramp(root.scrollWidth - root.clientWidth - x);
-        const rtl = getComputedStyle(root).direction === 'rtl';
         const layers = [];
         if (vertical && (top || bottom)) layers.push(`linear-gradient(to bottom, ${edge(top)}, #000 1.5rem, #000 calc(100% - 1.5rem), ${edge(bottom)})`);
-        if (horizontal && (start || end)) layers.push(`linear-gradient(to ${rtl ? 'left' : 'right'}, ${edge(start)}, #000 1.5rem, #000 calc(100% - 1.5rem), ${edge(end)})`);
+        if (horizontal && (start || end)) layers.push(`linear-gradient(to right, ${edge(start)}, #000 1.5rem, #000 calc(100% - 1.5rem), ${edge(end)})`);
         mask = layers.length ? layers.join(', ') : 'none';
         apply();
     };

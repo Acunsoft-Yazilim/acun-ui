@@ -10,7 +10,7 @@
 //     </div>
 //
 // A click on a tab opens its panel; on the tablist Left / Right move to the previous / next enabled tab and
-// open it (mirrored in a right-to-left page), Home / End to the first / last; only the open tab is in the Tab
+// open it, Home / End to the first / last; only the open tab is in the Tab
 // order. The open tab carries aria-selected="true" (its look: aria-selected: classes), the other panels are
 // hidden. The value on the root (data-value) is the open tab; without one (or one no enabled tab has) the first
 // enabled tab opens. Ids tie each tab to its panel (aria-controls, aria-labelledby; made when missing). A nested
@@ -135,8 +135,7 @@ function createTabs(root) {
         const list = /** @type {HTMLElement | null} */ (/** @type {Element} */ (event.target).closest?.('[role="tablist"]') ?? null);
         if (!list || list.closest(`[${ATTRIBUTE}]`) !== root) return;
 
-        const rtl = getComputedStyle(list).direction === 'rtl';
-        const step = /** @type {Record<string, number | 'first' | 'last'>} */ ({ ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1, Home: 'first', End: 'last' })[event.key];
+        const step = /** @type {Record<string, number | 'first' | 'last'>} */ ({ ArrowRight: 1, ArrowLeft: -1, Home: 'first', End: 'last' })[event.key];
         if (step === undefined) return;
 
         const open = enabled().filter((tab) => tab.closest('[role="tablist"]') === list);
