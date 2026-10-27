@@ -222,9 +222,10 @@ test('after a wire:navigate page change the stores put data-theme, the colour an
 
     // onSwap: in the same step the new page is put in, before the browser paints.
     strip();
-    let swap = null;
-    document.dispatchEvent(new window.CustomEvent('livewire:navigating', { detail: { onSwap: (callback) => (swap = callback) } }));
-    swap();
+    // Livewire runs every callback handed to onSwap.
+    const swaps = [];
+    document.dispatchEvent(new window.CustomEvent('livewire:navigating', { detail: { onSwap: (callback) => swaps.push(callback) } }));
+    swaps.forEach((callback) => callback());
     assert.equal(root.dataset.theme, 'dark');
     assert.deepEqual(user(), before);
 

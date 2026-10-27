@@ -28,6 +28,7 @@ const { fallbackComponents, fallbackStores } = await import('../../js/core/fallb
 const { drawer } = await import('../../js/components/drawer.js');
 const { modal } = await import('../../js/components/modal.js');
 const { registerStores } = await import('../../js/appearance/stores.js');
+const { startAppearance } = await import('../../js/appearance/preferences.js');
 
 test.after(() => {
     console.error = error;
@@ -81,7 +82,8 @@ test('the stand-ins have the names of the real components and stores', () => {
     assert.deepEqual(names(fallbackComponents.acunModal()), names(modal({ name: 'x' })));
 
     const stores = {};
-    registerStores({ store: (name, value) => { stores[name] = value; } }, { defaults: {} });
+    // The real stores are a view of the appearance choices (here started by hand: the runtime did not load).
+    registerStores({ store: (name, value) => { stores[name] = value; } }, startAppearance({ defaults: {} }));
     const stand = fallbackStores({ defaults: {} });
 
     assert.deepEqual(Object.keys(stand).sort(), Object.keys(stores).sort());

@@ -14,8 +14,10 @@
 //   (behavior/), used by the modal, the drawer and acun:command-palette;
 // - on a page with Alpine (Livewire brings it, adapters/alpine.js): the plugins' elements as
 //   Alpine roots with the 2.0 scope (close(), wire:model / x-model) and the deprecated Alpine
-//   data acunModal and acunDrawer; on pages with acun:layout.head the theme and menu stores
-//   (appearance/), and AcunUI.isDark(element) and AcunUI.tokenColor(element, '--ac-line') for code
+//   data acunModal and acunDrawer, and on pages with acun:layout.head the theme and menu stores
+//   (appearance/stores.js, a view of AcunUI.appearance);
+// - on pages with acun:layout.head the appearance choices without Alpine: AcunUI.appearance (mode,
+//   colour, skin, content width, menu; appearance/preferences.js), and AcunUI.isDark(element) and AcunUI.tokenColor(element, '--ac-line') for code
 //   that draws in the theme's colours (charts);
 // - the loading of heavy components in chunks of their own, the first time their element
 //   (data-acun-component) is on the page (core/components.js; the PRO package defines its own);
@@ -44,11 +46,12 @@ import { reloadWhenLeavingForcedLayout } from './behavior/forced-layout.js';
 import { syncSelectValues } from './behavior/select-sync.js';
 import { skipDetachedMorphs } from './behavior/morph-guard.js';
 import { registerStores } from './appearance/stores.js';
+import { appearance, startAppearance } from './appearance/preferences.js';
 import { isDark, tokenColor } from './appearance/theme.js';
 import { modalPlugin } from './plugins/modal.js';
 import { drawerPlugin } from './plugins/drawer.js';
 import { connectAlpine, scope } from './adapters/alpine.js';
-import { keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
+import { followAppearanceThroughNavigation, keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
 import { drawer, drawerScope } from './components/drawer.js';
 import { modal, modalScope } from './components/modal.js';
 
@@ -80,6 +83,8 @@ const api = {
     observe,
     components,
     load: components.load,
+    // The appearance choices (mode, colour, skin, content width, menu) without Alpine: get(), subscribe(), setMode()…
+    appearance,
     // Whether an element is in a dark theme (its nearest data-theme ends in "dark"), and a token's colour on it as rgb().
     isDark,
     tokenColor,
@@ -99,30 +104,14 @@ function registerAlpine(Alpine) {
     Alpine.data('acunDrawer', drawer);
     Alpine.data('acunModal', modal);
 
-    const config = readConfig();
-    if (config) registerStores(Alpine, config);
-    else registerStoresLater(Alpine);
+    // A first page without acun:layout.head (a sign-in page with a layout of its own): the stores come
+    // with the first page that has it, reached with wire:navigate, before Alpine starts its elements.
+    if (appearance.ready) registerStores(Alpine);
+    else storesWaiting = Alpine;
 }
 
-// A first page without acun:layout.head (a sign-in page with a layout of its own): the stores come
-// with the first page that has it, reached with wire:navigate, before Alpine starts its elements.
-/** @param {AlpineLike} Alpine */
-function registerStoresLater(Alpine) {
-    const register = (/** @type {Event & { detail?: { onSwap?: (callback: () => void) => void } }} */ event) => {
-        const onSwap = event.detail?.onSwap;
-        if (typeof onSwap !== 'function') return;
-
-        onSwap(() => {
-            const config = readConfig();
-            if (!config) return;
-
-            document.removeEventListener('livewire:navigating', register);
-            registerStores(Alpine, config);
-        });
-    };
-
-    document.addEventListener('livewire:navigating', register);
-}
+/** @type {AlpineLike | null} Alpine, until the appearance choices start (a page with acun:layout.head) */
+let storesWaiting = null;
 
 // The first names of the scroll lock (docs before 0.1): still there, with a warning.
 /** @param {{ scrollLock: typeof scrollLock }} runtime */
@@ -151,6 +140,13 @@ function setup(runtime, { observe: watch = true }) {
     onLivewire(skipDetachedMorphs);
     onLivewire(keepPluginStateThroughMorphs);
     onLivewire(runCloseActions);
+    // The appearance choices: from this page's settings, or from the first page reached with wire:navigate that has them.
+    const config = readConfig();
+    if (config) startAppearance(config);
+    followAppearanceThroughNavigation(() => {
+        if (storesWaiting) registerStores(storesWaiting);
+        storesWaiting = null;
+    });
     keepListsInView();
     reloadWhenLeavingForcedLayout();
     onNavigated(forgetDetachedOverlays);

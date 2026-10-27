@@ -39,11 +39,12 @@ test('the runtime sets up window.AcunUI with its public API', () => {
     assert.equal(window.AcunUI, AcunUI);
     assert.equal(AcunUI.version, releaseVersion);
     assert.equal(AcunUI.initialized, true);
-    assert.deepEqual(Object.keys(AcunUI).sort(), ['components', 'destroy', 'drawer', 'events', 'focus', 'init', 'initialized', 'isDark', 'load', 'modal', 'observe', 'overlays', 'plugins', 'scrollLock', 'tokenColor', 'version']);
+    assert.deepEqual(Object.keys(AcunUI).sort(), ['appearance', 'components', 'destroy', 'drawer', 'events', 'focus', 'init', 'initialized', 'isDark', 'load', 'modal', 'observe', 'overlays', 'plugins', 'scrollLock', 'tokenColor', 'version']);
     assert.deepEqual(Object.keys(AcunUI.components).sort(), ['define', 'isLoaded', 'load']);
     assert.deepEqual(AcunUI.plugins.names, ['modal', 'drawer']);
     assert.deepEqual(Object.keys(AcunUI.drawer).sort(), ['close', 'open', 'toggle']);
     assert.deepEqual(Object.keys(AcunUI.modal).sort(), ['close', 'open']);
+    assert.deepEqual(Object.keys(AcunUI.appearance).sort(), ['apply', 'forgetBrandColor', 'get', 'ready', 'reset', 'scope', 'setBrandColor', 'setContentWidth', 'setMode', 'setNavbarMode', 'setSemiDark', 'setSidebarCollapsed', 'setSkin', 'subscribe', 'toggleMode']);
     // Nothing else of its own on window.
     for (const name of ['acunKeepInView', 'acunApplyBrand', 'acunApplySkin', 'acunDrawer', 'acunModal']) assert.equal(name in window, false, name);
 });

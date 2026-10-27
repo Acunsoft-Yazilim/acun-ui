@@ -8,8 +8,10 @@
 // wire:model on acun:modal / acun:drawer is Livewire's own x-model: adapters/alpine.js ties it to
 // the plugin (Livewire always brings Alpine).
 
+import { readConfig } from '../core/config.js';
 import { EVENTS } from '../core/events.js';
 import { plugins } from '../core/plugins.js';
+import { appearance, followAppearance, startAppearance } from '../appearance/preferences.js';
 
 /** @import { AcunWindow, HostElement, LivewireLike, WireLike } from '../core/types.js' */
 
@@ -31,6 +33,34 @@ export function runCloseActions() {
         const action = root?.getAttribute('data-close-action');
         if (root && action && /** @type {CustomEvent<{ reason?: string }>} */ (event).detail?.reason === 'user') callComponent(root, action);
     });
+}
+
+/**
+ * Keeps the appearance choices through wire:navigate. Livewire writes the new page's raw attributes to
+ * <html> (data-theme back to the light member, the menu expanded, the user's colour gone): they go back
+ * in the same step the page is swapped in, before the browser paints (onSwap; 'livewire:navigated'
+ * comes a frame later, a flash in the dark mode), and again on 'livewire:navigated'. A page of another
+ * scope brings its own choices. The first page with settings after pages without any starts them
+ * (started() runs then).
+ *
+ * @param {() => void} started
+ */
+export function followAppearanceThroughNavigation(started) {
+    const follow = () => {
+        const config = readConfig();
+        if (appearance.ready) {
+            followAppearance(config);
+        } else if (config) {
+            startAppearance(config);
+            started();
+        }
+    };
+
+    document.addEventListener('livewire:navigating', (event) => {
+        const onSwap = /** @type {CustomEvent<{ onSwap?: (callback: () => void) => void }>} */ (event).detail?.onSwap;
+        if (typeof onSwap === 'function') onSwap(follow);
+    });
+    document.addEventListener('livewire:navigated', follow);
 }
 
 /**

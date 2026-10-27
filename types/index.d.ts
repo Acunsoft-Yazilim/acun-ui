@@ -82,6 +82,25 @@ declare const api: {
         isLoaded(name: string): boolean;
     };
     load: (name: string) => Promise<void>;
+    appearance: {
+        readonly ready: boolean;
+        readonly scope: any;
+        get(): import("./appearance/preferences.js").AppearanceState | null;
+        subscribe(listener: import("./appearance/preferences.js").AppearanceListener): () => void;
+        setMode(mode: 'light' | 'dark' | 'system'): void;
+        toggleMode(): void;
+        setBrandColor(color: string): void;
+        forgetBrandColor(): void;
+        setSkin(skin: string): void;
+        setContentWidth(width: string): void;
+        setSemiDark(on: boolean): void;
+        setSidebarCollapsed(collapsed: boolean, { save }?: {
+            save?: boolean;
+        }): void;
+        setNavbarMode(mode: string): void;
+        reset(): void;
+        apply: () => void;
+    };
     isDark: typeof isDark;
     tokenColor: typeof tokenColor;
 };
