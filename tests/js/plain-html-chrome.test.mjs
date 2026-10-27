@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chrome, openPage, wait } from './cdp.mjs';
+import { chrome, openPage } from './cdp.mjs';
 
 // examples/html/index.html (npm run build:example) in headless Chrome, with real clicks and keys: a plain HTML
 // page with the compiled stylesheet and the runtime's browser build (dist/acun-ui.js), no Alpine and no
@@ -10,8 +10,6 @@ import { chrome, openPage, wait } from './cdp.mjs';
 
 const page = new URL('../../../../examples/html/index.html', import.meta.url);
 const skip = chrome ? false : 'Chrome is not installed (CHROME_PATH)';
-// Longer than the leave transitions (150–200 ms), so the closed dialog is hidden again.
-const TRANSITIONS = 350;
 
 const state = (name, attribute) => `(() => {
     const root = document.querySelector('[${attribute}="${name}"]');
@@ -42,7 +40,7 @@ test('the modal and the drawer of the HTML example work with dist/acun-ui.js alo
 
         // The modal: a click opens it, the focus goes in (its X first), the page is locked.
         await browser.click('#open-modal');
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.deepEqual(await modal(), { hidden: false, panelHidden: false, open: true, visible: true, focusInside: true, focused: 'Kapat', locked: true });
 
         // Tab goes round inside it: X, Kapat, Onayla, back to the X.
@@ -53,51 +51,51 @@ test('the modal and the drawer of the HTML example work with dist/acun-ui.js alo
 
         // Escape closes it; the focus goes back to the button that opened it.
         await browser.press('Escape');
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.deepEqual(await modal(), { hidden: true, panelHidden: false, open: false, visible: false, focusInside: false, focused: 'open-modal', locked: false });
 
         // The backdrop closes it.
         await browser.click('#open-modal');
-        await wait(TRANSITIONS);
+        await browser.settle();
         await browser.clickAt(8, 8);
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.equal((await modal()).hidden, true, 'A click on the backdrop closes it.');
         assert.equal((await modal()).focused, 'open-modal');
 
         // A button with data-acun-close in it closes it.
         await browser.click('#open-modal');
-        await wait(TRANSITIONS);
+        await browser.settle();
         await browser.click('#modal-confirm');
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.equal((await modal()).hidden, true, 'Its own button closes it.');
 
         // The drawer: opens from its button, takes the focus, locks the page; Escape closes it.
         await browser.click('#open-drawer');
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.deepEqual(await drawer(), { hidden: false, panelHidden: false, open: true, visible: true, focusInside: true, focused: 'Kapat', locked: true });
         assert.equal(await browser.evaluate(`document.querySelector('[data-acun-drawer="siparis-filtreleri"]').getAttribute('aria-modal')`), 'true');
         await browser.press('Escape');
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.deepEqual(await drawer(), { hidden: true, panelHidden: false, open: false, visible: false, focusInside: false, focused: 'open-drawer', locked: false });
 
         // The backdrop beside the panel closes it.
         await browser.click('#open-drawer');
-        await wait(TRANSITIONS);
+        await browser.settle();
         await browser.clickAt(40, 450);
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.equal((await drawer()).hidden, true, 'A click beside the panel closes it.');
         assert.equal((await drawer()).focused, 'open-drawer');
 
         // The JavaScript API and the first event names (as a server sends them) work on the page too.
         await browser.evaluate(`AcunUI.drawer.open('siparis-filtreleri')`);
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.equal((await drawer()).open, true);
         await browser.evaluate(`window.dispatchEvent(new CustomEvent('close-drawer', { detail: { name: 'siparis-filtreleri' } }))`);
         await browser.evaluate(`window.dispatchEvent(new CustomEvent('open-modal', { detail: { name: 'siparis-ozeti' } }))`);
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.deepEqual([(await drawer()).hidden, (await modal()).open], [true, true]);
         await browser.evaluate(`AcunUI.modal.close()`);
-        await wait(TRANSITIONS);
+        await browser.settle();
         assert.equal((await modal()).hidden, true);
 
         const seen = await browser.evaluate('window.seen');
@@ -109,6 +107,6 @@ test('the modal and the drawer of the HTML example work with dist/acun-ui.js alo
         assert.ok(seen.some(([name, detail]) => name === 'drawer-state-changed' && detail.name === 'siparis-filtreleri' && detail.open === true));
         assert.deepEqual(browser.problems, [], 'No error and no warning in the console.');
     } finally {
-        browser.close();
+        await browser.close();
     }
 });

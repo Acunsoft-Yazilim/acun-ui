@@ -1,6 +1,8 @@
 // A page in headless Chrome driven over the DevTools protocol, with real input: trusted clicks and
 // key presses (Escape, Tab) as a user's, for the tests that need the browser's own focus and event
-// handling (plain-html-chrome.test.mjs). Skipped where no Chrome is installed (chrome.mjs finds one).
+// handling (plain-html-chrome.test.mjs). Skipped where no Chrome is installed (chrome.mjs finds one; on
+// CI a missing Chrome fails instead). Every step has a time limit, so a stuck browser fails the test
+// with a message instead of hanging the run, and close() waits for Chrome to exit.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -8,6 +10,20 @@ import path from 'node:path';
 import { chrome } from './chrome.mjs';
 
 export { chrome };
+
+// The limits: Chrome's start, a page load and one protocol call (an evaluate waits for its promise).
+const START_TIMEOUT = 30000;
+const LOAD_TIMEOUT = 30000;
+const CALL_TIMEOUT = 15000;
+
+/** promise, or a rejection with message after ms. */
+function within(promise, ms, message) {
+    let timer;
+    return Promise.race([
+        promise,
+        new Promise((resolve, reject) => { timer = setTimeout(() => reject(new Error(message)), ms); }),
+    ]).finally(() => clearTimeout(timer));
+}
 
 const KEYS = {
     Escape: { code: 'Escape', windowsVirtualKeyCode: 27 },
@@ -26,29 +42,47 @@ export async function openPage(url, { width = 1280, height = 900, args = [] } = 
         '--remote-debugging-port=0', `--window-size=${width},${height}`, `--user-data-dir=${profile}`, ...args, 'about:blank',
     ], { stdio: ['ignore', 'ignore', 'pipe'] });
 
-    const endpoint = await new Promise((resolve, reject) => {
-        let output = '';
-        const timer = setTimeout(() => reject(new Error('Chrome did not start in 30 s.')), 30000);
-        child.stderr.on('data', (chunk) => {
-            output += chunk;
-            const found = output.match(/DevTools listening on (ws:\/\/\S+)/);
-            if (found) {
-                clearTimeout(timer);
-                resolve(found[1]);
-            }
-        });
-        child.on('exit', (code) => reject(new Error(`Chrome exited (${code}).`)));
-    });
+    const exited = new Promise((resolve) => child.once('exit', resolve));
+    const removeProfile = () => fs.rmSync(profile, { recursive: true, force: true });
+    /** Ends Chrome and waits for it (killed outright after 5 s), then removes its profile. */
+    const stop = async () => {
+        if (child.exitCode === null && child.signalCode === null) {
+            child.kill();
+            const killer = setTimeout(() => child.kill('SIGKILL'), 5000);
+            await exited;
+            clearTimeout(killer);
+        }
+        removeProfile();
+    };
 
-    const socket = new WebSocket(endpoint);
-    await new Promise((resolve, reject) => {
-        socket.onopen = resolve;
-        socket.onerror = reject;
-    });
+    let socket;
+    try {
+        const endpoint = await within(new Promise((resolve, reject) => {
+            let output = '';
+            child.stderr.on('data', (chunk) => {
+                output += chunk;
+                const found = output.match(/DevTools listening on (ws:\/\/\S+)/);
+                if (found) resolve(found[1]);
+            });
+            child.once('exit', (code) => reject(new Error(`Chrome exited (${code}) before it started: ${output.split('\n').filter(Boolean).slice(-3).join(' | ')}`)));
+            child.once('error', reject);
+        }), START_TIMEOUT, `Chrome did not start in ${START_TIMEOUT / 1000} s.`);
+
+        socket = new WebSocket(endpoint);
+        await within(new Promise((resolve, reject) => {
+            socket.onopen = resolve;
+            socket.onerror = () => reject(new Error('The DevTools connection failed.'));
+        }), START_TIMEOUT, 'The DevTools connection did not open.');
+    } catch (error) {
+        await stop();
+        throw error;
+    }
 
     let id = 0;
     const pending = new Map();
     const events = [];
+    // Waiters for protocol events: { test(message), resolve }.
+    const waiters = new Set();
     socket.onmessage = (event) => {
         const message = JSON.parse(event.data);
         if (message.id && pending.has(message.id)) {
@@ -58,32 +92,46 @@ export async function openPage(url, { width = 1280, height = 900, args = [] } = 
             else resolve(message.result);
         } else {
             events.push(message);
+            waiters.forEach((waiter) => {
+                if (!waiter.test(message)) return;
+                waiters.delete(waiter);
+                waiter.resolve();
+            });
         }
     };
+    // Chrome gone (a crash) or the connection closed: every call still waiting fails at once.
+    const failPending = (reason) => {
+        pending.forEach(({ reject, method }) => reject(new Error(`${method}: ${reason}`)));
+        pending.clear();
+    };
+    socket.onclose = () => failPending('the DevTools connection closed');
+    child.once('exit', (code) => failPending(`Chrome exited (${code})`));
+
     const send = (method, params = {}, sessionId = undefined) => {
         const messageId = ++id;
+        const answer = new Promise((resolve, reject) => pending.set(messageId, { resolve, reject, method }));
         socket.send(JSON.stringify({ id: messageId, method, params, sessionId }));
 
-        return new Promise((resolve, reject) => pending.set(messageId, { resolve, reject, method }));
+        return within(answer, CALL_TIMEOUT, `${method} got no answer in ${CALL_TIMEOUT / 1000} s.`).finally(() => pending.delete(messageId));
     };
 
-    const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
-    const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
-    const page = (method, params) => send(method, params, sessionId);
-    await page('Page.enable');
-    await page('Runtime.enable');
-    await page('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
+    let sessionId;
+    try {
+        const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
+        ({ sessionId } = await send('Target.attachToTarget', { targetId, flatten: true }));
+        await send('Page.enable', {}, sessionId);
+        await send('Runtime.enable', {}, sessionId);
+        await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false }, sessionId);
 
-    const loaded = new Promise((resolve) => {
-        const check = setInterval(() => {
-            if (events.some((message) => message.sessionId === sessionId && message.method === 'Page.loadEventFired')) {
-                clearInterval(check);
-                resolve();
-            }
-        }, 20);
-    });
-    await page('Page.navigate', { url });
-    await loaded;
+        const loaded = new Promise((resolve) => waiters.add({ test: (message) => message.sessionId === sessionId && message.method === 'Page.loadEventFired', resolve }));
+        await send('Page.navigate', { url }, sessionId);
+        await within(loaded, LOAD_TIMEOUT, `${url} did not load in ${LOAD_TIMEOUT / 1000} s.`);
+    } catch (error) {
+        socket.close();
+        await stop();
+        throw error;
+    }
+    const page = (method, params) => send(method, params, sessionId);
 
     /** Runs expression in the page (awaits a promise) and returns its value. */
     const evaluate = async (expression) => {
@@ -93,8 +141,27 @@ export async function openPage(url, { width = 1280, height = 900, args = [] } = 
         return result.value;
     };
 
+    /** Polls expression in the page until it is truthy; fails with message after timeout ms. */
+    const waitFor = async (expression, { timeout = 5000, message = expression } = {}) => {
+        const end = Date.now() + timeout;
+        while (!(await evaluate(expression))) {
+            if (Date.now() > end) throw new Error(`Timed out after ${timeout} ms waiting for: ${message}`);
+            await wait(10);
+        }
+    };
+
     return {
         evaluate,
+        waitFor,
+        /**
+         * Waits until the page's transitions and animations are over: none running in two checks in a row,
+         * each after two frames (a transition a click starts on the next frame is counted). Endless ones (a
+         * spinner) do not count.
+         */
+        async settle({ timeout = 5000 } = {}) {
+            const idle = `new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(document.getAnimations().every((animation) => animation.playState !== 'running' || animation.effect?.getComputedTiming().endTime === Infinity)))))`;
+            await waitFor(`(${idle}).then(async (first) => first && (${idle}))`, { timeout, message: 'the page\'s transitions to end' });
+        },
         /** A real mouse click in the middle of the element the selector finds (scrolled into view first). */
         async click(selector) {
             const box = await evaluate(`(() => { const element = document.querySelector(${JSON.stringify(selector)}); if (!element) throw new Error('No ${selector.replace(/'/g, '')}'); element.scrollIntoView({ block: 'center' }); const rect = element.getBoundingClientRect(); return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }; })()`);
@@ -119,10 +186,10 @@ export async function openPage(url, { width = 1280, height = 900, args = [] } = 
                 .filter((message) => message.sessionId === sessionId && (message.method === 'Runtime.exceptionThrown' || (message.method === 'Runtime.consoleAPICalled' && ['error', 'warning'].includes(message.params.type))))
                 .map((message) => message.params.exceptionDetails?.exception?.description ?? message.params.args?.map((arg) => arg.value ?? arg.description).join(' '));
         },
-        close() {
+        /** Closes the page and Chrome, and waits for Chrome to exit. */
+        async close() {
             socket.close();
-            child.kill();
-            setTimeout(() => fs.rmSync(profile, { recursive: true, force: true }), 500);
+            await stop();
         },
     };
 }

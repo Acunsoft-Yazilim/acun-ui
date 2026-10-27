@@ -22,6 +22,12 @@ export const chrome = [
     '/usr/bin/chromium-browser',
 ].find((file) => file && fs.existsSync(file));
 
+// Locally the Chrome tests are skipped without Chrome; on CI (CI set) a missing Chrome is an error, so
+// the browser checks cannot pass by not running.
+if (!chrome && process.env.CI) {
+    throw new Error('Chrome is not installed on CI: set CHROME_PATH or install Chrome; the Chrome tests must run there.');
+}
+
 /**
  * @source lines for the component views of the named packages (componentSources('acun-ui',
  * 'acun-pro')), for stylesheet()'s app CSS: then the stylesheet has every class the views write, as
@@ -103,7 +109,22 @@ export function inChrome({ css, body, measure, htmlAttributes = '' }) {
         const page = path.join(directory, 'page.html');
         fs.writeFileSync(path.join(directory, 'panel.css'), css);
         fs.writeFileSync(page, `<!doctype html><html ${htmlAttributes}><head><meta charset="utf-8"><link rel="stylesheet" href="panel.css"><style>*, ::before, ::after { transition: none !important; }</style></head><body class="bg-page">${body}<pre id="acun-result"></pre><script>${helpers}\ndocument.getElementById('acun-result').textContent = JSON.stringify((() => { ${measure} })());</script></body></html>`);
-        const dom = execFileSync(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--allow-file-access-from-files', `--user-data-dir=${path.join(directory, 'profile')}`, '--dump-dom', `file://${page}`], { stdio: ['ignore', 'pipe', 'ignore'], timeout: 60000, maxBuffer: 64 * 1024 * 1024 }).toString();
+        let dom;
+        try {
+            dom = execFileSync(chrome, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--allow-file-access-from-files', `--user-data-dir=${path.join(directory, 'profile')}`, '--dump-dom', `file://${page}`], { stdio: ['ignore', 'pipe', 'pipe'], timeout: 60000, maxBuffer: 64 * 1024 * 1024 }).toString();
+        } catch (error) {
+            // On a busy machine Chrome may print the page and then take too long to shut down: its own
+            // teardown watchdog ends it with exit 2. The page was measured in full (the dump is complete),
+            // so its result stands; any other failure (a crash, the 60 s limit) fails the test.
+            const stderr = String(error.stderr ?? '');
+            const output = String(error.stdout ?? '');
+            if (error.status === 2 && stderr.includes('Teardown watchdog expired') && /<pre id="acun-result">[\s\S]*?<\/pre>[\s\S]*<\/html>/.test(output)) {
+                dom = output;
+                console.warn('chrome.mjs: Chrome\'s teardown watchdog ended it after the page was measured; the result is kept.');
+            } else {
+                throw new Error(`Chrome failed (exit ${error.status}, signal ${error.signal}${error.code ? `, ${error.code}` : ''}):\n${stderr.split('\n').filter(Boolean).slice(-6).join('\n')}`);
+            }
+        }
         const result = dom.match(/<pre id="acun-result">([\s\S]*?)<\/pre>/)[1];
 
         return JSON.parse(result.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
