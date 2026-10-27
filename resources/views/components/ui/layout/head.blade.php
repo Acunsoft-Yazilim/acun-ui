@@ -91,7 +91,8 @@
     (Acun\Ui\Support\Assets). The runtime itself (theme and menu stores, dialogs, Livewire
     fixes) comes with the application's JS: import '@acunsoft/acun-ui', or @acunUiScripts.
 --}}
-<script type="application/json" data-acun-ui-config>@json($config)</script>
+{{-- An id per response: wire:navigate then always adds this page's island (js/core/config.js). --}}
+<script type="application/json" data-acun-ui-config="{{ \Illuminate\Support\Str::random(8) }}">@json($config)</script>
 {!! app(\Acun\Ui\Support\Assets::class)->bootTag(['nonce' => $nonce]) !!}
 
 {{ $slot }}

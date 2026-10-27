@@ -21,10 +21,10 @@ const user = () => Object.fromEntries(USER_PROPERTIES.map((name) => [name, root.
 const saved = (scope) => JSON.parse(window.localStorage.getItem(storageKey(scope)) ?? 'null');
 
 /** Puts a newer island on the page (as wire:navigate does) and lets the stores read it. */
-function navigateTo(values) {
+function navigateTo(values, id = '') {
     const script = document.createElement('script');
     script.type = 'application/json';
-    script.dataset.acunUiConfig = '';
+    script.dataset.acunUiConfig = id;
     script.textContent = JSON.stringify({ ...PAGE, ...values });
     document.head.append(script);
     document.dispatchEvent(new window.CustomEvent('livewire:navigated'));
@@ -79,13 +79,10 @@ test('two scopes on one origin do not share the colour or the mode', () => {
     assert.deepEqual(saved('panel'), { mode: 'dark', brandColor: '#e11d48' });
 
     // Back in the panel: its own choices again.
-    shop.remove();
-    const panel = navigateTo({});
+    navigateTo({});
     assert.equal(Alpine.store('appearance').value, 'dark');
     assert.equal(root.dataset.theme, 'dark');
     assert.equal(user()['--ac-user-fill'], '#e11d48');
-    panel.remove();
-    document.dispatchEvent(new window.CustomEvent('livewire:navigated'));
 
     Alpine.store('brand').set('default');
     Alpine.store('appearance').set('light');
@@ -174,14 +171,12 @@ test('a theme pair of its own: data-theme names its members; without a dark memb
     assert.equal(root.dataset.theme, 'atelier-dark');
     Alpine.store('appearance').set('light');
     assert.equal(root.dataset.theme, 'atelier');
-    named.remove();
 
-    const single = navigateTo({ theme: { key: 'paper', light: 'paper', dark: null } });
+    navigateTo({ theme: { key: 'paper', light: 'paper', dark: null } });
     Alpine.store('appearance').set('dark');
     assert.equal(root.dataset.theme, 'paper');
     assert.equal(root.classList.contains('dark'), false);
-    single.remove();
-    document.dispatchEvent(new window.CustomEvent('livewire:navigated'));
+    navigateTo({});
     Alpine.store('appearance').set('light');
     window.localStorage.clear();
 });
@@ -281,8 +276,7 @@ test('the choices are saved to the account with the address of the current page;
     assert.deepEqual(posts.find(([, body]) => 'sidebar' in body), ['/tercihler', { sidebar: 'expanded' }]);
     assert.equal(window.localStorage.getItem('acun-ui:panel'), null);
 
-    page.remove();
-    document.dispatchEvent(new window.CustomEvent('livewire:navigated'));
+    navigateTo({});
     delete globalThis.fetch;
     window.localStorage.clear();
 });
@@ -295,11 +289,9 @@ test('the CSRF token goes only to a preference address on this site', () => {
     meta.content = 't0ken';
     document.head.append(meta);
 
-    const islands = ['/tercihler', 'http://localhost/tercihler', 'https://evil.example/tercihler', '//evil.example/tercihler'].map((preferenceUrl) => {
-        const page = navigateTo({ preferenceUrl });
+    ['/tercihler', 'http://localhost/tercihler', 'https://evil.example/tercihler', '//evil.example/tercihler'].forEach((preferenceUrl) => {
+        navigateTo({ preferenceUrl });
         Alpine.store('navbar').set('static');
-
-        return page;
     });
 
     assert.deepEqual(posts, [
@@ -309,9 +301,8 @@ test('the CSRF token goes only to a preference address on this site', () => {
         ['//evil.example/tercihler', null],
     ]);
 
-    islands.forEach((page) => page.remove());
     meta.remove();
-    document.dispatchEvent(new window.CustomEvent('livewire:navigated'));
+    navigateTo({});
     delete globalThis.fetch;
     window.localStorage.clear();
 });
@@ -370,5 +361,25 @@ test('the picker\'s default swatch shows the theme\'s own primary colour', async
     assert.equal(document.querySelector('input[type="color"]').value, '#0f766e');
 
     style.remove();
+    window.localStorage.clear();
+});
+
+// Livewire's wire:navigate adds a head <script> only when the same markup is not there yet and never
+// removes one. The island's id (one per response, acun:layout.head) makes the page shown the newest.
+test('back in a scope after wire:navigate, the page reads its own island, not the one left behind', () => {
+    window.localStorage.clear();
+
+    navigateTo({ scope: 'shop', defaults: {} }, 'shop0001');
+    Alpine.store('brand').set('green');
+    // Back to the panel: the shop's island stays in <head> (Livewire), the panel's comes after it.
+    navigateTo({}, 'panel002');
+
+    assert.equal(document.querySelectorAll('script[data-acun-ui-config]').length, 1, 'the older islands are removed');
+    assert.equal(document.querySelector('script[data-acun-ui-config]').dataset.acunUiConfig, 'panel002');
+    Alpine.store('brand').set('#123456');
+    assert.deepEqual(saved('shop'), { brandColor: 'green' }, 'the panel\'s choice does not go into the shop\'s storage');
+    assert.equal(saved('panel')?.brandColor, '#123456');
+
+    Alpine.store('brand').set('default');
     window.localStorage.clear();
 });

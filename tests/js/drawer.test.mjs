@@ -642,3 +642,40 @@ test('content written for the 2.0 Alpine drawer still works: close() and opened'
     assert.equal(byId('eski-durum').textContent, 'kapalı');
     assert.equal(locks(), 0);
 });
+
+// On a page the runtime starts before Alpine (Livewire starts it on DOMContentLoaded): the plugin mounts
+// the root first, then Alpine runs acunDrawer()'s init(), which writes the options onto the root.
+test('x-data="acunDrawer({ docked, lockScroll })" keeps its options when the plugin mounted the root first', async () => {
+    await mount('');
+    viewport.width = 1280;
+    const holder = document.createElement('main');
+    holder.innerHTML = `
+        <button id="eski-ac" data-acun-toggle="eski-filtre">Filtreler</button>
+        <div id="eski-filtre" data-acun-drawer="eski-filtre" x-data="acunDrawer({ name: 'eski-filtre', docked: true, lockScroll: false })" role="dialog" aria-label="Filtreler">
+            <div x-ref="panel" x-show="rendered" tabindex="-1"><button id="eski-filtre-ic">İç</button></div>
+        </div>
+        <div id="eski-cekmece" data-acun-drawer="eski-cekmece" x-data="acunDrawer({ name: 'eski-cekmece', lockScroll: false })" role="dialog" aria-modal="true" aria-label="Çekmece">
+            <div x-ref="panel" x-show="rendered" tabindex="-1"><button>İç</button></div>
+        </div>`;
+    window.AcunUI.init(holder);
+    assert.ok(drawer('eski-filtre') ?? window.AcunUI.plugins.get(holder.querySelector('#eski-filtre'), 'drawer'), 'mounted before Alpine');
+    document.body.append(holder);
+    await settle();
+
+    assert.equal(drawer('eski-filtre').docked, true, 'docked from the options');
+    byId('eski-ac').click();
+    await settle();
+    assert.equal(drawer('eski-filtre').isOpen, true);
+    assert.equal(drawer('eski-filtre').overlay, false, 'beside the content on desktop, not a modal overlay');
+    assert.equal(byId('eski-filtre').getAttribute('aria-modal'), 'false');
+    assert.equal(locks(), 0, 'the page keeps scrolling');
+    window.AcunUI.drawer.close('eski-filtre');
+
+    window.AcunUI.drawer.open('eski-cekmece');
+    await settle();
+    assert.equal(drawer('eski-cekmece').isOpen, true);
+    assert.equal(locks(), 0, 'lockScroll: false');
+    window.AcunUI.drawer.close('eski-cekmece');
+    await closed();
+    viewport.width = 390;
+});

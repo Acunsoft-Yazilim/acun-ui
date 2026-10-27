@@ -98,8 +98,15 @@ export function drawer({ name, docked = false, lockScroll = true } = {}) {
             warn();
             const root = this.$el;
             if (!root.hasAttribute('data-acun-drawer') && name) root.setAttribute('data-acun-drawer', name);
+            const changed = (docked && !root.hasAttribute('data-docked')) || (!lockScroll && root.getAttribute('data-lock-scroll') !== 'false');
             if (docked) root.setAttribute('data-docked', '');
             if (!lockScroll) root.setAttribute('data-lock-scroll', 'false');
+            // On a page the runtime starts before Alpine, so the plugin may have mounted the root before
+            // these options were on it: mount it again with them (it reads them once, at mount).
+            if (changed && plugins.get(root, 'drawer')) {
+                plugins.unmount(root, 'drawer');
+                plugins.mount(root, 'drawer');
+            }
             Object.assign(this, methods(root));
 
             stop = followState(root, 'drawer', () => Object.assign(this, state(root)));
