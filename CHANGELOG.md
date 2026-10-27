@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.2.0 (2026-10-27)
 
 - `AcunUI.appearance` works on a page without `acun:layout.head` (plain HTML, React, Vue): the first setter starts the choices from the defaults (the setters did nothing there). The plain HTML example's colour picker uses `setBrandColor()`, so the colours on the primary fill keep their contrast.
 - `acun:select` draws one arrow, in the `muted` colour (the base drew a second one under it, and the component's was the decorative `faint`); `acun:skeleton` stops pulsing and the button's loading spinner slows down with reduced motion.
@@ -40,8 +40,6 @@
 - `AcunUI.appearance`: the appearance choices (mode, primary colour, skin, content width, semi-dark menu, menu collapse, navbar mode) without Alpine, for plain HTML, React and Vue pages: `get()`, `subscribe(listener)`, `setMode()`, `toggleMode()`, `setBrandColor()`, `setSkin()`, `setContentWidth()`, `setSemiDark()`, `setSidebarCollapsed()`, `setNavbarMode()`, `reset()`. It applies, keeps (per scope) and saves them as the Alpine stores did; the stores (`$store.appearance`, `brand`, `customizer`, `sidebar`, `navbar`) keep every field and method and now change the choices through it, so both always agree. Keeping them through wire:navigate moved into the Livewire adapter.
 - `acun:modal:closed` and `modal-closed` carry `reason`: `user` (the X, Escape, the backdrop, `data-acun-close`, another modal opening), `command` (`AcunUI.modal.close()`, a `close-modal` event) or `removed` (taken off the page while open). The modal plugin no longer imports the Livewire adapter: the adapter runs `close-action` on a `user` close, as before (layer rule checked by `tests/js/layers.test.mjs`).
 - Fixed: `acun:search` with a value that is not text (`:value="request('q')"` and `?q[]=x` in the URL) failed the page; the field is now empty.
-
-## 2.2.0 (2026-10-22)
 
 - Compiled stylesheet for projects without Tailwind: `dist/acun-ui.css` (npm export `@acunsoft/acun-ui/acun-ui.css`, also on jsDelivr/unpkg), built from the same Tailwind v4 source with `npm run build:css`: Tailwind's preflight, the tokens and both built-in themes, the form base and every class the free components use, minified (17 KB gzip). The components, the light and dark theme, `data-theme` sections, the primary colour, focus and hover states paint as they do in a Tailwind application (checked in Chrome by `tests/js/css-parity.test.mjs`). `tailwindcss` is now an optional peer dependency. Acun Pro has `dist/acun-pro.css` (the free file plus the Pro components; the storefront is not in it). A plain HTML example: `examples/html/index.html` in the repository.
 - The kit's global rules (the theme's line on a border without a colour class, the pointer cursor, the headings' letter spacing, the code font, the dark font smoothing and the page texture) moved from `css/panel.css` into `css/base.css`; the rest is `css/core.css`. `css/panel.css` imports both, so nothing changes for applications. Import `css/core.css` (or link `dist/acun-ui-core.css`) for no global rules from the kit.
