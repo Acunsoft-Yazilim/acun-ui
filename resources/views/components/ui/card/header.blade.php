@@ -38,13 +38,13 @@
         {{ $actions ?? '' }}
 
         @if ($collapsible)
-            <button type="button" x-on:click="open = ! open" :aria-expanded="open.toString()" aria-label="{{ __('Collapse / expand') }}" class="flex size-7 cursor-pointer items-center justify-center rounded-sm text-muted hover:bg-hover hover:text-body">
-                <svg class="size-4 transition-transform" :class="! open && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/></svg>
+            <button type="button" data-slot="card-toggle" aria-expanded="true" aria-label="{{ __('Collapse / expand') }}" class="group flex size-7 cursor-pointer items-center justify-center rounded-sm text-muted hover:bg-hover hover:text-body">
+                <svg class="size-4 rotate-180 transition-transform group-aria-expanded:rotate-0 motion-reduce:transition-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/></svg>
             </button>
         @endif
 
         @if ($closable)
-            <button type="button" x-on:click="visible = false" aria-label="{{ __('Close') }}" class="flex size-7 cursor-pointer items-center justify-center rounded-sm text-muted hover:bg-hover hover:text-danger-ink">
+            <button type="button" data-acun-close aria-label="{{ __('Close') }}" class="flex size-7 cursor-pointer items-center justify-center rounded-sm text-muted hover:bg-hover hover:text-danger-ink">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         @endif

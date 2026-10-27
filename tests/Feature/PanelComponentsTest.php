@@ -66,7 +66,7 @@ final class PanelComponentsTest extends TestCase
             'icon solid' => ['<x-ui.icon name="trash" solid />', 'fill-rule="evenodd"'],
             'icon full set' => ['<x-ui.icon name="academic-cap" />', 'stroke-linejoin="round"'],
             'stat-card' => ['<x-ui.stat-card label="Sipariş" value="3.106" icon="shopping-bag" :change="-4" />', 'text-danger-ink'],
-            'card extras' => ['<x-ui.card title="T" subtitle="Alt" collapsible closable>G</x-ui.card>', 'visible = false'],
+            'card extras' => ['<x-ui.card title="T" subtitle="Alt" collapsible closable>G</x-ui.card>', 'data-acun-close'],
             'input-group' => ['<x-ui.input-group name="tel" prefix="+90" />', '+90'],
             'tabs pills' => ["<x-ui.tabs variant=\"pills\" :tabs=\"['a' => 'A']\"><x-ui.tab-panel value=\"a\">x</x-ui.tab-panel></x-ui.tabs>", 'role="tab"'],
             'command-palette' => ["<x-ui.command-palette placeholder=\"Ara\" :items=\"[['label' => 'Siparişler', 'href' => '/siparisler', 'group' => 'Sayfalar']]\" />", 'command-palette-open.window'],

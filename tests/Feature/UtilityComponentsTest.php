@@ -68,11 +68,9 @@ final class UtilityComponentsTest extends TestCase
         $plain = Blade::render('<x-ui.scroll-area>A</x-ui.scroll-area>');
         $shadowed = Blade::render('<x-ui.scroll-area direction="horizontal" shadows>A</x-ui.scroll-area>');
 
-        self::assertStringNotContainsString('x-data', $plain);
-        self::assertStringContainsString('x-on:scroll.passive="measure()"', $shadowed);
-        self::assertStringContainsString("x-bind:style=\"{ maskImage: mask, maskComposite: 'intersect' }\"", $shadowed);
-        self::assertStringContainsString('vertical: false,', $shadowed);
-        self::assertStringContainsString('horizontal: true,', $shadowed);
+        // The fading edges are the runtime's (js/plugins/scroll-shadows.js), only with shadows.
+        self::assertStringNotContainsString('data-acun-scroll-shadows', $plain);
+        self::assertStringContainsString('data-acun-scroll-shadows data-direction="horizontal"', $shadowed);
     }
 
     public function test_copy_button_reads_its_text_or_target_from_the_button(): void

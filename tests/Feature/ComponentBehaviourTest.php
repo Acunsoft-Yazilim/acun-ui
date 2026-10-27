@@ -164,7 +164,9 @@ final class ComponentBehaviourTest extends TestCase
         $html = Blade::render('<x-ui.input name="password" type="password" viewable />');
 
         self::assertStringNotContainsString('tabindex="-1"', $html);
-        self::assertStringContainsString(':aria-pressed="shown.toString()"', $html);
+        // The reveal plugin (js/plugins/reveal.js) switches the field and aria-pressed.
+        self::assertStringContainsString('data-acun-reveal', $html);
+        self::assertMatchesRegularExpression('/data-slot="reveal-toggle"[^>]*aria-pressed="false"/s', $html);
     }
 
     /** The tooltip plugin (js/plugins/tooltip.js) shows the bubble on hover and focus and wires aria-describedby. */

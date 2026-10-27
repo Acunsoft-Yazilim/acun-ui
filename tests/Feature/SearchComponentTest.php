@@ -92,7 +92,7 @@ final class SearchComponentTest extends TestCase
             self::assertStringNotContainsString($control, $outer[0]);
         }
 
-        self::assertSame(1, preg_match('/<input\s+data-acun-control\s+x-ref="input"(?:[^>"]|"[^"]*")*>/s', $html, $input));
+        self::assertSame(1, preg_match('/<input\s+data-acun-control\s+id=(?:[^>"]|"[^"]*")*>/s', $html, $input));
         self::assertStringContainsString('wire:model.live="arama"', $input[0]);
         self::assertStringContainsString('data-testid="ara"', $input[0]);
         self::assertStringContainsString('x-on:keyup="ara()"', $input[0]);
@@ -117,14 +117,15 @@ final class SearchComponentTest extends TestCase
     {
         $html = Blade::render('<x-ui.search name="q" shortcut="/" />');
 
-        self::assertMatchesRegularExpression('/<button\s+type="button"\s+x-on:click="clear\(\)"[^>]*peer-\[:not\(:placeholder-shown\)\]:flex[^>]*aria-label="Aramayı temizle"/s', $html);
+        self::assertMatchesRegularExpression('/<button\s+type="button"\s+data-slot="search-clear"[^>]*peer-\[:not\(:placeholder-shown\)\]:flex[^>]*aria-label="Aramayı temizle"/s', $html);
         self::assertMatchesRegularExpression('/peer-\[:placeholder-shown:not\(:focus\)\]:flex[^>]*>\s*<kbd[^>]*>\/<\/kbd>/s', $html);
         self::assertMatchesRegularExpression('/<input[^>]*aria-keyshortcuts="\/"/s', $html);
-        self::assertStringContainsString('x-on:keydown.window=', $html);
+        // The search plugin (js/plugins/search.js) clears the field and focuses it on the shortcut key.
+        self::assertMatchesRegularExpression('/data-acun-search\s+data-shortcut="\/"/', $html);
 
         $plain = Blade::render('<x-ui.search name="q" :clearable="false" />');
         self::assertStringNotContainsString('Aramayı temizle', $plain);
-        self::assertStringNotContainsString('keydown.window', $plain);
+        self::assertStringNotContainsString('data-shortcut', $plain);
     }
 
     public function test_a_livewire_field_shows_a_spinner_while_its_property_updates(): void

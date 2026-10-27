@@ -8,30 +8,12 @@
 {{--
     The recovery codes of two-factor sign-in, with Copy and Download (a .txt file):
         <acun:recovery-codes :codes="$user->recoveryCodes()" />
-    The codes are the application's (e.g. Fortify); the kit only shows them. The Copy result
-    is announced to screen readers.
+    The codes are the application's (e.g. Fortify); the kit only shows them. Copy is
+    acun:copy-button (the result is announced; a fallback without the Clipboard API);
+    Download saves them as a text file in the browser.
 --}}
-<div
-    x-data="{
-        codes: @js(array_values(array_map('strval', (array) $codes))),
-        copied: false,
-        async copy() {
-            try {
-                await navigator.clipboard.writeText(this.codes.join('\n'));
-                this.copied = true;
-                setTimeout(() => { this.copied = false }, 2000);
-            } catch {}
-        },
-        download() {
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(new Blob([this.codes.join('\n') + '\n'], { type: 'text/plain' }));
-            link.download = @js($filename);
-            link.click();
-            setTimeout(() => URL.revokeObjectURL(link.href), 0);
-        },
-    }"
-    {{ $attributes->class('space-y-3') }}
->
+@php($text = implode("\n", array_values(array_map('strval', (array) $codes))))
+<div {{ $attributes->class('space-y-3') }}>
     <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-1.5 rounded-sm bg-sunken/60 p-4 font-mono text-sm tracking-wider text-ink sm:grid-cols-2">
         @foreach ($codes as $code)
             <li class="select-all">{{ $code }}</li>
@@ -39,15 +21,11 @@
     </ul>
 
     <div class="flex flex-wrap gap-2">
-        <acun:button variant="white" size="sm" x-on:click="copy()">
-            <acun:icon name="clipboard-document" size="4" />
-            <span x-text="copied ? @js(__('Copied')) : @js(__('Copy'))">{{ __('Copy') }}</span>
-        </acun:button>
-        <acun:button variant="white" size="sm" x-on:click="download()">
+        {{-- The copy button announces the result and falls back to a selection where the Clipboard API is missing. --}}
+        <acun:copy-button :text="$text" variant="white" size="sm" />
+        <acun:button variant="white" size="sm" data-acun-download-text :data-text="$text" :data-filename="$filename">
             <acun:icon name="arrow-down-tray" size="4" />
             {{ __('Download') }}
         </acun:button>
     </div>
-
-    <p class="sr-only" role="status" x-text="copied ? @js(__('The codes were copied.')) : ''"></p>
 </div>

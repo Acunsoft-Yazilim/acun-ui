@@ -59,6 +59,12 @@ import { collapsePlugin } from './plugins/collapse.js';
 import { toastsPlugin } from './plugins/toast.js';
 import { copyPlugin } from './plugins/copy.js';
 import { inlineConfirmPlugin } from './plugins/inline-confirm.js';
+import { dismissiblePlugin } from './plugins/dismissible.js';
+import { cardPlugin } from './plugins/card.js';
+import { revealPlugin } from './plugins/reveal.js';
+import { searchPlugin } from './plugins/search.js';
+import { scrollShadowsPlugin } from './plugins/scroll-shadows.js';
+import { downloadTextPlugin } from './plugins/download-text.js';
 import { connectAlpine, scope } from './adapters/alpine.js';
 import { followAppearanceThroughNavigation, keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
 import { drawer, drawerScope } from './components/drawer.js';
@@ -177,6 +183,12 @@ function setup(runtime, { observe: watch = true }) {
     plugins.define('toasts', toastsPlugin);
     plugins.define('copy', copyPlugin);
     plugins.define('inline-confirm', inlineConfirmPlugin);
+    plugins.define('dismissible', dismissiblePlugin);
+    plugins.define('card', cardPlugin);
+    plugins.define('reveal', revealPlugin);
+    plugins.define('search', searchPlugin);
+    plugins.define('scroll-shadows', scrollShadowsPlugin);
+    plugins.define('download-text', downloadTextPlugin);
     scope('modal', '[data-acun-modal]', modalScope);
     scope('drawer', '[data-acun-drawer]', drawerScope);
     scope('dropdown', '[data-acun-dropdown]', dropdownScope);
@@ -262,6 +274,12 @@ export {
     toastsPlugin,
     copyPlugin,
     inlineConfirmPlugin,
+    dismissiblePlugin,
+    cardPlugin,
+    revealPlugin,
+    searchPlugin,
+    scrollShadowsPlugin,
+    downloadTextPlugin,
     // Deprecated (3.0): the Alpine data of the 2.0 drawer and modal; they delegate to the plugins.
     drawer,
     modal,

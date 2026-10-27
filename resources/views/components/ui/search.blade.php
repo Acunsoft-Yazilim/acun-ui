@@ -57,18 +57,8 @@
     role="search"
     @if ($isForm) method="{{ $post ? 'POST' : 'GET' }}"@if ($action !== null) action="{{ $action }}"@endif @endif
     {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex w-full flex-col gap-1.5') }}
-    x-data="{
-        clear() {
-            const input = this.$refs.input;
-            input.value = '';
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-            input.focus();
-        },
-    }"
-    @if ($shortcut)
-        x-on:keydown.window="if ($event.key === @js($shortcut) && ! $event.ctrlKey && ! $event.metaKey && ! $event.altKey && ! $event.target.closest('input, textarea, select, [contenteditable]')) { $event.preventDefault(); $refs.input.focus(); }"
-    @endif
+    data-acun-search
+    @if ($shortcut) data-shortcut="{{ $shortcut }}" @endif
 >
     {{-- The CSRF token goes only to this application, never to another site's address. --}}
     @if ($post && \Acun\Ui\Support\Url::isSameOrigin($action))
@@ -96,12 +86,10 @@
         {{-- peer: the clear button and the shortcut hint below read its :placeholder-shown / :focus. --}}
         <input
             data-acun-control
-            x-ref="input"
             id="{{ $inputId }}"
             @if ($name) name="{{ $name }}" @endif
             @if (! $label) aria-label="{{ $attributes->get('aria-label') ?? $placeholder }}" @endif
             @if ($shortcut) aria-keyshortcuts="{{ $shortcut }}" @endif
-            @if ($clearable) x-on:keydown.escape="if ($el.value !== '') { $event.preventDefault(); $event.stopPropagation(); clear(); }" @endif
             {{ \Acun\Ui\Support\Field::controlAttributes($attributes)->except(['id', 'name', 'placeholder', 'aria-label'])->merge([
                 'type' => 'search',
                 'placeholder' => $placeholder,
@@ -115,7 +103,7 @@
         @if ($clearable && ! $disabled)
             <button
                 type="button"
-                x-on:click="clear()"
+                data-slot="search-clear"
                 class="hidden flex-none items-center px-2 text-muted hover:text-body focus-visible:text-body focus-visible:outline-none peer-[:not(:placeholder-shown)]:flex"
                 aria-label="{{ __('Clear search') }}"
                 title="{{ __('Clear search') }}"

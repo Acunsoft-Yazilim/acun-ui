@@ -40,7 +40,7 @@
     Attributes (class, id, wire:key…) go on the alert box in both modes.
 --}}
 <div
-    @if ($dismissible) x-data="{ shown: true }" x-show="shown" @endif
+    @if ($dismissible) data-acun-dismissible @endif
     {{ $attributes->merge(['class' => 'flex items-start gap-3 rounded-sm p-4 text-sm ' . $style['wrap']]) }}
 >
     <svg class="size-5 flex-none {{ $style['icon'] }}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="{{ $iconPath }}"/></svg>
@@ -59,7 +59,7 @@
     @if ($dismissible)
         <button
             type="button"
-            @click="shown = false"
+            data-acun-close
             @if ($dismissAction) wire:click="{{ $dismissAction }}" @endif
             aria-label="{{ __('Close') }}"
             class="flex-none cursor-pointer text-current opacity-60 hover:opacity-100"

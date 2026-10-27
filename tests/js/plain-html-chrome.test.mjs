@@ -32,7 +32,7 @@ test('the modal and the drawer of the HTML example work with dist/acun-ui.js alo
     const browser = await openPage(page.href);
     try {
         assert.deepEqual(await browser.evaluate('({ alpine: typeof window.Alpine, livewire: typeof window.Livewire, runtime: window.AcunUI?.initialized, plugins: window.AcunUI?.plugins.names })'), {
-            alpine: 'undefined', livewire: 'undefined', runtime: true, plugins: ['modal', 'drawer', 'dropdown', 'popover', 'tooltip', 'tabs', 'accordion', 'collapse', 'toasts', 'copy', 'inline-confirm'],
+            alpine: 'undefined', livewire: 'undefined', runtime: true, plugins: ['modal', 'drawer', 'dropdown', 'popover', 'tooltip', 'tabs', 'accordion', 'collapse', 'toasts', 'copy', 'inline-confirm', 'dismissible', 'card', 'reveal', 'search', 'scroll-shadows', 'download-text'],
         });
         await browser.evaluate(`window.seen = []; for (const name of ['acun:modal:opened', 'acun:modal:closed', 'modal-closed', 'acun:drawer:opened', 'acun:drawer:closed', 'drawer-state-changed']) window.addEventListener(name, (event) => window.seen.push([name, event.detail]));`);
 

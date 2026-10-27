@@ -74,7 +74,10 @@ final class NewComponentsTest extends TestCase
 
         $codes = Blade::render('<acun:recovery-codes :codes="[\'a1b2-c3d4\', \'e5f6-g7h8\']" filename="acme-kodlar.txt" />');
         self::assertSame(2, substr_count($codes, '<li class="select-all">'));
-        self::assertStringContainsString('acme-kodlar.txt', $codes);
-        self::assertStringContainsString('role="status"', $codes);
+        self::assertStringContainsString('data-filename="acme-kodlar.txt"', $codes);
+        // Copy is acun:copy-button (its polite status line), the codes joined by new lines.
+        self::assertStringContainsString('data-acun-copy', $codes);
+        self::assertStringContainsString('aria-live="polite"', $codes);
+        self::assertStringContainsString("data-copy-text=\"a1b2-c3d4\ne5f6-g7h8\"", $codes);
     }
 }

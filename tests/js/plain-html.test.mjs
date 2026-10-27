@@ -802,3 +802,53 @@ test('inline confirm asks in place, runs only on confirm and keeps the focus on 
     assert.equal(question.hidden, true);
     assert.equal(document.activeElement, byId('sor'), 'after the action the focus is on the button again, not on <body>');
 });
+
+// --- the small components (stage 2.5) without Alpine ---------------------------------------------------------
+
+test('a dismissible alert and a closable card hide with their data-acun-close button; a card folds its body', async () => {
+    await mount(`
+        <div data-acun-dismissible id="uyari">Uyarı <button type="button" data-acun-close id="uyari-kapat">×</button></div>
+        <div data-acun-card id="kart">
+            <div data-slot="card-header"><button type="button" data-slot="card-toggle" aria-expanded="true" id="katla">⌃</button><button type="button" data-acun-close id="kart-kapat">×</button></div>
+            <div data-slot="card-body" data-open><div>İçerik</div></div>
+        </div>`);
+    byId('uyari-kapat').click();
+    assert.equal(byId('uyari').hidden, true);
+
+    const body = document.querySelector('[data-slot="card-body"]');
+    assert.equal(byId('katla').getAttribute('aria-controls'), body.id);
+    byId('katla').click();
+    await sleep(250);
+    assert.equal(byId('katla').getAttribute('aria-expanded'), 'false');
+    assert.equal(body.hidden, true);
+    byId('katla').click();
+    await settle();
+    assert.equal(body.hidden, false);
+
+    byId('kart-kapat').click();
+    assert.equal(byId('kart').hidden, true);
+});
+
+test('the password field shows and hides its value; the search box clears itself and answers its shortcut', async () => {
+    await mount(`
+        <div class="relative" data-acun-reveal><input type="password" id="sifre" value="gizli"><button type="button" data-slot="reveal-toggle" aria-pressed="false" id="goster">👁</button></div>
+        <div role="search" data-acun-search data-shortcut="/"><input type="search" id="ara" value="kulaklık"><button type="button" data-slot="search-clear" id="temizle">×</button></div>
+        <button type="button" id="baska-yer">Başka</button>`);
+    byId('goster').click();
+    assert.equal(byId('sifre').type, 'text');
+    assert.equal(byId('goster').getAttribute('aria-pressed'), 'true');
+    byId('goster').click();
+    assert.equal(byId('sifre').type, 'password');
+
+    const inputs = [];
+    byId('ara').addEventListener('input', () => inputs.push(byId('ara').value));
+    byId('temizle').click();
+    assert.equal(byId('ara').value, '');
+    assert.deepEqual(inputs, [''], 'Livewire hears the change');
+    assert.equal(document.activeElement, byId('ara'));
+
+    byId('baska-yer').focus();
+    const slash = press('/', {}, byId('baska-yer'));
+    assert.equal(slash.defaultPrevented, true);
+    assert.equal(document.activeElement, byId('ara'), 'the shortcut focuses the search');
+});

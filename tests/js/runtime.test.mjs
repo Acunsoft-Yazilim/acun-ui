@@ -41,7 +41,7 @@ test('the runtime sets up window.AcunUI with its public API', () => {
     assert.equal(AcunUI.initialized, true);
     assert.deepEqual(Object.keys(AcunUI).sort(), ['appearance', 'components', 'destroy', 'drawer', 'events', 'focus', 'init', 'initialized', 'isDark', 'load', 'modal', 'observe', 'overlays', 'plugins', 'scrollLock', 'tokenColor', 'version']);
     assert.deepEqual(Object.keys(AcunUI.components).sort(), ['define', 'isLoaded', 'load']);
-    assert.deepEqual(AcunUI.plugins.names, ['modal', 'drawer', 'dropdown', 'popover', 'tooltip', 'tabs', 'accordion', 'collapse', 'toasts', 'copy', 'inline-confirm']);
+    assert.deepEqual(AcunUI.plugins.names, ['modal', 'drawer', 'dropdown', 'popover', 'tooltip', 'tabs', 'accordion', 'collapse', 'toasts', 'copy', 'inline-confirm', 'dismissible', 'card', 'reveal', 'search', 'scroll-shadows', 'download-text']);
     assert.deepEqual(Object.keys(AcunUI.drawer).sort(), ['close', 'open', 'toggle']);
     assert.deepEqual(Object.keys(AcunUI.modal).sort(), ['close', 'open']);
     assert.deepEqual(Object.keys(AcunUI.appearance).sort(), ['apply', 'forgetBrandColor', 'get', 'ready', 'reset', 'scope', 'setBrandColor', 'setContentWidth', 'setMode', 'setNavbarMode', 'setSemiDark', 'setSidebarCollapsed', 'setSkin', 'subscribe', 'toggleMode']);
