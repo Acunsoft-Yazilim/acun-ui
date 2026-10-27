@@ -29,7 +29,7 @@ export declare const appearance: {
     readonly ready: boolean;
     /** The page's storage scope (localStorage 'acun-ui:{scope}'): panel, shop, app… */
     readonly scope: any;
-    /** @returns {AppearanceState | null} the choices now (a copy), null on a page without acun:layout.head */
+    /** @returns {AppearanceState | null} the choices now (a copy); null on a page without acun:layout.head until a setter starts them from the defaults */
     get(): AppearanceState | null;
     /**
      * Calls listener after every change (and when a page of another scope brings its own choices).
@@ -76,7 +76,7 @@ export declare function startAppearance(config: AppearanceSettings): {
     readonly ready: boolean;
     /** The page's storage scope (localStorage 'acun-ui:{scope}'): panel, shop, app… */
     readonly scope: any;
-    /** @returns {AppearanceState | null} the choices now (a copy), null on a page without acun:layout.head */
+    /** @returns {AppearanceState | null} the choices now (a copy); null on a page without acun:layout.head until a setter starts them from the defaults */
     get(): AppearanceState | null;
     /**
      * Calls listener after every change (and when a page of another scope brings its own choices).

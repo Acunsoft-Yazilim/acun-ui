@@ -138,7 +138,7 @@
 @else
     <button type="{{ $type }}" @disabled($disabled || $loading) @if ($loading) aria-busy="true" @endif {{ $attributes->merge(['class' => $classes]) }}>
         @if ($loading)
-            <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" class="opacity-25"/><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+            <svg class="size-4 animate-spin motion-reduce:animate-[spin_1.5s_linear_infinite]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" class="opacity-25"/><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
         @endif
         {{ $slot }}
         @if ($badge !== null && $badge !== '')

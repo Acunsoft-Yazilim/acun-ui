@@ -90,6 +90,9 @@ const applyNavbars = () => document.querySelectorAll('[data-acun-navbar]')
  * @param {{ apply: () => void, stored: Record<string, unknown>, saved: Record<string, unknown> | null }} effects
  */
 function change(key, value, { apply, stored, saved }) {
+    // A page without acun:layout.head (plain HTML, React, Vue): the first change starts the choices from the
+    // defaults, so the setters work there too (they did nothing before).
+    if (!state) startAppearance({});
     if (!state) return;
 
     state[key] = value;
@@ -122,7 +125,7 @@ export const appearance = {
         return scopeOf();
     },
 
-    /** @returns {AppearanceState | null} the choices now (a copy), null on a page without acun:layout.head */
+    /** @returns {AppearanceState | null} the choices now (a copy); null on a page without acun:layout.head until a setter starts them from the defaults */
     get() {
         return state ? { ...state } : null;
     },

@@ -65,7 +65,7 @@
             @if ($error) aria-invalid="true" @endif
                 @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
                 {{ $controlAttributes->except(['id', 'label', 'hint', 'options', 'placeholder', 'value', 'aria-describedby'])->merge([
-                'class' => \Acun\Ui\Support\Field::controlClass('block w-full appearance-none rounded-sm border-0 bg-field text-ink ring-1 ring-inset transition-colors '
+                'class' => \Acun\Ui\Support\Field::controlClass('block w-full appearance-none rounded-sm border-0 bg-field bg-none text-ink ring-1 ring-inset transition-colors '
                     . ($floating ? 'peer flex h-[45px] items-center pl-3 pr-9' : 'flex h-10 items-center pl-3 pr-9')
                     . ' '
                     . ($error ? $errorRing : 'ring-control hover:ring-line-hover focus:ring-focus focus:shadow-(--ac-focus-shadow)')
@@ -93,7 +93,7 @@
             @endforeach
         </select>
 
-        <svg class="pointer-events-none absolute inset-y-0 right-3 my-auto size-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="pointer-events-none absolute inset-y-0 right-3 my-auto size-4 text-muted" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
         </svg>
 

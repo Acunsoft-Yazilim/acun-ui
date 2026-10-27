@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `AcunUI.appearance` works on a page without `acun:layout.head` (plain HTML, React, Vue): the first setter starts the choices from the defaults (the setters did nothing there). The plain HTML example's colour picker uses `setBrandColor()`, so the colours on the primary fill keep their contrast.
+- `acun:select` draws one arrow, in the `muted` colour (the base drew a second one under it, and the component's was the decorative `faint`); `acun:skeleton` stops pulsing and the button's loading spinner slows down with reduced motion.
 - While a modal dialog is open the page behind it is inert (pointer, keyboard and screen readers reach only the dialog; before, Tab alone was kept in). Toasts and other live regions stay heard, and only what the runtime made inert comes back when the dialog closes.
 - The Escape that hides a tooltip or closes a dropdown or popover no longer also closes the modal or drawer it is in.
 - A dialog's first focus and the focus given back when it closes are brought into view once the transitions are over, when they ended up outside the window.
