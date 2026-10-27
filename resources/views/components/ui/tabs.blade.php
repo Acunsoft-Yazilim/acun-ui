@@ -34,11 +34,9 @@
 
     Pills wrap onto more lines; the underline row keeps one line and scrolls
     sideways when it does not fit (a phone with four tabs), bringing the chosen
-    tab into view.
+    tab into view. Works without Alpine (the tabs plugin of the runtime); with active,
+    the server already draws the open tab.
 --}}
-@php
-    $modelable = $attributes->whereStartsWith(['wire:model', 'x-model'])->isNotEmpty();
-@endphp
 @if (! empty($tabs))
 {{-- Classic: drawn by the parts, so it gets their ids, aria-controls, arrow keys and focus order. --}}
 <acun:tabs :active="$active ?? array_key_first($tabs)" :variant="$variant" :size="$size" {{ $attributes }}>
@@ -50,36 +48,9 @@
     {{ $slot }}
 </acun:tabs>
 @else
-<div
-    x-data="{
-        tab: @js($active === null ? null : (string) $active),
-        initial: @js($active === null ? null : (string) $active),
-        selected(value) { return this.tab !== null && this.tab !== undefined && String(this.tab) === value },
-        // An empty tab (no active prop, or an empty model): the active prop, else the
-        // first enabled trigger of this instance (a nested acun:tabs has its own).
-        resolveTab() {
-            if (this.tab !== null && this.tab !== undefined && this.tab !== '') return;
-            const first = [...this.$root.querySelectorAll('[role=tab]')].find(el => ! el.disabled && el.closest('[data-slot=tabs]') === this.$root);
-            this.tab = this.initial ?? first?.dataset.value ?? null;
-        },
-        init() {
-            this.resolveTab();
-            this.$watch('tab', () => this.resolveTab());
-        },
-        // Arrow keys, Home and End on a tablist: focus that tab and open it.
-        focusTab(list, to) {
-            const tabs = [...list.querySelectorAll('[role=tab]')].filter(el => ! el.disabled && el.closest('[role=tablist]') === list);
-            if (! tabs.length) return;
-            const i = tabs.indexOf(document.activeElement);
-            const next = to === 'first' ? tabs[0] : to === 'last' ? tabs[tabs.length - 1] : tabs[(Math.max(i, 0) + to + tabs.length) % tabs.length];
-            next.focus();
-            next.click();
-        },
-    }"
-    x-id="['tab', 'tabpanel']"
-    @if ($modelable) x-modelable="tab" @endif
-    data-slot="tabs" {{ $attributes }}
->
+{{-- The behaviour is the tabs plugin's (js/plugins/tabs.js): no Alpine; on a page with Alpine the root binds
+     wire:model / x-model and gives its content the 2.x scope (tab, selected()). --}}
+<div {{ $attributes->merge(['data-acun-tabs' => '', 'data-slot' => 'tabs', 'data-value' => $active === null || $active === '' ? null : (string) $active]) }}>
     {{ $slot }}
 </div>
 @endif

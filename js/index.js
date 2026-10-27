@@ -53,12 +53,17 @@ import { drawerPlugin } from './plugins/drawer.js';
 import { dropdownPlugin } from './plugins/dropdown.js';
 import { popoverPlugin } from './plugins/popover.js';
 import { tooltipPlugin } from './plugins/tooltip.js';
+import { tabsPlugin } from './plugins/tabs.js';
+import { accordionPlugin } from './plugins/accordion.js';
+import { collapsePlugin } from './plugins/collapse.js';
 import { connectAlpine, scope } from './adapters/alpine.js';
 import { followAppearanceThroughNavigation, keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
 import { drawer, drawerScope } from './components/drawer.js';
 import { modal, modalScope } from './components/modal.js';
 import { dropdownScope } from './components/dropdown.js';
 import { popoverScope } from './components/popover.js';
+import { tabsScope } from './components/tabs.js';
+import { accordionScope, collapseScope } from './components/accordion.js';
 
 /** @import { AcunWindow, AlpineLike } from './core/types.js' */
 
@@ -162,10 +167,16 @@ function setup(runtime, { observe: watch = true }) {
     plugins.define('dropdown', dropdownPlugin);
     plugins.define('popover', popoverPlugin);
     plugins.define('tooltip', tooltipPlugin);
+    plugins.define('tabs', tabsPlugin);
+    plugins.define('accordion', accordionPlugin);
+    plugins.define('collapse', collapsePlugin);
     scope('modal', '[data-acun-modal]', modalScope);
     scope('drawer', '[data-acun-drawer]', drawerScope);
     scope('dropdown', '[data-acun-dropdown]', dropdownScope);
     scope('popover', '[data-acun-popover]', popoverScope);
+    scope('tabs', '[data-acun-tabs]', tabsScope);
+    scope('accordion', '[data-acun-accordion]', accordionScope);
+    scope('collapse', '[data-acun-collapse]', collapseScope);
     startPlugins({ observe: watch });
 
     // Livewire's script runs before this module, so its Alpine is usually here already
@@ -237,6 +248,9 @@ export {
     dropdownPlugin,
     popoverPlugin,
     tooltipPlugin,
+    tabsPlugin,
+    accordionPlugin,
+    collapsePlugin,
     // Deprecated (3.0): the Alpine data of the 2.0 drawer and modal; they delegate to the plugins.
     drawer,
     modal,

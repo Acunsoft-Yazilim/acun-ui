@@ -1,4 +1,4 @@
-@aware(['name' => null, 'disabled' => false])
+@aware(['name' => null, 'disabled' => false, 'open' => null])
 
 {{--
     A trigger with free layout, in place of acun:accordion.heading: a plain button with
@@ -20,16 +20,13 @@
         throw new InvalidArgumentException('acun:accordion.trigger must be inside an acun:accordion-item with a name.');
     }
 
-    $key = \Illuminate\Support\Str::slug($name) ?: hash('crc32b', $name);
+    $expanded = in_array($name, array_map('strval', (array) $open), true);
 @endphp
 
 <button
     type="button"
     data-slot="accordion-trigger"
-    :id="$id('accordion', @js($key)) + '-heading'"
-    x-on:click="toggle(@js($name))"
-    :aria-expanded="isOpen(@js($name)).toString()"
-    :aria-controls="$id('accordion', @js($key))"
+    aria-expanded="{{ $expanded ? 'true' : 'false' }}"
     @disabled($disabled)
     {{ $attributes->class('group cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50') }}
 >{{ $slot }}</button>

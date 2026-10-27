@@ -35,7 +35,7 @@ final class ComponentOptionsTest extends TestCase
         $html = Blade::render('<acun:tabs variant="cards" :tabs="[\'genel\' => \'Genel\', \'kargo\' => \'Kargo\']"><acun:tab-panel value="genel">G</acun:tab-panel></acun:tabs>');
 
         self::assertStringContainsString('-mb-px rounded-t-sm border', $html);
-        self::assertStringContainsString("border-line bg-surface text-ink", $html);
+        self::assertStringContainsString('aria-selected:border-line aria-selected:bg-surface aria-selected:text-ink', $html);
         self::assertStringContainsString('rounded-b-sm border border-t-0 border-line bg-surface p-4', $html);
         self::assertStringNotContainsString('border-b-2', $html);
     }

@@ -74,9 +74,9 @@ final class PartsListsTest extends TestCase
             </acun:accordion>
         BLADE);
 
-        self::assertMatchesRegularExpression('/<div class="border-b[^"]*" x-show="visible">\s*<h3>/', $html);
-        self::assertMatchesRegularExpression('/<button\s+type="button"\s+:id="\$id\(\'accordion\', \'teslimat\'\) \+ \'-heading\'"\s+x-on:click="toggle\(\'teslimat\'\)"[^>]*:aria-controls="\$id\(\'accordion\', \'teslimat\'\)"[^>]*class="[^"]*py-3/', $html);
-        self::assertMatchesRegularExpression('/<div :id="\$id\(\'accordion\', \'teslimat\'\)" role="region" :aria-labelledby="\$id\(\'accordion\', \'teslimat\'\) \+ \'-heading\'" x-show="isOpen\(\'teslimat\'\)"/', $html);
+        self::assertMatchesRegularExpression('/<div data-slot="accordion-item" data-name="teslimat" class="border-b[^"]*" x-show="visible">\s*<h3>/', $html);
+        self::assertMatchesRegularExpression('/<button\s+type="button"\s+data-slot="accordion-trigger"\s+aria-expanded="true"[^>]*class="[^"]*py-3/', $html);
+        self::assertMatchesRegularExpression('/data-slot="accordion-content"\s+role="region"\s+data-open/', $html);
         self::assertMatchesRegularExpression('/<div class="px-5 pb-5[^"]*text-xs[^"]*">\s*Müşteriler/', $html);
     }
 
@@ -100,10 +100,11 @@ final class PartsListsTest extends TestCase
             </acun:accordion>
         BLADE);
 
-        self::assertMatchesRegularExpression('/:id="\$id\(\'accordion\', \'dis\'\) \+ \'-heading\'"[^>]*>\s*<span[^>]*>Satış<\/span>/', $html);
-        self::assertMatchesRegularExpression('/:id="\$id\(\'accordion\', \'ic\'\) \+ \'-heading\'"[^>]*>\s*<span[^>]*>Siparişler<\/span>/', $html);
-        self::assertMatchesRegularExpression('/:id="\$id\(\'accordion\', \'baslikli\'\) \+ \'-heading\'"[^>]*>\s*<span[^>]*>Destek ekibi<\/span>/', $html);
-        self::assertStringContainsString(':aria-labelledby="$id(\'accordion\', \'ic\') + \'-heading\'" x-show="isOpen(\'ic\')"', $html);
+        // Each item carries its own name; the runtime ties every heading to its own item's content.
+        self::assertSame(2, substr_count($html, 'data-acun-accordion'));
+        self::assertMatchesRegularExpression('/data-name="dis".*?<button[^>]*data-slot="accordion-trigger"[^>]*>\s*<span[^>]*>Satış<\/span>/s', $html);
+        self::assertMatchesRegularExpression('/data-name="ic".*?<button[^>]*data-slot="accordion-trigger"[^>]*>\s*<span[^>]*>Siparişler<\/span>/s', $html);
+        self::assertMatchesRegularExpression('/data-name="baslikli".*?<button[^>]*data-slot="accordion-trigger"[^>]*>\s*<span[^>]*>Destek ekibi<\/span>/s', $html);
     }
 
     /** The content part outside an item says where it belongs. */

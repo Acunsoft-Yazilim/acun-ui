@@ -35,9 +35,9 @@ final class ComponentBehaviourTest extends TestCase
             </x-ui.tabs>
         BLADE);
 
-        self::assertStringContainsString('tab: \'1\',', $html, 'The numeric key opens as a string.');
-        self::assertMatchesRegularExpression('/data-slot="tabs" class="mt-6"/', $html, 'Attributes stay on the root.');
-        self::assertStringContainsString('x-show="selected(\'1\')"', $html);
+        self::assertStringContainsString('data-slot="tabs" data-value="1"', $html, 'The numeric key opens as a string.');
+        self::assertMatchesRegularExpression('/data-value="1" class="mt-6"/', $html, 'Attributes stay on the root.');
+        self::assertMatchesRegularExpression('/data-value="1"\s+aria-selected="true"/', $html);
         self::assertStringContainsString('class="pt-4 p-2"', $html);
     }
 

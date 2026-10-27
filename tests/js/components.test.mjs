@@ -13,6 +13,25 @@ const html = render({
     accordions: `
         <acun:accordion open="genel"><acun:accordion.item name="genel" title="Genel">Bir</acun:accordion.item></acun:accordion>
         <acun:accordion><acun:accordion.item name="genel" title="Genel">İki</acun:accordion.item></acun:accordion>`,
+    lazyAccordion: `
+        <acun:accordion>
+            <acun:accordion.item name="ozet" title="Özet">Kısa</acun:accordion.item>
+            <acun:accordion.item name="grafik">
+                <acun:accordion.heading>Grafik</acun:accordion.heading>
+                <acun:accordion.content lazy><p id="grafik-ici">Ağır grafik</p></acun:accordion.content>
+            </acun:accordion.item>
+        </acun:accordion>`,
+    boundTabs: `
+        <div id="sahip" x-data="{ sekme: 'kargo' }">
+            <acun:tabs x-model="sekme">
+                <acun:tabs.list>
+                    <acun:tabs.trigger value="ozet">Özet</acun:tabs.trigger>
+                    <acun:tabs.trigger value="kargo">Kargo</acun:tabs.trigger>
+                </acun:tabs.list>
+                <acun:tabs.panel value="ozet">Ö</acun:tabs.panel>
+                <acun:tabs.panel value="kargo">K</acun:tabs.panel>
+            </acun:tabs>
+        </div>`,
     carousel: `<acun:carousel :interval="5000" id="vitrin"><div>Bir</div><div>İki</div><button id="slayt-dugme">Üç</button></acun:carousel>`,
     palette: `<acun:command-palette :items="[
         ['label' => 'İadeler', 'href' => '/iadeler', 'group' => 'Satış'],
@@ -46,6 +65,35 @@ test('two accordions with an item of the same name keep their headings and conte
         assert.equal(regions[index].getAttribute('aria-labelledby'), button.id);
     });
 });
+// On a page with Alpine the lazy content is Alpine's x-if on the accordion's scope (Livewire's morph keeps it).
+test('with Alpine an accordion section\'s lazy content renders on its first opening', async () => {
+    await mount(html.lazyAccordion);
+    const trigger = [...document.querySelectorAll('[data-slot="accordion-trigger"]')][1];
+    assert.equal(document.getElementById('grafik-ici'), null);
+
+    trigger.click();
+    await settle();
+    assert.equal(trigger.getAttribute('aria-expanded'), 'true');
+    assert.ok(document.getElementById('grafik-ici'), 'x-if on wasOpened()');
+    assert.deepEqual(Alpine.$data(trigger.closest('[data-acun-accordion]')).open, ['grafik']);
+});
+
+test('x-model on acun:tabs binds the open tab both ways', async () => {
+    await mount(html.boundTabs);
+    const host = Alpine.$data(document.getElementById('sahip'));
+    const tab = (value) => document.querySelector(`[role="tab"][data-value="${value}"]`);
+    await settle();
+    assert.equal(tab('kargo').getAttribute('aria-selected'), 'true', 'the property opens its tab');
+
+    tab('ozet').click();
+    await settle();
+    assert.equal(host.sekme, 'ozet', 'a click writes the property');
+
+    host.sekme = 'kargo';
+    await settle();
+    assert.equal(tab('kargo').getAttribute('aria-selected'), 'true', 'the property moves the tab');
+});
+
 test('the command palette filters once per keystroke and keeps its list readable to screen readers', async () => {
     await mount(html.palette);
     window.dispatchEvent(new window.CustomEvent('command-palette-open'));

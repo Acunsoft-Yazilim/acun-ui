@@ -7,13 +7,14 @@
     'icon' => null,
     'disabled' => false,
 ])
-@aware(['variant' => 'underline', 'size' => 'md'])
+@aware(['variant' => 'underline', 'size' => 'md', 'active' => null])
 
 {{--
     One tab of an acun:tabs.list (role="tab"): a button that opens the acun:tabs.panel
     with the same value.
         <acun:tabs.trigger value="teslimat" icon="truck" badge="8">Teslimat</acun:tabs.trigger>
-    Its id and aria-controls (the panel's id) are unique per acun:tabs (Alpine x-id).
+    Its id and aria-controls (the panel's id) are unique per acun:tabs (from the runtime).
+    The open tab carries aria-selected="true"; its look is the aria-selected: classes.
     Attributes (class, wire:*, x-*…) go on the button.
 --}}
 @php
@@ -22,8 +23,6 @@
     }
 
     $value = (string) $value;
-    // An id cannot contain spaces.
-    $key = preg_replace('/\s+/', '-', $value);
     $pills = $variant === 'pills';
 
     // md is the classic look (acun:tabs with :tabs); keep the two in sync.
@@ -35,19 +34,23 @@
 
     // cards: the open tab is a card tab joined to its panel below.
     $cards = $variant === 'cards';
+    // The open tab's look follows aria-selected (the tabs plugin sets it): no script swaps classes. Written out
+    // in full so Tailwind finds them (the selected, idle and badge looks of each variant).
     $selectedClass = match (true) {
-        $pills => 'bg-primary text-on-primary',
-        $cards => 'border-line bg-surface text-ink',
-        default => 'border-primary-ink text-primary-tint-ink',
+        $pills => 'aria-selected:bg-primary aria-selected:text-on-primary',
+        $cards => 'aria-selected:border-line aria-selected:bg-surface aria-selected:text-ink',
+        default => 'aria-selected:border-primary-ink aria-selected:text-primary-tint-ink',
     };
     $idleClass = $pills
-        ? 'text-dim hover:bg-hover'
-        : 'border-transparent text-muted hover:text-body';
+        ? 'not-aria-selected:text-dim not-aria-selected:hover:bg-hover'
+        : 'not-aria-selected:border-transparent not-aria-selected:text-muted not-aria-selected:hover:text-body';
 
-    $badgeSelectedClass = $pills ? 'bg-on-primary/20 text-on-primary' : 'bg-primary-tint text-primary-tint-ink';
+    $badgeSelectedClass = $pills ? 'group-aria-selected:bg-on-primary/20 group-aria-selected:text-on-primary' : 'group-aria-selected:bg-primary-tint group-aria-selected:text-primary-tint-ink';
     $badgeIdleClass = $pills
         ? 'bg-track/70 text-body'
         : 'bg-sunken text-dim';
+
+    $selected = $active !== null && (string) $active === $value;
 @endphp
 
 <button
@@ -55,16 +58,14 @@
     role="tab"
     data-slot="tabs-trigger"
     data-value="{{ $value }}"
-    :id="$id('tab', @js($key))"
-    :aria-controls="$id('tabpanel', @js($key))"
-    :aria-selected="selected(@js($value)).toString()"
-    :tabindex="selected(@js($value)) ? 0 : -1"
-    :class="selected(@js($value)) ? @js($selectedClass) : @js($idleClass)"
-    x-on:click="tab = @js($value); $el.scrollIntoView({ block: 'nearest', inline: 'nearest' })"
+    aria-selected="{{ $selected ? 'true' : 'false' }}"
+    tabindex="{{ $selected ? '0' : '-1' }}"
     @disabled($disabled)
     {{ $attributes->class([
-        'inline-flex cursor-pointer items-center font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-50',
+        'group inline-flex cursor-pointer items-center font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-focus disabled:pointer-events-none disabled:opacity-50',
         $sizes[$size],
+        $selectedClass,
+        $idleClass,
         'rounded-sm focus-visible:outline-offset-2' => $pills,
         'shrink-0 -mb-px rounded-t-sm border focus-visible:-outline-offset-2' => $cards,
         'shrink-0 border-b-2 focus-visible:-outline-offset-2' => ! $pills && ! $cards,
@@ -75,6 +76,6 @@
     @endif
     {{ $slot }}
     @if ($badge !== null && $badge !== '')
-        <span class="rounded-full px-1.5 font-mono text-2xs font-medium tabular-nums" :class="selected(@js($value)) ? @js($badgeSelectedClass) : @js($badgeIdleClass)">{{ $badge }}</span>
+        <span @class(['rounded-full px-1.5 font-mono text-2xs font-medium tabular-nums', $badgeIdleClass, $badgeSelectedClass])>{{ $badge }}</span>
     @endif
 </button>

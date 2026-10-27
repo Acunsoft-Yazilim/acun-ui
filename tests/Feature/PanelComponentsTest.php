@@ -45,7 +45,7 @@ final class PanelComponentsTest extends TestCase
             'select' => ['<x-ui.select wire:model.live="durum" :options="[\'1\' => \'Aktif\']" placeholder="Seçiniz" />', 'Aktif'],
             'sortable-th' => ['<x-ui.sortable-th field="ad" sort-field="ad" sort-direction="desc">Ad</x-ui.sortable-th>', "sortBy('ad')"],
             'table' => ['<x-ui.table><table class="ui-table"></table></x-ui.table>', 'class="ui-table-box relative overflow-x-auto'],
-            'tabs' => ['<x-ui.tabs :tabs="[\'genel\' => \'Genel\']"><x-ui.tab-panel value="genel">G</x-ui.tab-panel></x-ui.tabs>', "selected('genel')"],
+            'tabs' => ['<x-ui.tabs :tabs="[\'genel\' => \'Genel\']"><x-ui.tab-panel value="genel">G</x-ui.tab-panel></x-ui.tabs>', 'data-acun-tabs'],
             'textarea' => ['<x-ui.textarea name="not" label="Not" />', 'id="not"'],
             'toast-container' => ['<x-ui.toast-container />', 'x-on:toast.window'],
             'tooltip' => ['<x-ui.tooltip text="İpucu">?</x-ui.tooltip>', 'İpucu'],
@@ -54,8 +54,8 @@ final class PanelComponentsTest extends TestCase
             'auth-session-status' => ['<x-ui.auth-session-status status="Bağlantı gönderildi" />', 'Bağlantı gönderildi'],
             'list-toolbar' => ["<x-ui.list-toolbar>\n<x-slot:actions>Yeni</x-slot:actions>\nAra\n</x-ui.list-toolbar>", '<div class="flex flex-wrap items-center gap-2">'],
             'selection-bar' => ['<x-ui.selection-bar :count="3"><x-ui.button>Sil</x-ui.button></x-ui.selection-bar>', '3 kayıt seçildi.'],
-            'accordion' => ["<x-ui.accordion open=\"a\">\n<x-ui.accordion-item name=\"a\" title=\"Başlık\">İçerik</x-ui.accordion-item>\n</x-ui.accordion>", ':aria-controls="$id(\'accordion\', \'a\')"'],
-            'collapse' => ['<x-ui.collapse label="Ayrıntı">Gizli</x-ui.collapse>', 'x-collapse'],
+            'accordion' => ["<x-ui.accordion open=\"a\">\n<x-ui.accordion-item name=\"a\" title=\"Başlık\">İçerik</x-ui.accordion-item>\n</x-ui.accordion>", 'data-acun-accordion'],
+            'collapse' => ['<x-ui.collapse label="Ayrıntı">Gizli</x-ui.collapse>', 'data-acun-collapse'],
             'carousel' => ['<x-ui.carousel :interval="3000"><div>1</div><div>2</div></x-ui.carousel>', 'aria-roledescription="carousel"'],
             'list-group' => ['<x-ui.list-group><x-ui.list-group-item href="/a" active>A</x-ui.list-group-item><x-ui.list-group-item disabled>B</x-ui.list-group-item></x-ui.list-group>', 'aria-disabled="true"'],
             'spinner' => ['<x-ui.spinner type="grow" />', 'role="status"'],
@@ -279,7 +279,6 @@ final class PanelComponentsTest extends TestCase
         $underline = Blade::render('<x-ui.tabs :tabs="[\'a\' => \'Genel bakış\', \'b\' => \'Güvenlik\']">x</x-ui.tabs>');
         self::assertMatchesRegularExpression('/role="tablist"[^>]*class="[^"]*overflow-x-auto/', $underline);
         self::assertStringContainsString('shrink-0', $underline);
-        self::assertStringContainsString("scrollIntoView({ block: 'nearest', inline: 'nearest' })", $underline);
 
         $pills = Blade::render('<x-ui.tabs variant="pills" :tabs="[\'a\' => \'Genel bakış\']">x</x-ui.tabs>');
         self::assertMatchesRegularExpression('/role="tablist"[^>]*class="[^"]*flex-wrap/', $pills);
@@ -291,7 +290,7 @@ final class PanelComponentsTest extends TestCase
     {
         $html = Blade::render('<x-ui.accordion><x-ui.accordion-item name="a" title="Soru" x-show="visible" class="text-xs">Yanıt</x-ui.accordion-item></x-ui.accordion>');
 
-        self::assertMatchesRegularExpression('/<div class="border-b[^"]*" x-show="visible">\s*<h3>/', $html);
+        self::assertMatchesRegularExpression('/<div data-slot="accordion-item" data-name="a" class="border-b[^"]*" x-show="visible">\s*<h3>/', $html);
         self::assertMatchesRegularExpression('/<div class="px-5 pb-5[^"]*text-xs[^"]*">\s*Yanıt/', $html);
         // The list sits 1px lower than the box, which clips the last visible line.
         self::assertStringContainsString('<div class="-mb-px">', $html);
@@ -311,10 +310,10 @@ final class PanelComponentsTest extends TestCase
         BLADE);
 
         // Every item attribute goes on the item; each part takes its own.
-        self::assertMatchesRegularExpression('/<div class="border-b[^"]*" wire:key="iade">\s*<h3>/', $html);
-        self::assertMatchesRegularExpression('/<button\s+type="button"\s+:id="\$id\(\'accordion\', \'iade\'\) \+ \'-heading\'"\s+x-on:click="toggle\(\'iade\'\)"[^>]*:aria-controls="\$id\(\'accordion\', \'iade\'\)"[^>]*class="[^"]*py-3/', $html);
+        self::assertMatchesRegularExpression('/<div data-slot="accordion-item" data-name="iade" class="border-b[^"]*" wire:key="iade">\s*<h3>/', $html);
+        self::assertMatchesRegularExpression('/<button\s+type="button"\s+data-slot="accordion-trigger"\s+aria-expanded="true"[^>]*class="[^"]*py-3/', $html);
         self::assertMatchesRegularExpression('/<span data-icon><\/span> İade nasıl yapılır\? <span[^>]*>\s*Yeni/', $html);
-        self::assertMatchesRegularExpression('/<div :id="\$id\(\'accordion\', \'iade\'\)" role="region" :aria-labelledby="\$id\(\'accordion\', \'iade\'\) \+ \'-heading\'" x-show="isOpen\(\'iade\'\)"/', $html);
+        self::assertMatchesRegularExpression('/data-slot="accordion-content"\s+role="region"\s+data-open/', $html, 'Open on the server (open="iade").');
         self::assertMatchesRegularExpression('/<div class="px-5 pb-5[^"]*text-xs[^"]*">\s*14 gün/', $html);
     }
 

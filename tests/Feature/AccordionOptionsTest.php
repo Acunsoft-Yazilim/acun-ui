@@ -66,10 +66,12 @@ final class AccordionOptionsTest extends TestCase
             </acun:accordion>
         BLADE);
 
-        self::assertMatchesRegularExpression('/:id="\$id\(\'accordion\', \'a\'\) \+ \'-heading\'"(?:(?!>).)*?(?<!disabled)>/s', $html);
-        self::assertDoesNotMatchRegularExpression('/:id="\$id\(\'accordion\', \'a\'\) \+ \'-heading\'"[^>]*\sdisabled[\s>]/', $html);
-        self::assertMatchesRegularExpression('/:id="\$id\(\'accordion\', \'b\'\) \+ \'-heading\'"[^>]*\sdisabled[\s>]/', $html);
-        self::assertMatchesRegularExpression('/:id="\$id\(\'accordion\', \'c\'\) \+ \'-heading\'"[^>]*\sdisabled[\s>]/', $html);
+        // The trigger of each item, in order: a enabled, b (heading) and c (free trigger) disabled.
+        preg_match_all('/<button\s+type="button"\s+data-slot="accordion-trigger"[^>]*>/', $html, $triggers);
+        self::assertCount(3, $triggers[0]);
+        self::assertDoesNotMatchRegularExpression('/\sdisabled[\s>]/', $triggers[0][0]);
+        self::assertMatchesRegularExpression('/\sdisabled[\s>]/', $triggers[0][1]);
+        self::assertMatchesRegularExpression('/\sdisabled[\s>]/', $triggers[0][2]);
     }
 
     public function test_lazy_content_waits_for_the_first_opening(): void
@@ -81,13 +83,14 @@ final class AccordionOptionsTest extends TestCase
             </acun:accordion>
         BLADE);
 
-        // The lazy content sits in a <template> until its section has been opened once.
-        self::assertMatchesRegularExpression('/<template x-if="wasOpened\(\'a\'\)">\s*<div class="[^"]*text-xs[^"]*">\s*Ağır içerik/', $html);
+        // A section the server draws open renders its lazy content at once; a closed one keeps it in a <template>
+        // until its first opening (Alpine's x-if, or the runtime itself without Alpine).
+        self::assertMatchesRegularExpression('/<div class="[^"]*text-xs[^"]*">\s*Ağır içerik/', $html);
+        self::assertStringNotContainsString('<template', $html);
+
+        $closed = Blade::render('<acun:accordion><acun:accordion.item name="a"><acun:accordion.heading>A</acun:accordion.heading><acun:accordion.content lazy class="text-xs">Ağır içerik</acun:accordion.content></acun:accordion.item></acun:accordion>');
+        self::assertMatchesRegularExpression('/<template data-acun-lazy x-if="wasOpened\(\'a\'\)">\s*<div class="[^"]*text-xs[^"]*">\s*Ağır içerik/', $closed);
         self::assertDoesNotMatchRegularExpression('/<template[^>]*>\s*<div[^>]*>\s*Hafif içerik/', $html);
-        // An initially open section counts as opened; the first opening adds the content before it opens.
-        preg_match('/open: (.+),\n\s*\/\/[^\n]*\n\s*seen: (.+),/', html_entity_decode($html, ENT_QUOTES), $state);
-        self::assertSame($state[1], $state[2]);
-        self::assertStringContainsString('this.$nextTick(show)', html_entity_decode($html, ENT_QUOTES));
     }
 
     public function test_the_free_trigger_is_a_plain_button_wired_to_its_item(): void
@@ -104,9 +107,10 @@ final class AccordionOptionsTest extends TestCase
             </acun:accordion>
         BLADE);
 
-        self::assertMatchesRegularExpression('/<button\s+type="button"\s+data-slot="accordion-trigger"\s+:id="\$id\(\'accordion\', \'siparis-1042\'\) \+ \'-heading\'"\s+x-on:click="toggle\(\'siparis-1042\'\)"[^>]*:aria-controls="\$id\(\'accordion\', \'siparis-1042\'\)"[^>]*class="[^"]*flex-1 text-left[^"]*"\s*>Sipariş #1042<\/button>/', $html);
+        // The ids, aria-controls and aria-labelledby are the runtime's (js/plugins/accordion.js).
+        self::assertMatchesRegularExpression('/<button\s+type="button"\s+data-slot="accordion-trigger"\s+aria-expanded="false"[^>]*class="[^"]*flex-1 text-left[^"]*"\s*>Sipariş #1042<\/button>/', $html);
         self::assertStringNotContainsString('px-5 py-4', $html, 'No heading styles.');
-        self::assertStringContainsString(':aria-labelledby="$id(\'accordion\', \'siparis-1042\') + \'-heading\'"', $html);
+        self::assertMatchesRegularExpression('/data-slot="accordion-item" data-name="siparis-1042"/', $html);
     }
 
     public function test_the_free_trigger_outside_an_item_says_where_it_belongs(): void

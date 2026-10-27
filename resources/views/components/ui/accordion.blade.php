@@ -18,27 +18,11 @@
     </acun:accordion>
     Items may be hidden (x-show, a search filter): each item draws its own bottom line and
     the list sits 1px lower than the box, so the last visible line is always clipped.
+    Works without Alpine (the accordion plugin of the runtime); the open sections are drawn
+    open by the server and the height animates in CSS.
 --}}
-<div
-    x-data="{
-        multiple: @js((bool) $multiple),
-        open: @js(array_values(array_filter((array) $open))),
-        // Sections opened at least once; lazy content renders from then on.
-        seen: @js(array_values(array_filter((array) $open))),
-        isOpen(name) { return this.open.includes(name) },
-        wasOpened(name) { return this.seen.includes(name) },
-        toggle(name) {
-            if (this.isOpen(name)) { this.open = this.open.filter(n => n !== name); return }
-            const show = () => { this.open = this.multiple ? [...this.open, name] : [name] };
-            if (this.seen.includes(name)) { show(); return }
-            // First opening: lazy content is added first, so the opening animation measures it.
-            this.seen.push(name);
-            this.$nextTick(show);
-        },
-    }"
-    {{-- Ids of the parts are unique on the page: two accordions may both have a "genel" item. --}}
-    x-id="['accordion']"
-    {{ $attributes->merge(['class' => 'overflow-hidden rounded-sm bg-surface shadow-sm']) }}
->
+{{-- The behaviour is the accordion plugin's (js/plugins/accordion.js): no Alpine; on a page with Alpine the root
+     gives its content the 2.x scope (isOpen(), wasOpened(), toggle()). --}}
+<div {{ $attributes->merge(['data-acun-accordion' => '', 'data-multiple' => $multiple ? 'true' : 'false', 'class' => 'overflow-hidden rounded-sm bg-surface shadow-sm']) }}>
     <div class="-mb-px">{{ $slot }}</div>
 </div>

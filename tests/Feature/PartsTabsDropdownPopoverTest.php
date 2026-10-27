@@ -32,38 +32,26 @@ final class PartsTabsDropdownPopoverTest extends TestCase
     {
         $html = Blade::render(self::TABS);
 
-        // The container: its own Alpine scope and id scope, attributes on the root.
-        self::assertMatchesRegularExpression('/<div\s+x-data="\{\s*tab: null,/', $html);
-        self::assertStringContainsString("x-id=\"['tab', 'tabpanel']\"", $html);
-        self::assertMatchesRegularExpression('/data-slot="tabs"\s+class="mt-6"/', $html);
-        self::assertStringNotContainsString('x-modelable', $html);
+        // The container: the tabs plugin's root (js/plugins/tabs.js, no Alpine), attributes on the root.
+        self::assertMatchesRegularExpression('/<div data-acun-tabs="" data-slot="tabs"\s+class="mt-6"/', $html);
+        self::assertStringNotContainsString('x-data', $html);
         self::assertStringNotContainsString('<div class="pt-4">', $html, 'No classic panel wrapper in parts mode.');
 
-        // The list: tablist, arrow keys / Home / End, its own attributes.
+        // The list: tablist with its own attributes (the keys are the plugin's).
         self::assertMatchesRegularExpression('/role="tablist"\s+data-slot="tabs-list"/', $html);
-        self::assertStringContainsString('x-on:keydown.right.prevent="focusTab($el, 1)"', $html);
-        self::assertStringContainsString('x-on:keydown.left.prevent="focusTab($el, -1)"', $html);
-        self::assertStringContainsString("x-on:keydown.home.prevent=\"focusTab(\$el, 'first')\"", $html);
-        self::assertStringContainsString("x-on:keydown.end.prevent=\"focusTab(\$el, 'last')\"", $html);
         self::assertMatchesRegularExpression('/class="flex gap-1 overflow-x-auto[^"]*" aria-label="Müşteri ayrıntısı"/', $html);
 
-        // A trigger: role, ids from $id, aria-selected, roving tabindex.
+        // A trigger: role, value, aria-selected and a roving tabindex; nothing is open until the runtime picks the first.
         self::assertSame(3, substr_count($html, 'role="tab"'));
         self::assertSame(3, substr_count($html, 'data-slot="tabs-trigger"'));
-        self::assertStringContainsString('data-value="orders"', $html);
-        self::assertStringContainsString(":id=\"\$id('tab', 'orders')\"", $html);
-        self::assertStringContainsString(":aria-controls=\"\$id('tabpanel', 'orders')\"", $html);
-        self::assertStringContainsString(":aria-selected=\"selected('orders').toString()\"", $html);
-        self::assertStringContainsString(":tabindex=\"selected('orders') ? 0 : -1\"", $html);
-        self::assertStringContainsString("x-on:click=\"tab = 'orders'; \$el.scrollIntoView", $html);
+        self::assertMatchesRegularExpression('/data-value="orders"\s+aria-selected="false"\s+tabindex="-1"/', $html);
 
-        // The panel: labelled by its trigger, shown with x-show, the classic pt-4 spacing.
+        // The panel: hidden until its tab opens, the classic pt-4 spacing.
         self::assertSame(3, substr_count($html, 'role="tabpanel"'));
-        self::assertStringContainsString("x-show=\"selected('orders')\"", $html);
-        self::assertStringContainsString(":id=\"\$id('tabpanel', 'orders')\"", $html);
-        self::assertStringContainsString(":aria-labelledby=\"\$id('tab', 'orders')\"", $html);
+        self::assertMatchesRegularExpression('/data-slot="tabs-panel"\s+data-value="orders"\s+hidden/', $html);
         self::assertStringContainsString('class="pt-4 space-y-2" tabindex="0"', $html);
     }
+
 
     public function test_tab_triggers_take_a_badge_an_icon_disabled_and_their_own_attributes(): void
     {
@@ -77,32 +65,36 @@ final class PartsTabsDropdownPopoverTest extends TestCase
 
     public function test_the_first_enabled_trigger_opens_when_active_is_not_given(): void
     {
+        // Without active the runtime opens the first enabled tab: the server leaves every tab closed.
         $html = Blade::render(self::TABS);
+        self::assertStringNotContainsString('aria-selected="true"', $html);
+        self::assertStringNotContainsString('data-value="orders" hidden', $html);
 
-        // Resolved in the browser: the active prop, else the first enabled trigger of this instance.
-        self::assertStringContainsString('initial: null,', $html);
-        self::assertStringContainsString("this.tab = this.initial ?? first?.dataset.value ?? null;", $html);
-        self::assertStringContainsString("find(el => ! el.disabled && el.closest('[data-slot=tabs]') === this.\$root)", $html);
-        self::assertStringContainsString("this.\$watch('tab', () => this.resolveTab());", $html);
-
-        $active = Blade::render('<acun:tabs active="orders"><acun:tabs.list><acun:tabs.trigger value="orders">S</acun:tabs.trigger></acun:tabs.list></acun:tabs>');
-        self::assertStringContainsString("tab: 'orders',", $active);
-        self::assertStringContainsString("initial: 'orders',", $active);
+        // With active the server draws the open tab and its panel (no wait for the runtime).
+        $active = Blade::render('<acun:tabs active="orders"><acun:tabs.list><acun:tabs.trigger value="orders">S</acun:tabs.trigger><acun:tabs.trigger value="notes">N</acun:tabs.trigger></acun:tabs.list><acun:tabs.panel value="orders">O</acun:tabs.panel><acun:tabs.panel value="notes">N</acun:tabs.panel></acun:tabs>');
+        self::assertStringContainsString('data-acun-tabs="" data-slot="tabs" data-value="orders"', $active);
+        self::assertMatchesRegularExpression('/data-value="orders"\s+aria-selected="true"\s+tabindex="0"/', $active);
+        self::assertMatchesRegularExpression('/data-value="notes"\s+aria-selected="false"\s+tabindex="-1"/', $active);
+        self::assertMatchesRegularExpression('/data-slot="tabs-panel"\s+data-value="orders"\s+(?!hidden)/', $active);
+        self::assertMatchesRegularExpression('/data-slot="tabs-panel"\s+data-value="notes"\s+hidden/', $active);
     }
+
 
     public function test_variant_and_size_reach_the_parts(): void
     {
         $underline = Blade::render('<acun:tabs><acun:tabs.list><acun:tabs.trigger value="a">A</acun:tabs.trigger></acun:tabs.list></acun:tabs>');
-        // md is the classic look.
+        // md is the classic look; the open tab's look follows aria-selected.
         self::assertStringContainsString('shrink-0 border-b-2', $underline);
         self::assertStringContainsString('px-3 py-2 text-sm gap-2', $underline);
-        self::assertStringContainsString("'border-primary-ink text-primary-tint-ink'", $underline);
+        self::assertStringContainsString('aria-selected:border-primary-ink aria-selected:text-primary-tint-ink', $underline);
+        self::assertStringContainsString('not-aria-selected:border-transparent', $underline);
 
         $pills = Blade::render('<acun:tabs variant="pills" size="sm"><acun:tabs.list><acun:tabs.trigger value="a" icon="map" badge="3">A</acun:tabs.trigger></acun:tabs.list></acun:tabs>');
         self::assertMatchesRegularExpression('/role="tablist"[^>]*class="flex gap-1 flex-wrap"/', $pills);
         self::assertStringNotContainsString('overflow-x-auto', $pills);
-        self::assertStringContainsString('px-3 py-1.5 text-xs gap-1.5 rounded-sm', $pills);
-        self::assertStringContainsString("'bg-primary text-on-primary'", $pills);
+        self::assertStringContainsString('px-3 py-1.5 text-xs gap-1.5', $pills);
+        self::assertStringContainsString('aria-selected:bg-primary aria-selected:text-on-primary', $pills);
+        self::assertStringContainsString('group-aria-selected:bg-on-primary/20', $pills, 'The badge follows the open tab too.');
         self::assertStringContainsString('class="size-3.5 flex-none"', $pills);
 
         $large = Blade::render('<acun:tabs size="lg"><acun:tabs.list><acun:tabs.trigger value="a" icon="map">A</acun:tabs.trigger></acun:tabs.list></acun:tabs>');
@@ -110,37 +102,39 @@ final class PartsTabsDropdownPopoverTest extends TestCase
         self::assertStringContainsString('class="size-5 flex-none"', $large);
     }
 
-    public function test_tab_values_with_spaces_give_valid_ids(): void
+
+    /** The ids are made by the runtime from the value (spaces become dashes: js/plugins/tabs.js). */
+    public function test_tab_values_with_spaces_keep_their_value(): void
     {
         $html = self::decodeUnicodeEscapes(Blade::render('<acun:tabs><acun:tabs.list><acun:tabs.trigger value="genel bakış">G</acun:tabs.trigger></acun:tabs.list><acun:tabs.panel value="genel bakış">x</acun:tabs.panel></acun:tabs>'));
 
-        self::assertStringContainsString(":id=\"\$id('tab', 'genel-bakış')\"", $html);
-        self::assertStringContainsString(":aria-labelledby=\"\$id('tab', 'genel-bakış')\"", $html);
-        self::assertStringContainsString("x-show=\"selected('genel bakış')\"", $html);
+        self::assertSame(2, substr_count($html, 'data-value="genel bakış"'));
     }
+
 
     public function test_tabs_bind_the_open_tab_with_wire_model(): void
     {
         Livewire::test(RouteTabs::class)
             ->assertSet('activeTab', 'orders')
-            ->assertSeeHtml('x-modelable="tab"')
             ->assertSeeHtml('wire:model="activeTab"')
+            ->assertSeeHtml('data-acun-tabs')
             ->assertSeeHtml('data-slot="tabs-panel"')
             ->set('activeTab', 'settings')
             ->assertSet('activeTab', 'settings');
 
-        self::assertMatchesRegularExpression('/x-modelable="tab"\s+data-slot="tabs"\s+x-model="tab"/', Blade::render('<acun:tabs x-model="tab"><acun:tabs.list><acun:tabs.trigger value="a">A</acun:tabs.trigger></acun:tabs.list></acun:tabs>'));
+        // The binding itself is the runtime's (adapters/alpine.js: x-modelable on the root's scope).
+        self::assertMatchesRegularExpression('/data-acun-tabs="" data-slot="tabs"\s+x-model="tab"/', Blade::render('<acun:tabs x-model="tab"><acun:tabs.list><acun:tabs.trigger value="a">A</acun:tabs.trigger></acun:tabs.list></acun:tabs>'));
     }
+
 
     public function test_classic_tabs_are_drawn_by_the_parts_with_their_aria_and_keys(): void
     {
         $classic = Blade::render('<acun:tabs :tabs="[\'a\' => \'A\', \'b\' => \'B\']" wire:model.live="tab"><acun:tab-panel value="a">x</acun:tab-panel><acun:tab-panel value="b">y</acun:tab-panel></acun:tabs>');
-        self::assertMatchesRegularExpression('/x-modelable="tab"\s+data-slot="tabs" wire:model.live="tab"/', $classic);
-        // Each tab names its panel and each panel its tab; only the open tab is in the Tab order.
-        self::assertStringContainsString(':aria-controls="$id(\'tabpanel\', \'b\')"', $classic);
-        self::assertStringContainsString(':aria-labelledby="$id(\'tab\', \'b\')"', $classic);
-        self::assertStringContainsString(':tabindex="selected(\'a\') ? 0 : -1"', $classic);
-        self::assertStringContainsString('x-on:keydown.right.prevent="focusTab($el, 1)"', $classic);
+        self::assertMatchesRegularExpression('/data-acun-tabs="" data-slot="tabs" data-value="a"\s+wire:model.live="tab"/', $classic);
+        // The first tab is open on the server; only it is in the Tab order.
+        self::assertMatchesRegularExpression('/data-value="a"\s+aria-selected="true"\s+tabindex="0"/', $classic);
+        self::assertMatchesRegularExpression('/data-value="b"\s+aria-selected="false"\s+tabindex="-1"/', $classic);
+        self::assertMatchesRegularExpression('/data-slot="tabs-panel"\s+data-value="b"\s+hidden/', $classic);
 
         $plain = '<acun:tabs :tabs="[\'a\' => \'A\']"><acun:tab-panel value="a">x</acun:tab-panel></acun:tabs>';
         self::assertSame(Blade::render($plain), Blade::render(str_replace('<acun:tabs ', '<acun:tabs size="md" ', $plain)), 'md is the default size.');
@@ -156,9 +150,10 @@ final class PartsTabsDropdownPopoverTest extends TestCase
         $html = Blade::render('<acun:tab-panel value="1" class="p-2">A</acun:tab-panel>');
 
         self::assertStringContainsString('role="tabpanel"', $html);
-        self::assertStringContainsString('x-show="selected(\'1\')"', $html);
+        self::assertMatchesRegularExpression('/data-value="1"\s+hidden/', $html);
         self::assertStringContainsString('class="pt-4 p-2"', $html);
     }
+
 
     public function test_nested_tabs_keep_their_own_scope_and_mode(): void
     {
@@ -173,11 +168,11 @@ final class PartsTabsDropdownPopoverTest extends TestCase
             </acun:tabs>
             BLADE);
 
-        // Both are drawn by the parts, each with its own x-id scope and variant.
-        self::assertSame(2, substr_count($html, "x-id=\"['tab', 'tabpanel']\""));
-        self::assertStringContainsString("selected('siparisler') ? 'bg-primary text-on-primary'", $html, 'The outer keeps pills.');
-        self::assertMatchesRegularExpression('/data-slot="tabs-trigger".*?shrink-0 border-b-2/s', $html);
-        self::assertStringContainsString("x-show=\"selected('sabah')\"", $html);
+        // Both are drawn by the parts, each a tabs root with its own variant and open tab.
+        self::assertSame(2, substr_count($html, 'data-acun-tabs'));
+        self::assertMatchesRegularExpression('/data-value="siparisler"\s+aria-selected="true"[^>]*aria-selected:bg-primary/s', $html, 'The outer keeps pills and its open tab.');
+        self::assertMatchesRegularExpression('/data-value="sabah"\s+aria-selected="false"[^>]*shrink-0 border-b-2/s', $html, 'The inner has its own (no active).');
+        self::assertMatchesRegularExpression('/data-slot="tabs-panel"\s+data-value="sabah"\s+hidden/', $html);
     }
 
     /**

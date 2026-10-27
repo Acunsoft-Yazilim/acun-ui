@@ -637,3 +637,90 @@ test('the tooltip describes its control, shows on focus and hover, and Escape hi
     await sleep(250);
     assert.equal(visible(), false);
 });
+
+// --- tabs, accordion and collapse without Alpine -----------------------------------------------------------
+
+test('tabs open the first enabled tab, switch on click and with the arrow keys, and keep one tab in the Tab order', async () => {
+    await mount(`
+        <div data-acun-tabs data-slot="tabs">
+            <div role="tablist" data-slot="tabs-list">
+                <button type="button" role="tab" data-value="ozet" aria-selected="false" tabindex="-1" disabled>Özet</button>
+                <button type="button" role="tab" data-value="kargo" aria-selected="false" tabindex="-1">Kargo</button>
+                <button type="button" role="tab" data-value="fatura" aria-selected="false" tabindex="-1">Fatura</button>
+            </div>
+            <div role="tabpanel" data-value="ozet" hidden>Ö</div>
+            <div role="tabpanel" data-value="kargo" hidden>K</div>
+            <div role="tabpanel" data-value="fatura" hidden>F</div>
+        </div>`);
+    const tab = (value) => document.querySelector(`[role="tab"][data-value="${value}"]`);
+    const panel = (value) => document.querySelector(`[role="tabpanel"][data-value="${value}"]`);
+    const changes = [];
+    window.addEventListener('acun:tabs:change', (event) => changes.push(event.detail.value));
+
+    assert.equal(tab('kargo').getAttribute('aria-selected'), 'true', 'the first enabled tab opens');
+    assert.equal(panel('kargo').hidden, false);
+    assert.equal(panel('ozet').hidden, true);
+    assert.equal(tab('kargo').getAttribute('aria-controls'), panel('kargo').id);
+    assert.equal(panel('kargo').getAttribute('aria-labelledby'), tab('kargo').id);
+
+    tab('fatura').click();
+    assert.equal(panel('fatura').hidden, false);
+    assert.equal(panel('kargo').hidden, true);
+    assert.deepEqual([...document.querySelectorAll('[role="tab"]')].map((element) => element.tabIndex), [-1, -1, 0]);
+
+    tab('fatura').focus();
+    press('ArrowRight');
+    assert.equal(document.activeElement, tab('kargo'), 'wraps round, skipping the disabled tab');
+    assert.equal(panel('kargo').hidden, false);
+    press('End');
+    assert.equal(document.activeElement, tab('fatura'));
+    assert.deepEqual(changes, ['fatura', 'kargo', 'fatura']);
+});
+
+test('the accordion opens one section at a time, renders lazy content once and animates in CSS', async () => {
+    await mount(`
+        <div data-acun-accordion data-multiple="false">
+            <div data-slot="accordion-item" data-name="genel">
+                <h3><button type="button" data-slot="accordion-trigger" aria-expanded="true">Genel</button></h3>
+                <div data-slot="accordion-content" role="region" data-open><div>Bir</div></div>
+            </div>
+            <div data-slot="accordion-item" data-name="adres">
+                <h3><button type="button" data-slot="accordion-trigger" aria-expanded="false">Adres</button></h3>
+                <div data-slot="accordion-content" role="region" hidden><div><template data-acun-lazy><p id="agir">Ağır</p></template></div></div>
+            </div>
+        </div>`);
+    const trigger = (name) => document.querySelector(`[data-name="${name}"] [data-slot="accordion-trigger"]`);
+    const content = (name) => document.querySelector(`[data-name="${name}"] [data-slot="accordion-content"]`);
+
+    assert.equal(trigger('genel').getAttribute('aria-controls'), content('genel').id);
+    assert.equal(content('genel').getAttribute('aria-labelledby'), trigger('genel').id);
+    assert.equal(byId('agir'), null, 'lazy content waits');
+
+    trigger('adres').click();
+    await sleep(250);
+    assert.equal(trigger('adres').getAttribute('aria-expanded'), 'true');
+    assert.equal(content('adres').hidden, false);
+    assert.ok(byId('agir'), 'rendered on the first opening');
+    assert.equal(trigger('genel').getAttribute('aria-expanded'), 'false', 'one open at a time');
+    assert.equal(content('genel').hidden, true);
+});
+
+test('acun:collapse opens and closes its area', async () => {
+    await mount(`
+        <div data-acun-collapse>
+            <button type="button" data-slot="collapse-trigger" aria-expanded="false" id="daha">Daha</button>
+            <div data-slot="collapse-content" hidden><div><p>Gizli</p></div></div>
+        </div>`);
+    const area = document.querySelector('[data-slot="collapse-content"]');
+    assert.equal(byId('daha').getAttribute('aria-controls'), area.id);
+
+    byId('daha').click();
+    await settle();
+    assert.equal(byId('daha').getAttribute('aria-expanded'), 'true');
+    assert.equal(area.hidden, false);
+    assert.ok(area.hasAttribute('data-open'));
+
+    byId('daha').click();
+    await sleep(250);
+    assert.equal(area.hidden, true);
+});
