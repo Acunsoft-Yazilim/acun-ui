@@ -4,11 +4,12 @@
 // defines how to load it (AcunUI.components.define); the module is imported the first time
 // such an element is on the page, and only once, however many there are.
 //
-// No scan of the page: Alpine hands every element it starts to an init interceptor, on the
-// first page load, after wire:navigate, for elements a Livewire morph adds and inside nested
+// With Alpine, no scan of the page: Alpine hands every element it starts to an init interceptor, on
+// the first page load, after wire:navigate, for elements a Livewire morph adds and inside nested
 // or lazy Livewire components alike. A deferred component's element is left to Alpine until
 // its module is here (it registers the component's Alpine data), then Alpine starts it. The
-// server's HTML shows in the meantime.
+// server's HTML shows in the meantime. Without Alpine (plain HTML, React, Vue) the page's elements
+// and the ones added later start the loading (watchLazyComponents); both ways load a module once.
 //
 // A module that fails to load (the network dropped, a deploy replaced the chunk mid-session) is
 // tried again: once by itself a moment later, when the browser is back online, after the next
@@ -32,6 +33,8 @@ const AUTOMATIC_RETRIES = 1;
 const RETRY_DELAY = 1500;
 /** @type {AlpineLike | null} */
 let alpine = null;
+/** Whether watchLazyComponents looks at the page (a component defined later checks it at once). */
+let watching = false;
 
 export const components = {
     /**
@@ -44,7 +47,9 @@ export const components = {
      * @param {{ defer?: boolean }} [options]
      */
     define(name, load, { defer = true } = {}) {
-        if (!definitions.has(name)) definitions.set(name, { load, defer });
+        if (definitions.has(name)) return;
+        definitions.set(name, { load, defer });
+        if (watching && typeof document !== 'undefined') loadComponentsOnPage(document, name);
     },
 
     /**
@@ -114,6 +119,13 @@ function retry(name) {
 }
 
 const retryFailed = () => [...failures.keys()].forEach(retry);
+let retrying = false;
+const retryWhenBack = () => {
+    if (retrying) return;
+    retrying = true;
+    window.addEventListener('online', retryFailed);
+    document.addEventListener('livewire:navigated', retryFailed);
+};
 
 /**
  * Called once by the runtime, before Alpine starts.
@@ -122,8 +134,7 @@ const retryFailed = () => [...failures.keys()].forEach(retry);
  */
 export function deferLazyComponents(Alpine) {
     alpine = Alpine;
-    window.addEventListener('online', retryFailed);
-    document.addEventListener('livewire:navigated', retryFailed);
+    retryWhenBack();
 
     Alpine.interceptInit((element) => {
         const name = element.getAttribute?.(ATTRIBUTE);
@@ -150,13 +161,38 @@ export function deferLazyComponents(Alpine) {
 }
 
 /**
- * The components the first page already has start loading before Alpine reaches them.
+ * The components in root (the first page: before Alpine reaches them) start loading; only one name's with only.
  *
  * @param {ParentNode} [root]
+ * @param {string} [only]
  */
-export function loadComponentsOnPage(root = document) {
-    for (const element of root.querySelectorAll(`[${ATTRIBUTE}]`)) {
+export function loadComponentsOnPage(root = document, only) {
+    const self = /** @type {Element} */ (root).matches?.(`[${ATTRIBUTE}]`) ? [/** @type {Element} */ (root)] : [];
+    for (const element of [...self, ...root.querySelectorAll(`[${ATTRIBUTE}]`)]) {
         const name = element.getAttribute(ATTRIBUTE) ?? '';
-        if (definitions.has(name) && !loads.has(name)) components.load(name).catch(report(name));
+        if ((!only || name === only) && definitions.has(name) && !loads.has(name) && !loaded.has(name)) components.load(name).catch(report(name));
     }
+}
+
+/**
+ * Called once by the runtime: the components on the page, and (observe) the ones added later, start loading
+ * without Alpine. On a page with Alpine the init interceptor above also defers their elements; a module still
+ * loads once.
+ *
+ * @param {{ observe?: boolean }} [options]
+ */
+export function watchLazyComponents({ observe = true } = {}) {
+    watching = true;
+    retryWhenBack();
+    const scan = () => definitions.size && loadComponentsOnPage();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scan, { once: true });
+    else scan();
+
+    if (!observe || typeof MutationObserver === 'undefined') return;
+    new MutationObserver((records) => {
+        if (!definitions.size) return;
+        for (const record of records) {
+            record.addedNodes.forEach((node) => node.nodeType === 1 && loadComponentsOnPage(/** @type {Element} */ (node)));
+        }
+    }).observe(document.documentElement, { childList: true, subtree: true });
 }

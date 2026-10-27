@@ -455,3 +455,25 @@ test('a link trigger opens the component without leaving the page; a click with 
     assert.equal(newTab.defaultPrevented, false);
     assert.equal(isOpen('baglantili'), false, 'Ctrl+click opens the link in a new tab, not the dialog');
 });
+
+// Lazy components without Alpine (core/components.js, watchLazyComponents): the module of an element on the page, or
+// of one added later, is imported once; a component defined after its element is on the page loads at once.
+test('without Alpine a lazy component\'s module loads once, for elements on the page and added later', async () => {
+    let imports = 0;
+    AcunUI.components.define('duz-sayac', async () => { imports++; });
+    await mount('<div data-acun-component="duz-sayac">Sayaç</div>');
+    await settle();
+    assert.equal(imports, 1);
+    assert.equal(AcunUI.components.isLoaded('duz-sayac'), true);
+
+    document.body.insertAdjacentHTML('beforeend', '<div data-acun-component="duz-sayac">İkinci</div>');
+    await settle();
+    assert.equal(imports, 1, 'once, however many elements');
+
+    let late = 0;
+    document.body.insertAdjacentHTML('beforeend', '<div data-acun-component="gec-tanimli">Geç</div>');
+    await settle();
+    AcunUI.components.define('gec-tanimli', async () => { late++; });
+    await settle();
+    assert.equal(late, 1, 'defined after its element: loads at once');
+});

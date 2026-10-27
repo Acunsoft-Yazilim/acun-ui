@@ -29,8 +29,19 @@ export declare const components: {
  */
 export declare function deferLazyComponents(Alpine: AlpineLike): void;
 /**
- * The components the first page already has start loading before Alpine reaches them.
+ * The components in root (the first page: before Alpine reaches them) start loading; only one name's with only.
  *
  * @param {ParentNode} [root]
+ * @param {string} [only]
  */
-export declare function loadComponentsOnPage(root?: ParentNode): void;
+export declare function loadComponentsOnPage(root?: ParentNode, only?: string): void;
+/**
+ * Called once by the runtime: the components on the page, and (observe) the ones added later, start loading
+ * without Alpine. On a page with Alpine the init interceptor above also defers their elements; a module still
+ * loads once.
+ *
+ * @param {{ observe?: boolean }} [options]
+ */
+export declare function watchLazyComponents({ observe }?: {
+    observe?: boolean;
+}): void;

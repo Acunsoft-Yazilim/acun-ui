@@ -35,7 +35,7 @@ import { EVENTS, commands } from './core/events.js';
 import { readConfig } from './core/config.js';
 import { focusable } from './core/dom.js';
 import { connectLivewire, onLivewire, onNavigated } from './core/livewire.js';
-import { components, deferLazyComponents, loadComponentsOnPage } from './core/components.js';
+import { components, deferLazyComponents, loadComponentsOnPage, watchLazyComponents } from './core/components.js';
 import { destroy, init, observe, plugins, start as startPlugins } from './core/plugins.js';
 import { scrollLock } from './behavior/scroll-lock.js';
 import { focusFirst, trapTab } from './behavior/focus-trap.js';
@@ -173,6 +173,8 @@ function setup(runtime, { observe: watch = true }) {
 
     // By alpine:init every package has defined its components: those already on the first page start loading.
     document.addEventListener('alpine:init', () => loadComponentsOnPage(), { once: true });
+    // Without Alpine too: the page's lazy components and the ones added later (a component defined later checks the page then).
+    watchLazyComponents({ observe: watch });
 
     // Other packages define their plugins now (AcunUI.plugins.define), whatever loaded first.
     document.dispatchEvent(new CustomEvent('acun:init', { detail: { AcunUI: runtime } }));
