@@ -43,7 +43,15 @@ export async function openPage(url, { width = 1280, height = 900, args = [] } = 
     ], { stdio: ['ignore', 'ignore', 'pipe'] });
 
     const exited = new Promise((resolve) => child.once('exit', resolve));
-    const removeProfile = () => fs.rmSync(profile, { recursive: true, force: true });
+    // Chrome's helper processes (crashpad…) may still write into the profile for a moment after the browser
+    // exits (Linux): the removal is retried, and a temporary folder left behind does not fail the test.
+    const removeProfile = () => {
+        try {
+            fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+        } catch (error) {
+            console.warn(`cdp.mjs: the Chrome profile ${profile} was not removed (${error.code ?? error.message}).`);
+        }
+    };
     /** Ends Chrome and waits for it (killed outright after 5 s), then removes its profile. */
     const stop = async () => {
         if (child.exitCode === null && child.signalCode === null) {

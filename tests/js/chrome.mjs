@@ -129,6 +129,8 @@ export function inChrome({ css, body, measure, htmlAttributes = '' }) {
 
         return JSON.parse(result.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
     } finally {
-        fs.rmSync(directory, { recursive: true, force: true });
+        // Chrome's helper processes may still write into the profile a moment after it exits (Linux): retried,
+        // and a temporary folder left behind does not fail the measurement.
+        try { fs.rmSync(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); } catch (error) { console.warn(`chrome.mjs: ${directory} was not removed (${error.code ?? error.message}).`); }
     }
 }
