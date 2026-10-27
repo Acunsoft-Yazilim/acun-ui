@@ -25,7 +25,9 @@
             </acun:dropdown.content>
         </acun:dropdown>
     The trigger's button gets aria-expanded / aria-controls; Arrow Down / Up open the
-    panel and move between the items, Escape closes it and returns to the trigger.
+    panel and move between the items, Escape closes it and returns to the trigger. The panel
+    opens below (or above, position="top") and flips to the other side when the window has no
+    room for it there. Works without Alpine (the dropdown plugin of the runtime).
     Placement (align, position, full-width) applies to acun:dropdown.content.
     Attributes go on the root element (the classic form is drawn by the parts too).
 --}}
@@ -37,44 +39,10 @@
     }
 @endphp
 @if ($parts)
+{{-- The behaviour is the dropdown plugin's (js/plugins/dropdown.js): no Alpine; on a page with Alpine the root
+     still gives its content the 2.x scope (open, openMenu(), closeMenu()). --}}
 <div
-    x-data="{
-        open: false,
-        // The panel's links and enabled buttons, in order.
-        items() {
-            return [...(this.$refs.dropdownContent?.querySelectorAll('a[href], button:not(:disabled)') ?? [])];
-        },
-        focusItem(to) {
-            const items = this.items();
-            if (! items.length) return;
-            let i = items.indexOf(document.activeElement);
-            if (to === 'first' || (i < 0 && to === 1)) i = 0;
-            else if (to === 'last' || (i < 0 && to === -1)) i = items.length - 1;
-            else i = (i + to + items.length) % items.length;
-            items[i].focus();
-        },
-        openMenu(to) {
-            this.open = true;
-            this.$nextTick(() => this.focusItem(to));
-        },
-        closeMenu(refocus) {
-            this.open = false;
-            if (refocus) this.$refs.dropdownTrigger?.querySelector('button, a[href]')?.focus();
-        },
-        menuKey(event) {
-            if (event.target.matches('input, textarea, select')) return;
-            const to = { ArrowDown: 1, ArrowUp: -1, Home: 'first', End: 'last' }[event.key];
-            if (to === undefined) return;
-            event.preventDefault();
-            this.focusItem(to);
-        },
-    }"
-    x-id="['dropdown-content']"
-    x-on:click.outside="open = false"
-    {{-- Escape inside an open menu closes only the menu, not a drawer it sits in. --}}
-    x-on:keydown.escape="if (open) { $event.stopPropagation(); closeMenu(true) }"
-    x-on:keydown.escape.window="if (open) closeMenu($el.contains(document.activeElement))"
-    x-on:focusout="if ($event.relatedTarget && ! $el.contains($event.relatedTarget)) open = false"
+    data-acun-dropdown
     data-slot="dropdown"
     {{ $attributes->class(['relative', 'block w-full' => $fullWidth, 'inline-block' => ! $fullWidth]) }}
 >

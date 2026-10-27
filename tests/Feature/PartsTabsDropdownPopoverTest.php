@@ -253,22 +253,16 @@ final class PartsTabsDropdownPopoverTest extends TestCase
             </acun:dropdown>
             BLADE);
 
-        // The container: Alpine state, id scope, closing on Escape / outside; attributes on the root.
-        self::assertStringContainsString("x-id=\"['dropdown-content']\"", $html);
-        self::assertStringContainsString('x-on:keydown.escape.window="if (open) closeMenu($el.contains(document.activeElement))"', $html);
-        self::assertStringContainsString('x-on:click.outside="open = false"', $html);
-        self::assertStringContainsString('data-slot="dropdown"', $html);
-        self::assertStringContainsString('class="relative inline-block ms-2"', $html);
+        // The container: the dropdown plugin's root (js/plugins/dropdown.js, no Alpine); attributes on the root.
+        self::assertMatchesRegularExpression('/<div\s+data-acun-dropdown\s+data-slot="dropdown"\s+class="relative inline-block ms-2"/', $html);
+        self::assertStringNotContainsString('x-data', $html);
 
-        // The trigger wraps the button; the button gets aria-expanded / aria-controls.
-        self::assertMatchesRegularExpression('/data-slot="dropdown-trigger"\s+x-ref="dropdownTrigger"\s+x-on:click="open = ! open"\s+x-on:keydown.down.prevent="openMenu\(1\)"\s+x-on:keydown.up.prevent="openMenu\(-1\)"\s+data-test="siparis-islemleri"/', $html);
-        self::assertStringContainsString('<button :aria-expanded="open.toString()" :aria-controls="$id(\'dropdown-content\')" type="button"', $html);
+        // The trigger wraps the button; the button gets aria-expanded (aria-controls from the runtime).
+        self::assertMatchesRegularExpression('/<div data-slot="dropdown-trigger" data-test="siparis-islemleri">\s*<button aria-expanded="false" type="button"/', $html);
 
-        // The panel: placement from the container, its own attributes, keyboard.
-        self::assertStringContainsString('data-slot="dropdown-content"', $html);
-        self::assertStringContainsString(':id="$id(\'dropdown-content\')"', $html);
-        self::assertStringContainsString('x-on:keydown="menuKey($event)"', $html);
-        self::assertStringContainsString('class="absolute z-40 max-h-64 overflow-auto rounded-sm bg-surface py-1 shadow-lg min-w-[12rem] left-0 bottom-full mb-2 w-64"', $html);
+        // The panel: hidden until opened, the side it opens on, placement from the container, its own attributes.
+        self::assertMatchesRegularExpression('/data-slot="dropdown-content"\s+data-side="top"\s+hidden/', $html);
+        self::assertStringContainsString('min-w-[12rem] left-0 data-[side=top]:bottom-full data-[side=top]:mb-2 data-[side=bottom]:top-full data-[side=bottom]:mt-2 w-64"', $html);
 
         // Heading, separator, items.
         self::assertStringContainsString('<div data-slot="dropdown-heading" class="px-3 pt-2 pb-1 font-mono text-2xs', $html);
@@ -283,32 +277,34 @@ final class PartsTabsDropdownPopoverTest extends TestCase
     {
         $parts = '<acun:dropdown%s><acun:dropdown.trigger><button type="button">Aç</button></acun:dropdown.trigger><acun:dropdown.content><acun:dropdown.item>A</acun:dropdown.item></acun:dropdown.content></acun:dropdown>';
 
-        self::assertStringContainsString('min-w-[12rem] right-0 top-full mt-2"', Blade::render(sprintf($parts, '')));
+        $default = Blade::render(sprintf($parts, ''));
+        self::assertStringContainsString('data-side="bottom"', $default);
+        self::assertStringContainsString('min-w-[12rem] right-0 data-[side=top]:bottom-full', $default);
 
         $full = Blade::render(sprintf($parts, ' full-width'));
         self::assertStringContainsString('class="relative block w-full"', $full);
-        self::assertStringContainsString('shadow-lg left-0 right-0 top-full mt-2"', $full);
+        self::assertStringContainsString('motion-reduce:transition-none left-0 right-0 data-[side=top]:bottom-full', $full);
     }
 
     public function test_classic_dropdown_is_drawn_by_the_parts_with_their_aria_keys_and_attributes(): void
     {
         $html = Blade::render("<acun:dropdown class=\"ms-2\" id=\"siparis-menusu\" wire:key=\"menu-7\">\n<acun:slot:trigger><button>Aç</button></acun:slot:trigger>\n<acun:dropdown.heading>Sipariş</acun:dropdown.heading>\n<acun:dropdown.item href=\"/x\">Git</acun:dropdown.item>\n</acun:dropdown>");
 
-        self::assertStringContainsString('x-id="[\'dropdown-content\']"', $html, 'The keyboard and focus handling of the parts.');
-        self::assertStringContainsString('<button :aria-expanded="open.toString()"', $html);
+        self::assertStringContainsString('data-acun-dropdown', $html, 'The keyboard and focus handling of the parts (the plugin).');
+        self::assertStringContainsString('<button aria-expanded="false"', $html);
         self::assertSame(1, substr_count($html, 'data-slot="dropdown-content"'));
         self::assertStringContainsString('Sipariş', $html);
         // Attributes are no longer dropped: they go on the root.
-        self::assertMatchesRegularExpression('/data-slot="dropdown"\s+class="relative inline-block ms-2" id="siparis-menusu" wire:key="menu-7"/', $html);
+        self::assertMatchesRegularExpression('/data-acun-dropdown\s+data-slot="dropdown"\s+class="relative inline-block ms-2" id="siparis-menusu" wire:key="menu-7"/', $html);
     }
 
     public function test_a_trigger_button_after_livewire_markers_is_still_wired_and_other_elements_are_left_alone(): void
     {
         $marked = Blade::render('<acun:dropdown><acun:dropdown.trigger><!--[if BLOCK]><![endif]--><button type="button">Aç</button></acun:dropdown.trigger><acun:dropdown.content>x</acun:dropdown.content></acun:dropdown>');
-        self::assertStringContainsString('<!--[if BLOCK]><![endif]--><button :aria-expanded="open.toString()"', $marked);
+        self::assertStringContainsString('<!--[if BLOCK]><![endif]--><button aria-expanded="false"', $marked);
 
         $link = Blade::render('<acun:dropdown><acun:dropdown.trigger><a href="#">Aç</a></acun:dropdown.trigger><acun:dropdown.content>x</acun:dropdown.content></acun:dropdown>');
-        self::assertStringContainsString('<a :aria-expanded="open.toString()"', $link);
+        self::assertStringContainsString('<a aria-expanded="false"', $link);
 
         $avatar = Blade::render('<acun:dropdown><acun:dropdown.trigger><span>AE</span></acun:dropdown.trigger><acun:dropdown.content>x</acun:dropdown.content></acun:dropdown>');
         self::assertStringContainsString('<span>AE</span>', $avatar);
@@ -333,8 +329,8 @@ final class PartsTabsDropdownPopoverTest extends TestCase
             BLADE);
 
         self::assertSame(2, substr_count($html, 'data-slot="dropdown-content"'), 'The outer classic one is drawn by the parts too.');
-        self::assertStringContainsString('min-w-[12rem] left-0 top-full mt-2"', $html, 'The inner panel takes the inner align.');
-        self::assertStringContainsString('min-w-[12rem] right-0 top-full mt-2"', $html, 'The outer panel keeps its own (end).');
+        self::assertStringContainsString('min-w-[12rem] left-0 data-[side=top]', $html, 'The inner panel takes the inner align.');
+        self::assertStringContainsString('min-w-[12rem] right-0 data-[side=top]', $html, 'The outer panel keeps its own (end).');
     }
 
     // ---- popover ----------------------------------------------------------
@@ -348,19 +344,17 @@ final class PartsTabsDropdownPopoverTest extends TestCase
             </acun:popover>
             BLADE);
 
-        self::assertStringContainsString("x-id=\"['popover', 'popover-title']\"", $html);
-        self::assertStringContainsString('data-slot="popover"', $html);
-        self::assertStringContainsString('class="relative inline-block ms-1"', $html);
-        self::assertStringContainsString('x-on:keydown.escape.window="if (open) closePopover($el.contains(document.activeElement))"', $html);
+        // The popover plugin's root (js/plugins/popover.js, no Alpine); attributes on the root.
+        self::assertStringContainsString('<div data-acun-popover data-slot="popover" class="relative inline-block ms-1">', $html);
+        self::assertStringNotContainsString('x-data', $html);
 
-        self::assertStringContainsString('<div data-slot="popover-trigger" x-ref="popoverTrigger" x-on:click="open = ! open"', $html);
-        self::assertStringContainsString('<button aria-haspopup="dialog" :aria-expanded="open.toString()" :aria-controls="$id(\'popover\')" type="button"', $html);
+        // The trigger's button: aria-haspopup and aria-expanded (aria-controls from the runtime).
+        self::assertMatchesRegularExpression('/<div data-slot="popover-trigger"\s*>\s*<button aria-haspopup="dialog" aria-expanded="false" type="button"/', $html);
 
-        self::assertMatchesRegularExpression('/role="dialog"\s+data-slot="popover-content"\s+x-show="open"/', $html);
-        self::assertStringContainsString(':id="$id(\'popover\')"', $html);
-        self::assertStringContainsString(':aria-labelledby="$id(\'popover-title\')"', $html);
-        self::assertStringContainsString('<div :id="$id(\'popover-title\')" class="border-b', $html);
-        self::assertMatchesRegularExpression('/class="absolute z-40 [^"]* w-72 top-full mt-2 right-0" data-test="kural"/', $html);
+        // The bubble: a dialog, hidden until opened, named by its title (aria-labelledby from the runtime).
+        self::assertMatchesRegularExpression('/role="dialog"\s+data-slot="popover-content"\s+data-side="bottom"\s+hidden/', $html);
+        self::assertStringContainsString('<div data-slot="popover-title" class="border-b', $html);
+        self::assertMatchesRegularExpression('/class="absolute z-40 [^"]* w-72 data-\[side=top\]:bottom-full [^"]* right-0" data-test="kural"/', $html);
         self::assertStringContainsString('<div class="px-4 py-3 text-dim">Ürünler teslimattan', $html);
     }
 
@@ -369,19 +363,21 @@ final class PartsTabsDropdownPopoverTest extends TestCase
         $html = Blade::render('<acun:popover position="top"><acun:popover.trigger><button type="button">?</button></acun:popover.trigger><acun:popover.content class="w-96" aria-label="Kural">Açıklama</acun:popover.content></acun:popover>');
 
         self::assertStringNotContainsString('w-72', $html);
-        self::assertStringContainsString('bottom-full mb-2 left-0 w-96"', $html);
+        self::assertStringContainsString('data-side="top"', $html);
+        self::assertStringContainsString('data-[side=bottom]:mt-2 left-0 w-96"', $html);
         self::assertStringNotContainsString('aria-labelledby', $html);
         self::assertStringContainsString('aria-label="Kural"', $html);
     }
 
-    public function test_classic_popover_is_unchanged(): void
+    /** The classic form gets the plugin's ARIA, Escape and focus handling; its attributes stay on the content box. */
+    public function test_classic_popover_keeps_its_attribute_place_and_gets_the_plugin(): void
     {
         $html = Blade::render("<acun:popover title=\"Kural\" class=\"text-xs\">\n<acun:slot:trigger><button>?</button></acun:slot:trigger>\nAçıklama\n</acun:popover>");
 
-        self::assertStringContainsString('<div x-on:click="open = ! open"><button>?</button></div>', $html);
+        self::assertStringContainsString('<div data-acun-popover data-slot="popover" class="relative inline-block">', $html);
+        self::assertStringContainsString('<div data-slot="popover-trigger"><button aria-haspopup="dialog" aria-expanded="false">?</button></div>', $html);
+        self::assertStringContainsString('<div data-slot="popover-title" class="border-b border-line px-4 py-2.5 font-semibold text-ink">Kural</div>', $html);
         self::assertStringContainsString('<div class="px-4 py-3 text-dim text-xs">Açıklama</div>', $html);
-        self::assertStringNotContainsString('data-slot', $html);
-        self::assertStringNotContainsString('aria-expanded', $html);
     }
 
     public function test_a_popover_in_parts_nested_in_a_classic_popover_keeps_both_modes(): void
@@ -396,8 +392,8 @@ final class PartsTabsDropdownPopoverTest extends TestCase
             </acun:popover>
             BLADE);
 
-        self::assertStringContainsString('<div x-on:click="open = ! open"><button>Dış</button></div>', $html);
-        self::assertSame(1, substr_count($html, 'data-slot="popover-content"'));
+        self::assertStringContainsString('<div data-slot="popover-trigger"><button aria-haspopup="dialog" aria-expanded="false">Dış</button></div>', $html);
+        self::assertSame(2, substr_count($html, 'data-slot="popover-content"'), 'The classic outer one has the plugin markup too.');
         self::assertSame(2, substr_count($html, 'role="dialog"'));
     }
 

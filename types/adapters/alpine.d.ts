@@ -22,8 +22,8 @@ export declare function connectAlpine(Alpine: AlpineLike): void;
  * and :closed events). Returns the function that stops.
  *
  * @param {Element} element
- * @param {'modal' | 'drawer'} kind
+ * @param {'modal' | 'drawer' | 'dropdown' | 'popover'} kind
  * @param {(open: boolean) => void} callback
  * @returns {() => void}
  */
-export declare function followState(element: Element, kind: 'modal' | 'drawer', callback: (open: boolean) => void): () => void;
+export declare function followState(element: Element, kind: 'modal' | 'drawer' | 'dropdown' | 'popover', callback: (open: boolean) => void): () => void;

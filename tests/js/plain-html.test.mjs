@@ -477,3 +477,163 @@ test('without Alpine a lazy component\'s module loads once, for elements on the 
     await settle();
     assert.equal(late, 1, 'defined after its element: loads at once');
 });
+
+// --- the dropdown (js/plugins/dropdown.js) without Alpine -------------------------------------------------
+
+const dropdownHtml = `
+    <button type="button" id="disarida">Dışarıda</button>
+    <div data-acun-dropdown data-slot="dropdown" class="relative inline-block">
+        <div data-slot="dropdown-trigger"><button type="button" id="islemler" aria-expanded="false">İşlemler</button></div>
+        <div data-slot="dropdown-content" data-side="bottom" hidden>
+            <button type="button" id="duzenle">Düzenle</button>
+            <button type="button" disabled>Kopyala</button>
+            <a href="#sil" id="sil">Sil</a>
+        </div>
+    </div>`;
+const menu = () => document.querySelector('[data-slot="dropdown-content"]');
+const menuOpen = () => !menu().hidden && menu().hasAttribute('data-open') && byId('islemler').getAttribute('aria-expanded') === 'true';
+
+test('the dropdown opens, moves between its items and closes with the keyboard, without Alpine', async () => {
+    await mount(dropdownHtml);
+    assert.equal(byId('islemler').getAttribute('aria-controls'), menu().id, 'the runtime gives the menu an id');
+    assert.ok(menu().id);
+
+    byId('islemler').focus();
+    press('ArrowDown', {}, byId('islemler'));
+    await settle();
+    assert.ok(menuOpen());
+    assert.equal(document.activeElement?.id, 'duzenle', 'Arrow Down opens it on the first item');
+
+    press('ArrowDown');
+    assert.equal(document.activeElement?.id, 'sil', 'the disabled button is skipped');
+    press('Home');
+    assert.equal(document.activeElement?.id, 'duzenle');
+    press('End');
+    assert.equal(document.activeElement?.id, 'sil');
+
+    const escape = press('Escape');
+    await sleep(150);
+    assert.equal(menuOpen(), false);
+    assert.equal(menu().hidden, true);
+    assert.equal(document.activeElement, byId('islemler'), 'Escape gives the focus back to the trigger');
+    assert.equal(escape.defaultPrevented, false);
+});
+
+test('the dropdown toggles on its trigger, closes on an item and on a click outside', async () => {
+    await mount(dropdownHtml);
+    const events = [];
+    window.addEventListener('acun:dropdown:closed', (event) => events.push(event.detail.reason));
+
+    byId('islemler').click();
+    await settle();
+    assert.ok(menuOpen());
+    byId('islemler').click();
+    await sleep(150);
+    assert.equal(menuOpen(), false, 'a second click closes it');
+
+    byId('islemler').click();
+    await settle();
+    byId('duzenle').focus();
+    byId('duzenle').click();
+    await sleep(150);
+    assert.equal(menuOpen(), false, 'a click on an item closes it');
+    assert.equal(document.activeElement, byId('islemler'), 'the focus goes back to the trigger');
+
+    byId('islemler').click();
+    await settle();
+    byId('disarida').click();
+    await sleep(150);
+    assert.equal(menuOpen(), false, 'a click outside closes it');
+    assert.deepEqual(events, ['user', 'user', 'user']);
+});
+
+test('the floating panel flips to the other side when the window has no room below, and back', async () => {
+    const { place } = await import('../../js/behavior/floating.js');
+    const panel = document.createElement('div');
+    const anchor = document.createElement('button');
+    const rect = (top, height, left = 100, width = 200) => ({ top, bottom: top + height, left, right: left + width, width, height, x: left, y: top });
+    window.innerHeight = 600;
+    window.innerWidth = 1000;
+    panel.getBoundingClientRect = () => rect(panel.dataset.side === 'top' ? 330 : 580, 200);
+
+    anchor.getBoundingClientRect = () => rect(540, 36);
+    place(panel, anchor, 'bottom');
+    assert.equal(panel.dataset.side, 'top', '200px below a trigger 24px from the bottom: it opens above');
+
+    anchor.getBoundingClientRect = () => rect(100, 36);
+    place(panel, anchor, 'bottom');
+    assert.equal(panel.dataset.side, 'bottom', 'room below again: its own side');
+
+    panel.getBoundingClientRect = () => rect(150, 200, 900, 200);
+    place(panel, anchor, 'bottom');
+    assert.equal(panel.style.translate, '-108px 0', 'past the right edge: shifted back inside');
+});
+
+// --- the popover (js/plugins/popover.js) without Alpine ---------------------------------------------------
+
+test('the popover opens on its trigger, stays open on a click inside, closes with Escape or a click outside', async () => {
+    await mount(`
+        <button type="button" id="baska">Başka</button>
+        <div data-acun-popover data-slot="popover" class="relative inline-block">
+            <div data-slot="popover-trigger"><button type="button" id="bilgi" aria-haspopup="dialog" aria-expanded="false">Bilgi</button></div>
+            <div role="dialog" data-slot="popover-content" data-side="bottom" hidden>
+                <div data-slot="popover-title">İade kuralı</div>
+                <div><a href="#kosullar" id="kosullar">Koşullar</a> 14 gün içinde iade.</div>
+            </div>
+        </div>`);
+    const bubble = document.querySelector('[data-slot="popover-content"]');
+    const isShown = () => !bubble.hidden && bubble.hasAttribute('data-open') && byId('bilgi').getAttribute('aria-expanded') === 'true';
+    assert.equal(byId('bilgi').getAttribute('aria-controls'), bubble.id);
+    assert.equal(bubble.getAttribute('aria-labelledby'), bubble.querySelector('[data-slot="popover-title"]').id, 'the title names the dialog');
+
+    byId('bilgi').click();
+    await settle();
+    assert.ok(isShown());
+    byId('kosullar').focus();
+    bubble.querySelector('div:last-child').click();
+    await settle();
+    assert.ok(isShown(), 'a click inside keeps it open');
+
+    press('Escape');
+    await sleep(150);
+    assert.equal(isShown(), false);
+    assert.equal(document.activeElement, byId('bilgi'));
+
+    byId('bilgi').click();
+    await settle();
+    byId('baska').click();
+    await sleep(150);
+    assert.equal(isShown(), false, 'a click outside closes it');
+});
+
+// --- the tooltip (js/plugins/tooltip.js) without Alpine ---------------------------------------------------
+
+test('the tooltip describes its control, shows on focus and hover, and Escape hides it', async () => {
+    await mount(`
+        <span data-acun-tooltip class="relative">
+            <button type="button" id="sil-dugme">x</button>
+            <span role="tooltip" data-slot="tooltip-content" data-position="top" popover="manual" hidden>Siparişi sil</span>
+        </span>`);
+    const tip = document.querySelector('[role="tooltip"]');
+    const visible = () => !tip.hidden && tip.hasAttribute('data-open');
+    assert.equal(byId('sil-dugme').getAttribute('aria-describedby'), tip.id);
+
+    byId('sil-dugme').focus();
+    await settle();
+    assert.ok(visible(), 'shown on keyboard focus');
+
+    const escape = press('Escape');
+    await sleep(150);
+    assert.equal(visible(), false, 'Escape hides it');
+    assert.equal(escape.defaultPrevented, false);
+
+    const root = document.querySelector('[data-acun-tooltip]');
+    root.dispatchEvent(new window.MouseEvent('mouseenter'));
+    await settle();
+    assert.ok(visible(), 'shown on hover');
+    root.dispatchEvent(new window.MouseEvent('mouseleave'));
+    await sleep(60);
+    assert.ok(visible(), 'kept for a moment: the pointer may be on its way to the bubble');
+    await sleep(250);
+    assert.equal(visible(), false);
+});

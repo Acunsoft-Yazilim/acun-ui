@@ -20,8 +20,9 @@
             <acun:popover.content title="İade kuralı">Ürünler teslimattan sonra 14 gün içinde iade edilebilir.</acun:popover.content>
         </acun:popover>
     The trigger's button gets aria-expanded / aria-controls; Escape or moving the focus
-    out closes it. Placement (position, align) applies to acun:popover.content.
-    Attributes go on the root element in parts mode.
+    out closes it. Placement (position, align) applies to acun:popover.content; the bubble flips
+    to the other side when the window has no room for it. Attributes go on the root element in
+    parts mode. Works without Alpine (the popover plugin of the runtime).
 --}}
 @php
     $parts = ! isset($trigger) && \Acun\Ui\Support\Parts::used($slot, 'popover');
@@ -31,44 +32,31 @@
     }
 @endphp
 @if ($parts)
-<div
-    x-data="{
-        open: false,
-        closePopover(refocus) {
-            this.open = false;
-            if (refocus) this.$refs.popoverTrigger?.querySelector('button, a[href]')?.focus();
-        },
-    }"
-    x-id="['popover', 'popover-title']"
-    x-on:click.outside="open = false"
-    {{-- Escape inside an open popover closes only the popover, not a drawer it sits in. --}}
-    x-on:keydown.escape="if (open) { $event.stopPropagation(); closePopover(true) }"
-    x-on:keydown.escape.window="if (open) closePopover($el.contains(document.activeElement))"
-    x-on:focusout="if ($event.relatedTarget && ! $el.contains($event.relatedTarget)) open = false"
-    data-slot="popover"
-    {{ $attributes->class('relative inline-block') }}
->
+{{-- The behaviour is the popover plugin's (js/plugins/popover.js): no Alpine; on a page with Alpine the root
+     still gives its content the 2.x scope (open, closePopover()). --}}
+<div data-acun-popover data-slot="popover" {{ $attributes->class('relative inline-block') }}>
     {{ $slot }}
 </div>
 @else
-<div x-data="{ open: false }" x-on:click.outside="open = false" x-on:keydown.escape="if (open) { $event.stopPropagation(); open = false }" x-on:keydown.escape.window="open = false" class="relative inline-block">
-    <div x-on:click="open = ! open">{{ $trigger }}</div>
+{{-- Classic: the same plugin markup (ARIA, Escape, focus, placement); the attributes stay on the content box. --}}
+<div data-acun-popover data-slot="popover" class="relative inline-block">
+    <div data-slot="popover-trigger">{!! \Acun\Ui\Support\Parts::controlAttributes($trigger, 'aria-haspopup="dialog" aria-expanded="false"') !!}</div>
 
     <div
-        x-show="open"
-        x-cloak
-        x-transition.opacity.duration.100ms
         role="dialog"
+        data-slot="popover-content"
+        data-side="{{ $position === 'top' ? 'top' : 'bottom' }}"
+        hidden
         @class([
             'absolute z-40 w-72 rounded-sm bg-surface text-sm shadow-lg ring-1 ring-line',
-            'top-full mt-2' => $position !== 'top',
-            'bottom-full mb-2' => $position === 'top',
+            'opacity-0 transition-opacity duration-100 data-open:opacity-100 motion-reduce:transition-none',
+            'data-[side=top]:bottom-full data-[side=top]:mb-2 data-[side=bottom]:top-full data-[side=bottom]:mt-2',
             'left-0' => $align === 'start',
             'right-0' => $align === 'end',
         ])
     >
         @if ($title)
-            <div class="border-b border-line px-4 py-2.5 font-semibold text-ink">{{ $title }}</div>
+            <div data-slot="popover-title" class="border-b border-line px-4 py-2.5 font-semibold text-ink">{{ $title }}</div>
         @endif
         <div {{ $attributes->merge(['class' => 'px-4 py-3 text-dim']) }}>{{ $slot }}</div>
     </div>

@@ -53,6 +53,22 @@ final class Parts
         return substr($html, strlen($tag[0]));
     }
 
+    /**
+     * The slot with attributes added to its first element when that is a button or a link (a trigger's
+     * control: aria-expanded…); anything else is left as it is. Whitespace and comments before it are skipped.
+     */
+    public static function controlAttributes(Htmlable|string|null $slot, string $attributes): string
+    {
+        $html = $slot instanceof Htmlable ? $slot->toHtml() : (string) $slot;
+
+        return (string) preg_replace_callback(
+            '/^((?:\s+|<!--.*?-->)*<(?:button|a)\b)/is',
+            fn (array $match): string => $match[1].' '.$attributes,
+            $html,
+            1,
+        );
+    }
+
     /** The slot as HTML without the whitespace and comments before its first element. */
     private static function trimmed(Htmlable|string|null $slot): string
     {

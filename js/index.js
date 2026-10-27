@@ -50,10 +50,15 @@ import { appearance, startAppearance } from './appearance/preferences.js';
 import { isDark, tokenColor } from './appearance/theme.js';
 import { modalPlugin } from './plugins/modal.js';
 import { drawerPlugin } from './plugins/drawer.js';
+import { dropdownPlugin } from './plugins/dropdown.js';
+import { popoverPlugin } from './plugins/popover.js';
+import { tooltipPlugin } from './plugins/tooltip.js';
 import { connectAlpine, scope } from './adapters/alpine.js';
 import { followAppearanceThroughNavigation, keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
 import { drawer, drawerScope } from './components/drawer.js';
 import { modal, modalScope } from './components/modal.js';
+import { dropdownScope } from './components/dropdown.js';
+import { popoverScope } from './components/popover.js';
 
 /** @import { AcunWindow, AlpineLike } from './core/types.js' */
 
@@ -154,8 +159,13 @@ function setup(runtime, { observe: watch = true }) {
 
     plugins.define('modal', modalPlugin);
     plugins.define('drawer', drawerPlugin);
+    plugins.define('dropdown', dropdownPlugin);
+    plugins.define('popover', popoverPlugin);
+    plugins.define('tooltip', tooltipPlugin);
     scope('modal', '[data-acun-modal]', modalScope);
     scope('drawer', '[data-acun-drawer]', drawerScope);
+    scope('dropdown', '[data-acun-dropdown]', dropdownScope);
+    scope('popover', '[data-acun-popover]', popoverScope);
     startPlugins({ observe: watch });
 
     // Livewire's script runs before this module, so its Alpine is usually here already
@@ -224,6 +234,9 @@ export {
     liveObserve as observe,
     modalPlugin,
     drawerPlugin,
+    dropdownPlugin,
+    popoverPlugin,
+    tooltipPlugin,
     // Deprecated (3.0): the Alpine data of the 2.0 drawer and modal; they delegate to the plugins.
     drawer,
     modal,

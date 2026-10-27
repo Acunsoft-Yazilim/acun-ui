@@ -5,30 +5,22 @@
     acun:dropdown.heading and acun:dropdown.separator between them. Placement (align,
     position, full-width) comes from the acun:dropdown. A click inside closes it; Arrow
     Up / Down, Home and End move between the items. Attributes (class="w-64", id…) go on
-    the panel.
+    the panel. Closed it is hidden; open it carries data-open.
 --}}
 <div
     data-slot="dropdown-content"
-    x-ref="dropdownContent"
-    x-show="open"
-    x-cloak
-    x-transition:enter="ease-out duration-100"
-    x-transition:enter-start="opacity-0 scale-95"
-    x-transition:enter-end="opacity-100 scale-100"
-    x-transition:leave="ease-in duration-75"
-    x-transition:leave-start="opacity-100 scale-100"
-    x-transition:leave-end="opacity-0 scale-95"
-    x-on:click="closeMenu($el.contains(document.activeElement))"
-    x-on:keydown="menuKey($event)"
-    :id="$id('dropdown-content')"
+    data-side="{{ $position === 'top' ? 'top' : 'bottom' }}"
+    hidden
     {{ $attributes->class([
         'absolute z-40 max-h-64 overflow-auto rounded-sm bg-surface py-1 shadow-lg',
+        // Closed: faded and slightly smaller; open (data-open): the full panel (js/core/transition.js).
+        'scale-95 opacity-0 transition duration-100 ease-out data-open:scale-100 data-open:opacity-100 motion-reduce:transition-none',
         'left-0 right-0' => $fullWidth,
         'min-w-[12rem]' => ! $fullWidth,
         'left-0' => ! $fullWidth && $align === 'start',
         'right-0' => ! $fullWidth && $align !== 'start',
-        'bottom-full mb-2' => $position === 'top',
-        'top-full mt-2' => $position !== 'top',
+        // The side it opens on (data-side): the plugin flips it when the window has no room there.
+        'data-[side=top]:bottom-full data-[side=top]:mb-2 data-[side=bottom]:top-full data-[side=bottom]:mt-2',
     ]) }}
 >
     {{ $slot }}

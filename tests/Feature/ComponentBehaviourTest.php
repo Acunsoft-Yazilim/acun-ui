@@ -167,23 +167,21 @@ final class ComponentBehaviourTest extends TestCase
         self::assertStringContainsString(':aria-pressed="shown.toString()"', $html);
     }
 
-    public function test_tooltip_opens_on_focus_and_describes_its_trigger(): void
+    /** The tooltip plugin (js/plugins/tooltip.js) shows the bubble on hover and focus and wires aria-describedby. */
+    public function test_tooltip_is_a_plugin_root_with_a_top_layer_bubble(): void
     {
         $html = Blade::render('<x-ui.tooltip text="Sil"><button>x</button></x-ui.tooltip>');
 
-        self::assertStringContainsString('x-on:focusin="open()"', $html);
-        // The pointer can rest on the tooltip, and Escape hides it from anywhere (WCAG 1.4.13).
-        self::assertSame(2, substr_count($html, 'x-on:mouseleave="close(120)"'));
-        self::assertStringContainsString('x-on:keydown.escape.window="show = false"', $html);
-        self::assertStringNotContainsString('pointer-events-none fixed', $html);
-        // A binding on the button: a Livewire re-render keeps it.
-        self::assertStringContainsString("<button :aria-describedby=\"\$id('ui-tooltip')\">x</button>", $html);
-        self::assertStringNotContainsString("setAttribute('aria-describedby'", $html);
-        self::assertStringContainsString('role="tooltip"', $html);
+        self::assertMatchesRegularExpression('/<span data-acun-tooltip class="relative">\s*<button>x<\/button>/', $html);
+        self::assertStringNotContainsString('x-data', $html);
+        // The bubble: a tooltip in the browser's top layer, hidden until shown, above the element by default.
+        self::assertMatchesRegularExpression('/role="tooltip"\s+data-slot="tooltip-content"\s+data-position="top"\s+popover="manual"\s+hidden/', $html);
+        self::assertStringContainsString('-translate-y-full', $html);
+        self::assertStringContainsString('>Sil</span>', $html);
 
-        // Other content: set once on its first focusable element.
-        self::assertStringContainsString("setAttribute('aria-describedby', \$id('ui-tooltip'))", Blade::render('<x-ui.tooltip text="Bilgi"><span tabindex="0">?</span></x-ui.tooltip>'));
-        self::assertStringContainsString(":id=\"\$id('ui-tooltip')\"", $html);
+        $below = Blade::render('<x-ui.tooltip text="Bilgi" position="bottom"><span tabindex="0">?</span></x-ui.tooltip>');
+        self::assertStringContainsString('data-position="bottom"', $below);
+        self::assertStringNotContainsString('-translate-y-full', $below);
     }
 
     public function test_toasts_are_announced_and_links_work_without_livewire(): void
