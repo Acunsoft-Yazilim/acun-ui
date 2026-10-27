@@ -32,9 +32,9 @@ final class ToastTest extends TestCase
         self::assertNull(Toast::payload('Hazır', link: '//evil.example/giris')['link']);
         self::assertSame('//localhost/kayitlar', Toast::payload('Hazır', link: '//localhost/kayitlar')['link']);
 
-        // A toast dispatched straight from a component skips payload(): the container checks it too.
-        $html = Blade::render('<x-ui.toast-container />');
-        self::assertStringContainsString('const link = this.safeLink(toast.link);', html_entity_decode($html, ENT_QUOTES));
+        // A toast dispatched straight from a component skips payload(): the container (js/plugins/toast.js) checks it
+        // too (tests/js/components.test.mjs).
+        self::assertStringContainsString('data-acun-toasts', Blade::render('<x-ui.toast-container />'));
     }
 
     public function test_the_trait_dispatches_a_toast_event(): void
@@ -68,8 +68,8 @@ final class ToastTest extends TestCase
         (new ToastingComponent)->queueForNextPage();
 
         $first = Blade::render('<x-ui.toast-container />');
-        self::assertStringContainsString('x-init=', $first);
-        self::assertStringContainsString('Eklendi.', $first);
+        self::assertStringContainsString('data-flashed=', $first);
+        self::assertSame('Eklendi.', self::flashed($first)[0]['message']);
 
         $second = Blade::render('<x-ui.toast-container />');
         self::assertStringNotContainsString('Eklendi.', $second, 'A flashed toast is shown only once.');
@@ -131,20 +131,18 @@ final class ToastTest extends TestCase
 
         self::assertSame(['type' => 'info', 'message' => 'Rapor hazır.', 'link' => '/rapor.pdf', 'linkLabel' => 'İndir', 'download' => true], self::flashed($html)[0]);
         // The container gives the link the download attribute and skips wire:navigate for it (tests/js/components.test.mjs).
-        self::assertStringContainsString(':download="toast.download"', $html);
-        self::assertStringContainsString('if (toast.download !== null) { dismiss(toast.id); return }', html_entity_decode($html, ENT_QUOTES));
     }
 
     /**
-     * The toasts the container's x-init pushes (Js::from writes JSON.parse('…')).
+     * The toasts the server flashed for the page (the container's data-flashed).
      *
      * @return list<array<string, mixed>>
      */
     private static function flashed(string $html): array
     {
-        self::assertSame(1, preg_match("/x-init=\"JSON\\.parse\\('(.*?)'\\)\\.forEach/", html_entity_decode($html, ENT_QUOTES), $match));
+        self::assertSame(1, preg_match('/data-flashed="([^"]*)"/', $html, $match));
 
-        return json_decode(json_decode('"'.$match[1].'"', flags: JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
+        return json_decode(html_entity_decode($match[1], ENT_QUOTES), true, flags: JSON_THROW_ON_ERROR);
     }
 
     /** @return array<string, array{string}> */

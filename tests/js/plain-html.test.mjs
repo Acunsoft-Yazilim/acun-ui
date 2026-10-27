@@ -724,3 +724,81 @@ test('acun:collapse opens and closes its area', async () => {
     await sleep(250);
     assert.equal(area.hidden, true);
 });
+
+// --- toast, copy and inline-confirm without Alpine ----------------------------------------------------------
+
+test('a toast event shows a toast from the template, with its type, a safe link and a close button', async () => {
+    await mount(`
+        <div data-acun-toasts aria-live="polite" data-type-classes='{"success":"bg-success","error":"bg-danger","warning":"bg-warning","info":"bg-inverse"}' data-flashed='[{"type":"success","message":"Kaydedildi"}]'>
+            <template data-slot="toast-template"><div data-slot="toast"><div><p data-slot="toast-message"></p><a data-slot="toast-link" hidden></a></div><button type="button" data-slot="toast-close" aria-label="Kapat">×</button></div></template>
+        </div>`);
+    const toasts = () => [...document.querySelectorAll('[data-slot="toast"]')].filter((toast) => !toast.closest('template'));
+    assert.equal(toasts().length, 1, 'the flashed toast');
+    assert.equal(toasts()[0].getAttribute('role'), 'status');
+    assert.ok(toasts()[0].classList.contains('bg-success'));
+
+    dispatch('toast', { type: 'Danger', message: 'Silinemedi', link: 'javascript:alert(1)', linkLabel: 'Aç' });
+    dispatch('toast', { message: 'Rapor hazır', link: '/raporlar/5.xlsx', linkLabel: 'İndir', download: true });
+    await settle();
+    const [, error, report] = toasts();
+    assert.equal(error.getAttribute('role'), 'alert');
+    assert.ok(error.classList.contains('bg-danger'));
+    assert.equal(error.querySelector('a'), null, 'an unsafe link is dropped');
+    assert.equal(report.querySelector('a').getAttribute('href'), '/raporlar/5.xlsx');
+    assert.equal(report.querySelector('a').getAttribute('download'), '');
+
+    error.querySelector('[data-slot="toast-close"]').click();
+    await sleep(250);
+    assert.equal(toasts().length, 2);
+});
+
+test('the copy button copies its text and says so, without Alpine', async () => {
+    await mount(`
+        <span class="contents" data-acun-copy data-state="idle" data-timeout="2000" data-copied-label="Kopyalandı" data-failed-label="Kopyalanamadı">
+            <button type="button" data-copy-text="TR33 0006" id="kopyala">Kopyala</button>
+            <span class="sr-only" aria-live="polite" data-slot="copy-status"></span>
+        </span>`);
+    const written = [];
+    Object.defineProperty(window, 'isSecureContext', { configurable: true, value: true });
+    Object.defineProperty(window.navigator, 'clipboard', { configurable: true, value: { writeText: async (text) => { written.push(text); } } });
+    const copied = [];
+    window.addEventListener('copied', (event) => copied.push(event.detail.text), { once: true });
+
+    byId('kopyala').click();
+    await settle();
+    assert.deepEqual(written, ['TR33 0006']);
+    assert.equal(document.querySelector('[data-acun-copy]').dataset.state, 'copied');
+    assert.equal(document.querySelector('[data-slot="copy-status"]').textContent, 'Kopyalandı');
+    assert.deepEqual(copied, ['TR33 0006']);
+});
+
+test('inline confirm asks in place, runs only on confirm and keeps the focus on the page', async () => {
+    await mount(`
+        <span data-acun-inline-confirm>
+            <button type="button" data-slot="inline-confirm-ask" id="sor">Sil</button>
+            <span data-slot="inline-confirm-question" hidden role="group" aria-label="Silinsin mi?">
+                <button type="button" data-slot="inline-confirm-confirm" id="evet-sil">Sil</button>
+                <button type="button" data-slot="inline-confirm-cancel" id="vazgec">Vazgeç</button>
+            </span>
+        </span>`);
+    const question = document.querySelector('[data-slot="inline-confirm-question"]');
+    let deleted = 0;
+    byId('evet-sil').addEventListener('click', () => deleted++);
+
+    byId('sor').click();
+    assert.equal(question.hidden, false);
+    assert.equal(byId('sor').hidden, true);
+    assert.equal(document.activeElement, byId('evet-sil'));
+
+    const escape = press('Escape');
+    assert.equal(question.hidden, true);
+    assert.equal(document.activeElement, byId('sor'), 'Escape gives the focus back');
+    assert.equal(escape.defaultPrevented, false);
+
+    byId('sor').click();
+    byId('evet-sil').click();
+    await settle();
+    assert.equal(deleted, 1);
+    assert.equal(question.hidden, true);
+    assert.equal(document.activeElement, byId('sor'), 'after the action the focus is on the button again, not on <body>');
+});

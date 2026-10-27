@@ -84,18 +84,18 @@ final class UtilityComponentsTest extends TestCase
         self::assertStringNotContainsString('data-copy-target', $text);
         self::assertStringContainsString('data-copy-target="#adres"', $target);
         self::assertStringNotContainsString('data-copy-text', $target);
-        self::assertStringContainsString('x-on:click="copy($el.querySelector(\'button\'))"', $target);
+        self::assertStringContainsString('data-acun-copy', $target);
     }
 
     public function test_copy_button_announces_the_result_politely(): void
     {
         $html = self::decodeUnicodeEscapes(Blade::render('<x-ui.copy-button text="a" />'));
 
-        self::assertMatchesRegularExpression('/<span class="sr-only" aria-live="polite" x-text="[^"]*Kopyalandı[^"]*Kopyalanamadı[^"]*"><\/span>/', $html);
-        self::assertStringContainsString('<span x-show="copyState === \'idle\'">Kopyala</span>', $html);
-        self::assertStringContainsString('<span x-show="copyState === \'copied\'" x-cloak>Kopyalandı</span>', $html);
-        self::assertStringContainsString('navigator.clipboard.writeText(text)', $html);
-        self::assertStringContainsString("document.execCommand('copy')", $html);
+        // The plugin (js/plugins/copy.js) writes the result into the polite status line and data-state.
+        self::assertMatchesRegularExpression('/data-copied-label="Kopyalandı"\s+data-failed-label="Kopyalanamadı"/', $html);
+        self::assertStringContainsString('<span class="sr-only" aria-live="polite" data-slot="copy-status"></span>', $html);
+        self::assertStringContainsString('<span class="group-data-[state=copied]/copy:hidden group-data-[state=failed]/copy:hidden">Kopyala</span>', $html);
+        self::assertStringContainsString('<span class="hidden group-data-[state=copied]/copy:inline">Kopyalandı</span>', $html);
     }
 
     public function test_copy_button_labels_are_translatable(): void

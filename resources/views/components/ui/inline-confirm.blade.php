@@ -16,7 +16,8 @@
     The first click turns the button into the question with the confirm and cancel buttons;
     only the confirm button runs the action (attributes such as wire:click go on it). Escape,
     the cancel button or a click elsewhere puts the button back. The focus moves to the
-    confirm button and comes back to the first one.
+    confirm button and comes back to the first one (also after the confirm button: it is
+    never lost to the page).
 --}}
 @php
     $question ??= __('Are you sure?');
@@ -24,17 +25,13 @@
     $outline = str_starts_with($variant, 'outline-') ? $variant : 'outline-'.$variant;
 @endphp
 
-<span
-    x-data="{ asking: false }"
-    x-on:click.outside="asking = false"
-    x-on:keydown.escape="if (asking) { $event.stopPropagation(); asking = false; $nextTick(() => $refs.ask.focus()) }"
-    class="inline-flex items-center gap-2"
->
-    <acun:button :variant="$outline" :size="$size" x-ref="ask" x-show="! asking" x-on:click="asking = true; $nextTick(() => $refs.confirm.focus())">{{ $slot }}</acun:button>
+{{-- The behaviour is the inline-confirm plugin's (js/plugins/inline-confirm.js): no Alpine. --}}
+<span data-acun-inline-confirm class="inline-flex items-center gap-2">
+    <acun:button :variant="$outline" :size="$size" data-slot="inline-confirm-ask">{{ $slot }}</acun:button>
 
-    <span x-show="asking" x-cloak role="group" :aria-label="@js($question)" class="inline-flex items-center gap-2">
+    <span data-slot="inline-confirm-question" hidden role="group" aria-label="{{ $question }}" class="inline-flex items-center gap-2">
         <span class="text-sm text-body">{{ $question }}</span>
-        <acun:button :variant="$variant" :size="$size" x-ref="confirm" x-on:click="asking = false" {{ $attributes }}>{{ $confirmText ?? $slot }}</acun:button>
-        <acun:button variant="ghost" :size="$size" x-on:click="asking = false; $nextTick(() => $refs.ask.focus())">{{ $cancelText }}</acun:button>
+        <acun:button :variant="$variant" :size="$size" data-slot="inline-confirm-confirm" {{ $attributes }}>{{ $confirmText ?? $slot }}</acun:button>
+        <acun:button variant="ghost" :size="$size" data-slot="inline-confirm-cancel">{{ $cancelText }}</acun:button>
     </span>
 </span>

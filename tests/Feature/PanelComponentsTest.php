@@ -47,7 +47,7 @@ final class PanelComponentsTest extends TestCase
             'table' => ['<x-ui.table><table class="ui-table"></table></x-ui.table>', 'class="ui-table-box relative overflow-x-auto'],
             'tabs' => ['<x-ui.tabs :tabs="[\'genel\' => \'Genel\']"><x-ui.tab-panel value="genel">G</x-ui.tab-panel></x-ui.tabs>', 'data-acun-tabs'],
             'textarea' => ['<x-ui.textarea name="not" label="Not" />', 'id="not"'],
-            'toast-container' => ['<x-ui.toast-container />', 'x-on:toast.window'],
+            'toast-container' => ['<x-ui.toast-container />', 'data-acun-toasts'],
             'tooltip' => ['<x-ui.tooltip text="İpucu">?</x-ui.tooltip>', 'İpucu'],
             'theme-toggle' => ['<x-ui.theme-toggle />', '$store.appearance.toggle()'],
             'auth-header' => ['<x-ui.auth-header title="Giriş" description="Hesabınıza girin" />', 'Hesabınıza girin'],
@@ -197,7 +197,7 @@ final class PanelComponentsTest extends TestCase
         self::assertStringContainsString('<link rel="icon" href="/favicon.svg">', $html);
         self::assertMatchesRegularExpression('~<body class="min-h-dvh text-body bg-surface" data-page="vitrin">\s*<p>Kendi içeriği</p>~', $html);
         self::assertStringNotContainsString('panel-sidebar', $html);
-        self::assertStringContainsString('x-on:toast.window="push($event.detail)"', $html);
+        self::assertStringContainsString('data-acun-toasts', $html);
     }
 
     public function test_selection_bar_floats_by_default_and_can_stay_in_the_flow(): void

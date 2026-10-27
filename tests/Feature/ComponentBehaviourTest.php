@@ -189,8 +189,9 @@ final class ComponentBehaviourTest extends TestCase
         $html = Blade::render('<x-ui.toast-container />');
 
         self::assertStringContainsString('aria-live="polite"', $html);
-        // wire:navigate within the application only; a mailto: or another site opens as a normal link.
-        self::assertStringContainsString('if (window.Livewire?.navigate && sameSite(toast.link)) { $event.preventDefault();', $html);
+        // The plugin (js/plugins/toast.js) opens a link of this site with wire:navigate, any other as a normal link.
+        self::assertStringContainsString('data-acun-toasts', $html);
+        self::assertStringContainsString('data-slot="toast-template"', $html);
         self::assertStringNotContainsString('x-on:click.prevent', $html);
     }
 

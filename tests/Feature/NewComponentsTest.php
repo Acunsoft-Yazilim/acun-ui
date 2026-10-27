@@ -48,9 +48,10 @@ final class NewComponentsTest extends TestCase
         $html = Blade::render('<acun:inline-confirm wire:click="delete(7)" question="Silinsin mi?">Sil</acun:inline-confirm>');
 
         self::assertSame(1, substr_count($html, 'wire:click="delete(7)"'));
-        self::assertMatchesRegularExpression('/x-ref="confirm"[^>]*wire:click="delete\(7\)"/', $html);
+        self::assertMatchesRegularExpression('/data-slot="inline-confirm-confirm"[^>]*wire:click="delete\(7\)"/', $html);
         self::assertStringContainsString('Silinsin mi?', $html);
-        self::assertStringContainsString('x-on:keydown.escape=', $html);
+        self::assertStringContainsString('data-acun-inline-confirm', $html);
+        self::assertMatchesRegularExpression('/data-slot="inline-confirm-question" hidden role="group" aria-label="Silinsin mi\?"/', $html);
         self::assertStringContainsString('border-danger-line text-danger-ink', $html, 'The first button is the outline of the variant.');
     }
     public function test_logo_shows_the_dark_version_where_dark_applies(): void

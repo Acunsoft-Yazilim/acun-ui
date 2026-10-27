@@ -56,6 +56,9 @@ import { tooltipPlugin } from './plugins/tooltip.js';
 import { tabsPlugin } from './plugins/tabs.js';
 import { accordionPlugin } from './plugins/accordion.js';
 import { collapsePlugin } from './plugins/collapse.js';
+import { toastsPlugin } from './plugins/toast.js';
+import { copyPlugin } from './plugins/copy.js';
+import { inlineConfirmPlugin } from './plugins/inline-confirm.js';
 import { connectAlpine, scope } from './adapters/alpine.js';
 import { followAppearanceThroughNavigation, keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
 import { drawer, drawerScope } from './components/drawer.js';
@@ -64,6 +67,7 @@ import { dropdownScope } from './components/dropdown.js';
 import { popoverScope } from './components/popover.js';
 import { tabsScope } from './components/tabs.js';
 import { accordionScope, collapseScope } from './components/accordion.js';
+import { toastsScope } from './components/toast.js';
 
 /** @import { AcunWindow, AlpineLike } from './core/types.js' */
 
@@ -170,6 +174,9 @@ function setup(runtime, { observe: watch = true }) {
     plugins.define('tabs', tabsPlugin);
     plugins.define('accordion', accordionPlugin);
     plugins.define('collapse', collapsePlugin);
+    plugins.define('toasts', toastsPlugin);
+    plugins.define('copy', copyPlugin);
+    plugins.define('inline-confirm', inlineConfirmPlugin);
     scope('modal', '[data-acun-modal]', modalScope);
     scope('drawer', '[data-acun-drawer]', drawerScope);
     scope('dropdown', '[data-acun-dropdown]', dropdownScope);
@@ -177,6 +184,7 @@ function setup(runtime, { observe: watch = true }) {
     scope('tabs', '[data-acun-tabs]', tabsScope);
     scope('accordion', '[data-acun-accordion]', accordionScope);
     scope('collapse', '[data-acun-collapse]', collapseScope);
+    scope('toasts', '[data-acun-toasts]', toastsScope);
     startPlugins({ observe: watch });
 
     // Livewire's script runs before this module, so its Alpine is usually here already
@@ -251,6 +259,9 @@ export {
     tabsPlugin,
     accordionPlugin,
     collapsePlugin,
+    toastsPlugin,
+    copyPlugin,
+    inlineConfirmPlugin,
     // Deprecated (3.0): the Alpine data of the 2.0 drawer and modal; they delegate to the plugins.
     drawer,
     modal,
