@@ -14,7 +14,7 @@ use function Laravel\Prompts\confirm;
 /**
  * php artisan acun:install [--check] [--example] [--npm | --no-npm] [--remove-font]
  *
- * Wires the free package into a Laravel application (https://ui.acunsoft.com/installation.html#free):
+ * Wires the free package into a Laravel application (https://docs.acunui.com/installation.html#free):
  *
  *   package.json            "@acunsoft/acun-ui": "file:vendor/acunsoft/acun-ui" in dependencies
  *   resources/css/app.css   @import 'tailwindcss'; @import '@acunsoft/acun-ui';
@@ -48,12 +48,12 @@ final class InstallCommand extends Command
 
     protected $description = 'Wire Acun UI into package.json and the CSS and JS entries (Acun Pro\'s lines too when it is installed)';
 
-    private const GUIDE = 'https://ui.acunsoft.com/installation.html#free';
+    private const GUIDE = 'https://docs.acunui.com/installation.html#free';
 
-    private const PRO_GUIDE = 'https://ui.acunsoft.com/installation.html#existing';
+    private const PRO_GUIDE = 'https://docs.acunui.com/installation.html#existing';
 
     /** The same lines written by hand. */
-    private const MANUAL = 'https://ui.acunsoft.com/installation.html#manual';
+    private const MANUAL = 'https://docs.acunui.com/installation.html#manual';
 
     /** The example page (--example) and the route that shows it. */
     private const EXAMPLE = 'views/acun/example.blade.php';

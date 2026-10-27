@@ -2,7 +2,7 @@
   "name": "@acunsoft/acun-ui",
   "version": "2.2.0",
   "description": "Acun UI: design tokens, Tailwind CSS v4 sources, a compiled stylesheet and the browser runtime of the Acun UI components.",
-  "homepage": "https://ui.acunsoft.com",
+  "homepage": "https://docs.acunui.com",
   "keywords": [
     "tailwindcss",
     "alpinejs",

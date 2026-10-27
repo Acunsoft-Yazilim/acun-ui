@@ -31,7 +31,7 @@ php artisan acun:install
 
 It no longer adds `@tailwindcss/forms` (2.1 and older did; a line that is there is left alone and does no harm). It offers to run `npm install` and `npm run build` (`--npm`, `--no-npm`; pnpm, yarn and bun by their lock file), copies an example page with `--example`, adds Acun Pro's lines when `acunsoft/acun-pro` is installed, and asks nothing with `--no-interaction` (CI). A second run changes nothing. `php artisan acun:install --check` changes nothing: it lists what is set up and what is missing, and exits with 1 when something is. Then put `<acun:layout.blank>` on a page (or `<acun:layout.head>` in your own layout) and run `npm run dev`.
 
-The same lines by hand: https://ui.acunsoft.com/installation.html#manual
+The same lines by hand: https://docs.acunui.com/installation.html#manual
 
 Without Composer (any Tailwind CSS 4 project), install it from npm (the CSS, `js/`, `dist/` and `vite/` only):
 
@@ -57,7 +57,7 @@ Without the `@source` line the components render unstyled. If Laravel's default 
 
 The kit draws its own form controls: every `<input>`, `<select>` and `<textarea>` a component renders carries `data-acun-control`, and `css/forms.css` styles only those (the `@tailwindcss/forms` plugin is not needed, and the application's other fields are left alone). Your own markup (the npm path) puts `data-acun-control` on a field to get the same base.
 
-Acun DataTable (`acunsoft/datatable-laravel`, a separate MIT package for server-side Livewire tables) brings its own stylesheet (`@import '@acunsoft/datatable-dom/styles.css';`); `css/acun-datatable.css` (imported by `css/panel.css`) sets its `--adt-*` colours, corners and font from the tokens, so it follows the theme, the dark theme and the primary colour. Docs: https://ui.acunsoft.com/components/acun-datatable.html
+Acun DataTable (`acunsoft/datatable-laravel`, a separate MIT package for server-side Livewire tables) brings its own stylesheet (`@import '@acunsoft/datatable-dom/styles.css';`); `css/acun-datatable.css` (imported by `css/panel.css`) sets its `--adt-*` colours, corners and font from the tokens, so it follows the theme, the dark theme and the primary colour. Docs: https://docs.acunui.com/components/acun-datatable.html
 
 **Global rules.** `css/panel.css` is `css/core.css` (tokens, themes, form base, the kit's own rules) plus `css/base.css` (rules that reach the whole page: the theme's line on a border without a colour class, the pointer cursor, the headings' letter spacing, the code font). For none of them, import `@acunsoft/acun-ui/css/core.css` instead of `@acunsoft/acun-ui`.
 
@@ -84,7 +84,7 @@ The components paint with design tokens, not palette shades, so each one follows
 
 - **Theme switcher:** one component, `acun:theme-switcher`. `<acun:theme-switcher />` is the light/dark button; `as="drawer"` (a panel from the right) and `as="inline"` show the mode, the primary colour (presets or the user's own, measured for contrast) and the themes a package offers; `sections` picks them.
 
-All the tokens, sections, the user's colour and the switcher's options: https://ui.acunsoft.com/theming.html
+All the tokens, sections, the user's colour and the switcher's options: https://docs.acunui.com/theming.html
 
 ### JavaScript
 

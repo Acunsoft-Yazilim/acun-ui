@@ -136,7 +136,7 @@ final class InstallCommandTest extends TestCase
         self::assertStringContainsString('Changed: package.json, resources/css/app.css, resources/js/app.js.', $output);
         self::assertStringContainsString("Use <acun:layout.blank> on a page (or <acun:layout.head> in your own layout), with @vite(['resources/css/app.css', 'resources/js/app.js'])", $output);
         self::assertStringContainsString('Run npm install, then npm run dev', $output);
-        self::assertStringContainsString('https://ui.acunsoft.com/installation.html#free', $output);
+        self::assertStringContainsString('https://docs.acunui.com/installation.html#free', $output);
         self::assertStringNotContainsString('Acun Pro', $output);
     }
 
@@ -335,7 +335,7 @@ final class InstallCommandTest extends TestCase
         self::assertStringContainsString('✗ No build: public/build/manifest.json and public/hot are missing', $output);
         self::assertStringNotContainsString('@tailwindcss/forms', $output, 'The plugin is not wanted: the kit draws its own form controls.');
         self::assertStringContainsString('6 things are missing: fix them as shown above.', $output);
-        self::assertStringContainsString('Guide: https://ui.acunsoft.com/installation.html#free', $output);
+        self::assertStringContainsString('Guide: https://docs.acunui.com/installation.html#free', $output);
     }
 
     public function test_check_passes_on_a_complete_setup_and_names_a_missing_source(): void
@@ -508,7 +508,7 @@ final class InstallCommandTest extends TestCase
         ]), $this->read('resources/css/app.css'));
         self::assertSame("import './bootstrap';\nimport '@acunsoft/acun-ui';\nimport '@acunsoft/acun-pro';\n", $this->read('resources/js/app.js'));
 
-        self::assertStringContainsString('Acun Pro: the rest is by hand, see https://ui.acunsoft.com/installation.html#existing', $output);
+        self::assertStringContainsString('Acun Pro: the rest is by hand, see https://docs.acunui.com/installation.html#existing', $output);
         self::assertStringContainsString('vite.config.js: the fonts (Public Sans, DM Mono) and woff2Only()', $output);
         self::assertStringContainsString('The layout: resources/views/layouts/admin/vertical.blade.php', $output);
         self::assertStringContainsString('The menu: resources/menu/main.json', $output);
@@ -517,7 +517,7 @@ final class InstallCommandTest extends TestCase
 
         [, $output] = $this->acun();
         self::assertStringContainsString('Already set up. Nothing changed.', $output);
-        self::assertStringContainsString('Acun Pro: Vite, the layout, the menu and the first page are set by hand: https://ui.acunsoft.com/installation.html#existing', $output);
+        self::assertStringContainsString('Acun Pro: Vite, the layout, the menu and the first page are set by hand: https://docs.acunui.com/installation.html#existing', $output);
 
         $this->linkNodeModules('acun-ui');
         $this->write('public/build/manifest.json', '{}');
