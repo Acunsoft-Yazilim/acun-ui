@@ -1,4 +1,5 @@
 import type { OpenOptions, PluginDefinition } from '../core/plugins.js';
+export type CloseReason = 'user' | 'command' | 'removed';
 export type ModalInstance = {
     /**
      * the root (data-acun-modal)
@@ -12,7 +13,7 @@ export type ModalInstance = {
     isOpen: boolean;
     open: (options?: OpenOptions) => void;
     /**
-     * notify: false when the server asked for it (no close-action)
+     * notify: false when the page or the server asked for it (reason 'command': no close-action)
      */
     close: (options?: {
         notify?: boolean;

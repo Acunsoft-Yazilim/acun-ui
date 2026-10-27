@@ -103,8 +103,8 @@ test('the modal and the drawer of the HTML example work with dist/acun-ui.js alo
         const seen = await browser.evaluate('window.seen');
         assert.deepEqual(seen.slice(0, 3), [
             ['acun:modal:opened', { name: 'siparis-ozeti' }],
-            ['acun:modal:closed', { name: 'siparis-ozeti' }],
-            ['modal-closed', { name: 'siparis-ozeti' }],
+            ['acun:modal:closed', { name: 'siparis-ozeti', reason: 'user' }],
+            ['modal-closed', { name: 'siparis-ozeti', reason: 'user' }],
         ]);
         assert.ok(seen.some(([name, detail]) => name === 'drawer-state-changed' && detail.name === 'siparis-filtreleri' && detail.open === true));
         assert.deepEqual(browser.problems, [], 'No error and no warning in the console.');

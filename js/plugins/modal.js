@@ -11,14 +11,17 @@
 //
 // Open, the root, the backdrop and the panel carry data-open (and the root loses hidden); the CSS
 // transitions do the rest (core/transition.js). Options on the root: data-close-action (a method of
-// the Livewire component around it, run when the user closes the modal) and
+// the Livewire component around it, run when the user closes the modal: adapters/livewire.js) and
 // data-request-close-event (a close guard: the X, Escape and the backdrop send this event instead
 // of closing; the page then closes it with AcunUI.modal.close(name)).
 //
 // One modal is open at a time: opening one closes the others, except one opened from inside an
 // open modal (a confirmation over an edit form), which goes on top of it; Escape closes the top one.
 // Escape, Tab, the page scroll lock and the focus restore come from the overlay manager.
-// Events (from the root, bubbling to window): acun:modal:opened, acun:modal:closed and modal-closed ({ name }).
+// Events (from the root, bubbling to window): acun:modal:opened ({ name }), acun:modal:closed and modal-closed
+// ({ name, reason }): reason 'user' (the X, Escape, the backdrop, data-acun-close, another modal opening),
+// 'command' (AcunUI.modal.close(), a close-modal event: the page or the server asked) or 'removed' (taken off the
+// page while open). A framework adapter tells a user's close from its own with it (React/Vue onOpenChange).
 
 import { EVENTS, dispatch, listen } from '../core/events.js';
 import { focusable, ownPart } from '../core/dom.js';
@@ -27,9 +30,14 @@ import { enter, leave } from '../core/transition.js';
 import { keepHeaderName } from '../behavior/dialog-name.js';
 import { focusFirst } from '../behavior/focus-trap.js';
 import { overlays } from '../behavior/overlay-manager.js';
-import { callComponent } from '../adapters/livewire.js';
 
 /** @import { OpenOptions, PluginDefinition } from '../core/plugins.js' */
+
+/**
+ * Why a modal closed (the detail of acun:modal:closed).
+ *
+ * @typedef {'user' | 'command' | 'removed'} CloseReason
+ */
 
 /**
  * A modal on the page (AcunUI.plugins.get(element, 'modal')).
@@ -40,7 +48,7 @@ import { callComponent } from '../adapters/livewire.js';
  * @property {string | null} name
  * @property {boolean} isOpen
  * @property {(options?: OpenOptions) => void} open
- * @property {(options?: { notify?: boolean }) => void} close  notify: false when the server asked for it (no close-action)
+ * @property {(options?: { notify?: boolean }) => void} close  notify: false when the page or the server asked for it (reason 'command': no close-action)
  * @property {(options?: OpenOptions) => void} toggle
  * @property {() => void} requestClose  the user's close: through data-request-close-event when there is one
  * @property {() => HTMLElement[]} focusables  the panel's elements that Tab reaches
@@ -124,12 +132,11 @@ function createModal(root) {
             cancelLeave = leave(layers, parts);
             overlays.close(root);
 
-            const action = root.getAttribute('data-close-action');
-            if (notify && action) callComponent(root, action);
-
+            /** @type {CloseReason} */
+            const reason = notify ? 'user' : 'command';
             plugins.expand(name(), false);
-            dispatch(EVENTS.modal.closed, { name: name() }, root);
-            dispatch('modal-closed', { name: name() }, root);
+            dispatch(EVENTS.modal.closed, { name: name(), reason }, root);
+            dispatch('modal-closed', { name: name(), reason }, root);
         },
 
         toggle(options) {
@@ -157,8 +164,8 @@ function createModal(root) {
                 isOpen = false;
                 plugins.expand(name(), false);
                 const target = root.isConnected ? root : window;
-                dispatch(EVENTS.modal.closed, { name: name() }, target);
-                dispatch('modal-closed', { name: name() }, target);
+                dispatch(EVENTS.modal.closed, { name: name(), reason: 'removed' }, target);
+                dispatch('modal-closed', { name: name(), reason: 'removed' }, target);
             }
         },
     };

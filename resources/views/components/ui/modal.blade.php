@@ -62,7 +62,7 @@
     backdrop do the same: through request-close-event when there is one), data-acun-close-now
     (no question), or <acun:modal.close>. (close() and requestClose() of the 2.0 Alpine scope still
     work until 3.0.)
-    It sends acun:modal:opened and acun:modal:closed / modal-closed ({ name }).
+    It sends acun:modal:opened ({ name }) and acun:modal:closed / modal-closed ({ name, reason: user · command · removed }).
     wire:model / x-model bind the open state both ways: <acun:modal name="…" wire:model="showForm">
     opens when the property is true and sets it to false when the user closes it.
 

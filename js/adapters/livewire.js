@@ -3,10 +3,12 @@
 //   on every update, and a morph would close an open one. The attributes a plugin manages
 //   (plugins.own) keep their values in the browser (morph.updating, before the morph applies them);
 // - runs a modal's close-action, a method of the Livewire component around it
-//   (data-close-action="cancel" calls $wire.cancel()).
+//   (data-close-action="cancel" calls $wire.cancel()), when the user closed it (acun:modal:closed with
+//   reason 'user'; the modal plugin only reports the reason).
 // wire:model on acun:modal / acun:drawer is Livewire's own x-model: adapters/alpine.js ties it to
 // the plugin (Livewire always brings Alpine).
 
+import { EVENTS } from '../core/events.js';
 import { plugins } from '../core/plugins.js';
 
 /** @import { AcunWindow, HostElement, LivewireLike, WireLike } from '../core/types.js' */
@@ -18,6 +20,17 @@ import { plugins } from '../core/plugins.js';
  */
 export function keepPluginStateThroughMorphs(Livewire) {
     Livewire.hook('morph.updating', (/** @type {{ el: Element, toEl: Element }} */ { el, toEl }) => plugins.keepOwned(el, toEl));
+}
+
+/**
+ * Called once by the runtime, when Livewire is on the page: a modal the user closed runs its close-action.
+ */
+export function runCloseActions() {
+    window.addEventListener(EVENTS.modal.closed, (event) => {
+        const root = /** @type {Element | null} */ (event.target instanceof Element ? event.target : null);
+        const action = root?.getAttribute('data-close-action');
+        if (root && action && /** @type {CustomEvent<{ reason?: string }>} */ (event).detail?.reason === 'user') callComponent(root, action);
+    });
 }
 
 /**

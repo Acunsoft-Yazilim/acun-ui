@@ -48,7 +48,7 @@ import { isDark, tokenColor } from './appearance/theme.js';
 import { modalPlugin } from './plugins/modal.js';
 import { drawerPlugin } from './plugins/drawer.js';
 import { connectAlpine, scope } from './adapters/alpine.js';
-import { keepPluginStateThroughMorphs } from './adapters/livewire.js';
+import { keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
 import { drawer, drawerScope } from './components/drawer.js';
 import { modal, modalScope } from './components/modal.js';
 
@@ -150,6 +150,7 @@ function setup(runtime, { observe: watch = true }) {
     onLivewire(syncSelectValues);
     onLivewire(skipDetachedMorphs);
     onLivewire(keepPluginStateThroughMorphs);
+    onLivewire(runCloseActions);
     keepListsInView();
     reloadWhenLeavingForcedLayout();
     onNavigated(forgetDetachedOverlays);

@@ -7,6 +7,10 @@ import type { LivewireLike, WireLike } from '../core/types.js';
  */
 export declare function keepPluginStateThroughMorphs(Livewire: LivewireLike): void;
 /**
+ * Called once by the runtime, when Livewire is on the page: a modal the user closed runs its close-action.
+ */
+export declare function runCloseActions(): void;
+/**
  * The $wire of the Livewire component element is in, or null.
  *
  * @param {Element} element

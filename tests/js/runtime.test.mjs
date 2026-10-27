@@ -296,10 +296,12 @@ test('modals open and close by the API, the new events and the first names; one 
     assert.equal(AcunUI.scrollLock.count, 0);
     assert.deepEqual(events.slice(0, 5), [
         ['acun:modal:opened', { name: 'bir' }],
-        ['acun:modal:closed', { name: 'bir' }],
-        ['modal-closed', { name: 'bir' }],
+        // Replaced by another modal: as when the user closes it (its close-action runs).
+        ['acun:modal:closed', { name: 'bir', reason: 'user' }],
+        ['modal-closed', { name: 'bir', reason: 'user' }],
         ['acun:modal:opened', { name: 'iki' }],
-        ['acun:modal:closed', { name: 'iki' }],
+        // Closed by a command (the page or the server asked).
+        ['acun:modal:closed', { name: 'iki', reason: 'command' }],
     ]);
 });
 
@@ -334,6 +336,13 @@ test('a modal opened from inside another goes on top of it; a replaced one tells
     assert.deepEqual(calls, ['kapat']);
     AcunUI.modal.close();
     await settle();
+
+    // Closed by a command (the page or the server asked): no close-action.
+    AcunUI.modal.open('duzenle');
+    await settle();
+    AcunUI.modal.close('duzenle');
+    await settle();
+    assert.deepEqual(calls, ['kapat'], 'A close the page asked for does not call the server back.');
     window.Livewire.find = find;
 });
 
