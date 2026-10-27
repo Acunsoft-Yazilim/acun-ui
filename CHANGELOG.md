@@ -10,6 +10,8 @@
 - Fixed: after wire:navigate from one scope to another and back (panel → store → panel), the runtime kept the other page's settings (theme, colours, the browser storage key). The settings island of `acun:layout.head` now carries an id per response (`data-acun-ui-config="…"`), so the page shown always has the newest island, and the runtime removes the older ones.
 - Fixed: Escape inside a modal `<dialog>` the page opened in an `acun:modal` or `acun:drawer` closed the outer dialog and cancelled the browser's own close of the `<dialog>`, leaving the page inert. The browser now closes the `<dialog>` and the outer dialog stays open.
 - Fixed: a dialog opened from a menu item (a dropdown item with `data-acun-open`) gave the focus back to the hidden item when it closed, so the focus was lost. It now goes to the element focused when the dialog opened (the menu's button); with nowhere to go, the focus leaves the closed dialog.
+- A trigger (`data-acun-open`, `data-acun-toggle`) that is or holds a link opens its component without also following the link; a middle click or a click with a modifier key (a new tab) is left to the link.
+- A modal or drawer removed while open (a Livewire morph, an `@if`, an unmount) sets its triggers back to `aria-expanded="false"` and sends its closed events, so a bound property learns it closed.
 - Fixed: `acun:search` with a value that is not text (`:value="request('q')"` and `?q[]=x` in the URL) failed the page; the field is now empty.
 
 ## 2.2.0 (2026-10-22)

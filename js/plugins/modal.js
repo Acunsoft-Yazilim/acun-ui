@@ -152,6 +152,14 @@ function createModal(root) {
             cancelLeave();
             openModals.delete(instance);
             overlays.close(root);
+            // Removed while open (a morph, an @if, an unmount): the triggers and the listeners learn it closed.
+            if (isOpen) {
+                isOpen = false;
+                plugins.expand(name(), false);
+                const target = root.isConnected ? root : window;
+                dispatch(EVENTS.modal.closed, { name: name() }, target);
+                dispatch('modal-closed', { name: name() }, target);
+            }
         },
     };
 

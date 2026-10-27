@@ -178,6 +178,14 @@ function createDrawer(root) {
             stop.splice(0).forEach((undo) => undo());
             cancelLeave();
             overlays.close(root);
+            // Removed while open (a morph, an @if, an unmount): the triggers and the listeners learn it closed.
+            if (opened) {
+                opened = false;
+                plugins.expand(name(), false);
+                const target = root.isConnected ? root : window;
+                dispatch(EVENTS.drawer.closed, { name: name() }, target);
+                dispatch('drawer-state-changed', { name: name(), open: false }, target);
+            }
         },
     };
 

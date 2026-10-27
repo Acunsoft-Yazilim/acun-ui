@@ -339,14 +339,21 @@ function closestClosable(element) {
 function onClick(event) {
     const trigger = isElement(event.target) ? /** @type {HTMLElement | null} */ (event.target.closest(TRIGGERS)) : null;
     if (!trigger) return;
+    // A middle click or one with a modifier key opens a link elsewhere (a new tab): not the component.
+    if (event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-    act(trigger);
+    // A link that opens a component (an href kept as a fallback) does not also leave the page.
+    const link = /** @type {Element} */ (event.target).closest('a[href]');
+    if (act(trigger) && link && (trigger.contains(link) || link.contains(trigger))) event.preventDefault();
     // As Alpine's $dispatch(name) sends it (no detail): a confirmation's "{name}-confirmed".
     const notice = trigger.getAttribute('data-acun-dispatch');
     if (notice) trigger.dispatchEvent(new CustomEvent(notice, { bubbles: true, composed: true, cancelable: true }));
 }
 
-/** @param {HTMLElement} trigger */
+/**
+ * @param {HTMLElement} trigger
+ * @returns {boolean} whether it opened or toggled a component
+ */
 function act(trigger) {
     const open = trigger.getAttribute('data-acun-open');
     const toggle = open === null ? trigger.getAttribute('data-acun-toggle') : null;
@@ -357,7 +364,7 @@ function act(trigger) {
 
         const opener = openerOf(trigger);
         targets.forEach((instance) => (toggle !== null && instance.isOpen ? instance.close?.() : instance.open?.({ opener })));
-        return;
+        return targets.length > 0;
     }
 
     const now = trigger.hasAttribute('data-acun-close-now');
@@ -369,10 +376,11 @@ function act(trigger) {
 
     if (!targets.length) {
         console.error(`[Acun UI] ${attribute} is not inside a component it can close${target ? ` and nothing is named "${target}"` : ''}.`, trigger);
-        return;
+        return false;
     }
 
     targets.forEach((instance) => (!now && instance.requestClose ? instance.requestClose() : instance.close?.()));
+    return false;
 }
 
 /**

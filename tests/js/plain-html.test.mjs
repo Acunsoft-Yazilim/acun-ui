@@ -422,3 +422,36 @@ test('a hidden opener without a visible fallback: the focus does not stay inside
     await sleep(250);
     assert.equal(root('tek').contains(document.activeElement), false);
 });
+
+test('a modal removed while open: its trigger is collapsed again and the closed event is sent', async () => {
+    await mount(`<button type="button" id="sil-ac" data-acun-open="silinen" aria-expanded="false">Aç</button>${modalHtml('silinen')}`);
+    byId('sil-ac').click();
+    await settle();
+    assert.equal(byId('sil-ac').getAttribute('aria-expanded'), 'true');
+
+    const closed = [];
+    window.addEventListener('acun:modal:closed', (event) => closed.push(event.detail.name), { once: true });
+    root('silinen').remove();
+    await settle();
+    assert.equal(byId('sil-ac').getAttribute('aria-expanded'), 'false');
+    assert.deepEqual(closed, ['silinen']);
+    assertReleased('removed while open');
+});
+
+test('a link trigger opens the component without leaving the page; a click with a modifier key is the link\'s', async () => {
+    await mount(`<a id="baglanti" href="/siparisler/4821" data-acun-open="baglantili">Sipariş</a>${modalHtml('baglantili')}`);
+
+    const plain = new window.MouseEvent('click', { bubbles: true, cancelable: true });
+    byId('baglanti').dispatchEvent(plain);
+    await settle();
+    assert.equal(plain.defaultPrevented, true, 'the page stays');
+    assert.equal(isOpen('baglantili'), true);
+    AcunUI.modal.close('baglantili');
+    await sleep(250);
+
+    const newTab = new window.MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+    byId('baglanti').dispatchEvent(newTab);
+    await settle();
+    assert.equal(newTab.defaultPrevented, false);
+    assert.equal(isOpen('baglantili'), false, 'Ctrl+click opens the link in a new tab, not the dialog');
+});
