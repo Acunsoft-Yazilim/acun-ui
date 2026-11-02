@@ -34,12 +34,12 @@ const html = skip ? {} : render({
 const { menu: menuButton = '', ...parts } = html;
 const markup = Object.values(parts).join('\n');
 
-// The command palette's dialog is teleported to <body> by Alpine; the page puts it there itself.
+// The command palette's layer is hidden until it opens (the runtime does not run here); the page opens it itself.
 const page = `<div id="card" class="m-4 rounded-sm bg-surface p-4">${markup}</div>`;
-const teleport = `document.querySelectorAll('template').forEach((template) => document.body.append(template.content.cloneNode(true)));`;
+const openPalette = `document.querySelectorAll('[data-slot^="command-palette-"]').forEach((part) => { part.hidden = false; part.setAttribute('data-open', ''); });`;
 
 const measureText = `
-    ${teleport}
+    ${openPalette}
     const root = document.documentElement;
     const measure = () => {
         const result = {};

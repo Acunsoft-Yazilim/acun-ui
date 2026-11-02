@@ -1,7 +1,7 @@
 // @ts-nocheck: not type-checked yet; typed progressively (ARCHITECTURE.md, ADR-008).
 //
-// acun:passkey-button: x-data="acunPasskey({ mode, optionsUrl, actionUrl, optionsMethod,
-// actionMethod, optionsGet, nameField })" (the Blade component prints it).
+// acun:passkey-button's exchange, in a chunk of its own: js/plugins/passkey.js loads it on the first
+// press (the 2.x markup's Alpine data, acunPasskey, is here too).
 //
 // Adds a passkey to the signed-in account (mode: register) or signs in with one (mode: login).
 // The kit runs only the browser's part (navigator.credentials). The two server steps are the
@@ -137,7 +137,12 @@ async function requestJson(url, { method = 'POST', body } = {}) {
 // The user closed the browser's passkey window or it timed out: no message, they can try again.
 const CANCELLED = ['NotAllowedError', 'AbortError'];
 
-export function passkey({
+/**
+ * The whole exchange of one button press: the options, the browser's window, the answer to the
+ * server. Returns the server's answer; throws what failed (a cancelled window: NotAllowedError or
+ * AbortError). wire: the Livewire component around the button ($wire), for the method steps.
+ */
+export async function runPasskey({
     mode = 'login',
     optionsUrl = null,
     actionUrl = null,
@@ -145,7 +150,45 @@ export function passkey({
     actionMethod = null,
     optionsGet = false,
     nameField = null,
-} = {}) {
+} = {}, wire = null) {
+    const json = optionsMethod ? await wire.call(optionsMethod) : await requestJson(optionsUrl, { method: optionsGet ? 'GET' : 'POST' });
+    const credential = mode === 'register'
+        ? await navigator.credentials.create({ publicKey: creationOptions(json) })
+        : await navigator.credentials.get({ publicKey: requestOptions(json) });
+    const answer = credentialJson(credential);
+    const name = nameField ? document.querySelector(nameField)?.value?.trim() || null : null;
+
+    return actionMethod ? wire.call(actionMethod, answer, name) : requestJson(actionUrl, { body: name === null ? answer : { ...answer, name } });
+}
+
+/**
+ * After the exchange: the events from element, a safe redirect address followed (URL mode), and the
+ * message to show ('' for a cancelled window).
+ *
+ * @param {object} config
+ * @param {HTMLElement} element
+ * @param {any} [wire]
+ * @returns {Promise<string>}
+ */
+export async function pressPasskey(config, element, wire = null) {
+    const mode = config.mode ?? 'login';
+    try {
+        const result = await runPasskey(config, wire);
+        dispatch('acun:passkey:done', { mode, result: result ?? null }, element);
+        const redirect = config.actionUrl ? safeUrl(result?.redirect) : null;
+        if (redirect) window.location.assign(redirect);
+
+        return '';
+    } catch (error) {
+        const name = error?.name ?? 'Error';
+        dispatch('acun:passkey:failed', { mode, error: name, message: error?.message ?? '', status: error?.status ?? null }, element);
+
+        return CANCELLED.includes(name) ? '' : error?.body?.message ?? element.dataset.errorText ?? String(error?.message ?? name);
+    }
+}
+
+/** Deprecated (3.0): the Alpine data of the 2.x markup (x-data="acunPasskey(…)"); the plugin runs the button now. */
+export function passkey(config = {}) {
     return {
         supported: true,
         busy: false,
@@ -160,38 +203,8 @@ export function passkey({
 
             this.busy = true;
             this.error = '';
-
-            try {
-                const options = await this.options();
-                const credential = mode === 'register'
-                    ? await navigator.credentials.create({ publicKey: creationOptions(options) })
-                    : await navigator.credentials.get({ publicKey: requestOptions(options) });
-                const result = await this.send(credentialJson(credential));
-
-                dispatch('acun:passkey:done', { mode, result: result ?? null }, this.$el);
-                // URL mode: a sign-in answer with a (safe) redirect address goes there.
-                const redirect = actionUrl ? safeUrl(result?.redirect) : null;
-                if (redirect) window.location.assign(redirect);
-            } catch (error) {
-                const name = error?.name ?? 'Error';
-                if (!CANCELLED.includes(name)) this.error = error?.body?.message ?? this.$el.dataset.errorText ?? String(error?.message ?? name);
-                dispatch('acun:passkey:failed', { mode, error: name, message: error?.message ?? '', status: error?.status ?? null }, this.$el);
-            } finally {
-                this.busy = false;
-            }
-        },
-
-        options() {
-            if (optionsMethod) return this.$wire.call(optionsMethod);
-
-            return requestJson(optionsUrl, { method: optionsGet ? 'GET' : 'POST' });
-        },
-
-        send(credential) {
-            const name = nameField ? document.querySelector(nameField)?.value?.trim() || null : null;
-            if (actionMethod) return this.$wire.call(actionMethod, credential, name);
-
-            return requestJson(actionUrl, { body: name === null ? credential : { ...credential, name } });
+            this.error = await pressPasskey(config, this.$el, this.$wire);
+            this.busy = false;
         },
     };
 }

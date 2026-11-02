@@ -63,6 +63,9 @@ import { dismissiblePlugin } from './plugins/dismissible.js';
 import { cardPlugin } from './plugins/card.js';
 import { revealPlugin } from './plugins/reveal.js';
 import { searchPlugin } from './plugins/search.js';
+import { commandPalettePlugin } from './plugins/command-palette.js';
+import { themeSwitcherPlugin, themeSwitcherScope } from './plugins/theme-switcher.js';
+import { passkeyPlugin } from './plugins/passkey.js';
 import { scrollShadowsPlugin } from './plugins/scroll-shadows.js';
 import { downloadTextPlugin } from './plugins/download-text.js';
 import { tableScrollPlugin } from './plugins/table-scroll.js';
@@ -188,6 +191,9 @@ function setup(runtime, { observe: watch = true }) {
     plugins.define('card', cardPlugin);
     plugins.define('reveal', revealPlugin);
     plugins.define('search', searchPlugin);
+    plugins.define('command-palette', commandPalettePlugin);
+    plugins.define('theme-switcher', themeSwitcherPlugin);
+    plugins.define('passkey', passkeyPlugin);
     plugins.define('scroll-shadows', scrollShadowsPlugin);
     plugins.define('download-text', downloadTextPlugin);
     plugins.define('table-scroll', tableScrollPlugin);
@@ -198,6 +204,7 @@ function setup(runtime, { observe: watch = true }) {
     scope('tabs', '[data-acun-tabs]', tabsScope);
     scope('accordion', '[data-acun-accordion]', accordionScope);
     scope('collapse', '[data-acun-collapse]', collapseScope);
+    scope('theme-switcher', '[data-acun-theme-switcher]', themeSwitcherScope);
     scope('toasts', '[data-acun-toasts]', toastsScope);
     startPlugins({ observe: watch });
 
@@ -248,7 +255,8 @@ const liveInit = other?.init ?? init;
 const liveDestroy = other?.destroy ?? destroy;
 const liveObserve = other?.observe ?? observe;
 
-// acun:passkey-button: its Alpine data comes in a chunk of its own, on pages that have one.
+// The 2.x markup of acun:passkey-button (x-data="acunPasskey(…)", data-acun-component="passkey"): its Alpine
+// data comes in a chunk of its own, on pages that have one. The component itself is the passkey plugin now.
 if (inBrowser) liveComponents.define('passkey', () => import('./components/passkey.js').then(({ passkey }) => /** @type {AcunWindow} */ (window).Alpine?.data('acunPasskey', passkey)));
 
 export {
@@ -280,6 +288,9 @@ export {
     cardPlugin,
     revealPlugin,
     searchPlugin,
+    commandPalettePlugin,
+    themeSwitcherPlugin,
+    passkeyPlugin,
     scrollShadowsPlugin,
     downloadTextPlugin,
     tableScrollPlugin,

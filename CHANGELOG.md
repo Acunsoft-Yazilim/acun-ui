@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- The command palette, the theme switcher and the passkey button work without Alpine (stage 2.6): the runtime's plugins (`data-acun-command-palette`, `data-acun-theme-switcher`, `data-acun-passkey`) drive them, so every interactive component of the free kit except the carousel runs in plain HTML with `dist/acun-ui.js` alone.
+- `acun:command-palette`: the options are on the page from the start (server-rendered) and the plugin hides the ones that don't match; filtering (Turkish case), group headings, `aria-activedescendant`, the arrow keys, Home / End (new), Enter, ⌘K / Ctrl+K, the `command-palette-open` event and wire:navigate work as before. The layer moves to the end of `<body>` when the plugin mounts (was an Alpine teleport), opens and closes with CSS transitions (`data-open`), and the empty row is announced through the same status line.
+- `acun:theme-switcher` is a view of `AcunUI.appearance`: a radio group (or a checkbox) with `data-appearance` shows and changes that choice, whoever else changes it. `acun:theme-switcher.section` has a new `setting` prop (`mode`, `brandColor`, `skin`, `contentWidth`, `sidebar`, `navbarMode`) for the kit's choices; `value` and `change` keep working on Alpine pages for choices of your own (deprecated for the kit's, removed in 3.0). Links, buttons and forms that reload the page with a server-kept choice carry `data-switcher-keep-open` (was `x-on:click="keepOpen()"`, which still works on Alpine pages). The drawer's triggers are `data-acun-toggle` buttons. Acun Pro's panel and storefront sections use `setting` and `data-switcher-keep-open`.
+- `acun:passkey-button`: its settings are `data-*` attributes on the root (was `x-data="acunPasskey(…)"`); the WebAuthn exchange still loads on the first press. `acunPasskey` stays for 2.x markup of your own (deprecated, removed in 3.0). The unsupported note and the error line use the `hidden` attribute.
+- `dist/acun-ui.js` is 23 KB gzip (was 20.5 KB): the three plugins replace the Alpine code the components printed into every page.
+
 ## 2.2.0 (2026-10-27)
 
 - `AcunUI.appearance` works on a page without `acun:layout.head` (plain HTML, React, Vue): the first setter starts the choices from the defaults (the setters did nothing there). The plain HTML example's colour picker uses `setBrandColor()`, so the colours on the primary fill keep their contrast.

@@ -143,8 +143,9 @@ final class LayoutSettingsTest extends TestCase
         foreach (['evil.example', 'Kötü', 'Kısa', 'Adlı', 'Boş', '#123456'] as $skipped) {
             self::assertStringNotContainsString($skipped, $picker);
         }
-        // The custom colour's starting value reads the same filtered list.
-        self::assertStringContainsString('presets: '.\Illuminate\Support\Js::from(['firma' => '#0f766e']), $picker);
+        // The custom colour's starting value reads the same filtered list (the presets' data-color).
+        self::assertSame(1, substr_count($picker, 'data-color="'));
+        self::assertStringContainsString('value="firma" data-color="#0f766e"', $picker);
     }
 
     /** T3-D6: "$" also matched before a trailing newline, so "#aabbcc\n" reached the style attribute. */

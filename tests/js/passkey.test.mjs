@@ -152,5 +152,5 @@ test('a browser without passkeys disables the button and says why', async () => 
     await settle();
 
     assert.equal(document.querySelector('#login').disabled, true);
-    assert.equal(document.querySelector('#login').closest('[x-data]').querySelector('p[x-show]').style.display, '');
+    assert.equal(document.querySelector('#login').closest('[data-acun-passkey]').querySelector('[data-slot="passkey-unsupported"]').hidden, false);
 });

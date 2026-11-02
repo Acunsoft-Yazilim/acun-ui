@@ -21,7 +21,8 @@
 
 {{--
     A passkey button. The kit runs the browser's part (navigator.credentials, the core runtime's
-    acunPasskey); the options and the check of the answer are the application's WebAuthn code:
+    passkey plugin: js/plugins/passkey.js, no Alpine); the options and the check of the answer are
+    the application's WebAuthn code:
 
         <acun:passkey-button mode="login" options-url="/passkeys/login/options" action-url="/passkeys/login" />
         <acun:passkey-button mode="register" options-method="passkeyOptions" action-method="addPasskey" />
@@ -30,37 +31,26 @@
 --}}
 @php
     $label ??= $mode === 'register' ? __('Add a passkey') : __('Sign in with a passkey');
-    $config = [
-        'mode' => $mode === 'register' ? 'register' : 'login',
-        'optionsUrl' => $optionsUrl,
-        'actionUrl' => $actionUrl,
-        'optionsMethod' => $optionsMethod,
-        'actionMethod' => $actionMethod,
-        'optionsGet' => (bool) $optionsGet,
-        'nameField' => $nameField,
-    ];
 @endphp
 
 <div
-    x-data="acunPasskey(@js($config))"
-    data-acun-component="passkey"
+    data-acun-passkey
+    data-mode="{{ $mode === 'register' ? 'register' : 'login' }}"
+    @if ($optionsUrl) data-options-url="{{ $optionsUrl }}" @endif
+    @if ($actionUrl) data-action-url="{{ $actionUrl }}" @endif
+    @if ($optionsMethod) data-options-method="{{ $optionsMethod }}" @endif
+    @if ($actionMethod) data-action-method="{{ $actionMethod }}" @endif
+    @if ($optionsGet) data-options-get @endif
+    @if ($nameField) data-name-field="{{ $nameField }}" @endif
     data-error-text="{{ __('The passkey could not be used. Please try again.') }}"
     {{ $attributes->only('class')->class('space-y-2') }}
 >
-    <acun:button
-        :variant="$variant"
-        :size="$size"
-        x-on:click="run()"
-        {{-- While it works it stays focusable (aria-disabled; run() does nothing then): disabled, it dropped the keyboard focus. --}}
-        x-bind:disabled="! supported"
-        x-bind:aria-disabled="busy ? 'true' : null"
-        x-bind:aria-busy="busy ? 'true' : 'false'"
-        {{ $attributes->except('class') }}
-    >
+    {{-- While it works it stays focusable (aria-disabled; a press does nothing then): disabled, it dropped the keyboard focus. --}}
+    <acun:button :variant="$variant" :size="$size" data-slot="passkey-button" aria-busy="false" {{ $attributes->except('class') }}>
         <acun:icon name="finger-print" size="4" />
         <span>{{ $label }}</span>
     </acun:button>
 
-    <p x-show="! supported" x-cloak class="text-xs text-muted">{{ __('This browser does not support passkeys.') }}</p>
-    <p x-show="error" x-text="error" x-cloak role="alert" class="text-xs text-danger-ink"></p>
+    <p data-slot="passkey-unsupported" hidden class="text-xs text-muted">{{ __('This browser does not support passkeys.') }}</p>
+    <p data-slot="passkey-error" role="alert" hidden class="text-xs text-danger-ink"></p>
 </div>

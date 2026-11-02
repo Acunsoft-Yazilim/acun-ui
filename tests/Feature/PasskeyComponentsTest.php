@@ -18,7 +18,7 @@ final class PasskeyComponentsTest extends TestCase
             self::config($html),
         );
         self::assertStringContainsString('class="space-y-2 mt-4"', $html);
-        self::assertStringContainsString('x-on:click="run()"', $html);
+        self::assertStringContainsString('data-slot="passkey-button"', $html);
         self::assertStringContainsString('Geçiş anahtarı ekle', $html);
         self::assertStringContainsString('role="alert"', $html);
     }
@@ -59,12 +59,21 @@ final class PasskeyComponentsTest extends TestCase
         self::assertStringNotContainsString('wire:click', Blade::render('<acun:passkey-list :passkeys="[[\'id\' => 1, \'name\' => \'iPhone\']]" />'));
     }
 
-    /** The acunPasskey(...) settings the button prints (Js::from: JSON.parse('…')). */
+    /** The settings the button prints on its root for the passkey plugin (data-mode, data-options-url…). */
     private static function config(string $html): array
     {
-        self::assertMatchesRegularExpression("/x-data=\"acunPasskey\\(JSON\\.parse\\('(.*?)'\\)\\)\"/", $html);
-        preg_match("/acunPasskey\\(JSON\\.parse\\('(.*?)'\\)\\)/", $html, $match);
+        self::assertMatchesRegularExpression('/<div\s[^>]*data-acun-passkey/', $html);
+        preg_match('/<div\s[^>]*data-acun-passkey[^>]*>/', $html, $root);
+        $data = fn (string $name): ?string => preg_match('/\sdata-'.$name.'="([^"]*)"/', $root[0], $match) ? html_entity_decode($match[1]) : null;
 
-        return json_decode(json_decode('"'.$match[1].'"'), true);
+        return [
+            'mode' => $data('mode'),
+            'optionsUrl' => $data('options-url'),
+            'actionUrl' => $data('action-url'),
+            'optionsMethod' => $data('options-method'),
+            'actionMethod' => $data('action-method'),
+            'optionsGet' => (bool) preg_match('/\sdata-options-get[\s>]/', $root[0]),
+            'nameField' => $data('name-field'),
+        ];
     }
 }

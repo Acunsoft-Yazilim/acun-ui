@@ -9,9 +9,12 @@
     // One choice out of a few, as native radios: value => label, or value => ['label' => …,
     // 'description' => …, 'icon' => …]. Side by side in a segmented bar; as cards when one has a description.
     'options' => [],
-    // With options: the Alpine expression of the chosen value ($store.navbar.mode).
+    // With options: the appearance choice the radios show and change (AcunUI.appearance, no Alpine):
+    // mode, brandColor, skin, contentWidth, sidebar (expanded or collapsed) or navbarMode.
+    'setting' => null,
+    // Deprecated (3.0), Alpine pages only: the expression of the chosen value ($store.navbar.mode) and of
+    // the function a choice goes to ($store.navbar.set). Use setting.
     'value' => null,
-    // With options: the Alpine expression of the function a choice goes to ($store.navbar.set).
     'change' => null,
     // Whether the section is a group named by its heading; null: when it has no options (its radio
     // group is named instead). false: the slot names its own controls (aria-labelledby the heading's id).
@@ -28,6 +31,10 @@
                 :options="['comfortable' => __('Comfortable'), 'compact' => __('Compact')]"
                 value="$store.density.value" change="$store.density.set" />
         </acun:theme-switcher>
+
+    setting ties the radios to one of the kit's appearance choices without Alpine (the switcher's
+    plugin keeps them in step): <acun:theme-switcher.section name="navbar" … setting="navbarMode" />.
+    A choice of your own still needs Alpine (value and change) or a script of its own.
 
     Native radios: Tab enters the group once, the arrow keys move the choice, and a screen reader
     reads the heading as the group's name. The heading's id is the id attribute when one is given
@@ -54,6 +61,7 @@
         <div
             role="radiogroup"
             aria-labelledby="{{ $headingId }}"
+            @if ($setting) data-appearance="{{ $setting }}" @endif
             @if ($change) x-on:change="({{ $change }})($event.target.value)" @endif
             @class(['grid grid-cols-2 gap-2' => $cards, 'flex gap-1 rounded-sm bg-sunken p-1' => ! $cards])
         >

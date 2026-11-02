@@ -40,7 +40,7 @@ final class ThemeSwitcherTest extends TestCase
     {
         $html = Blade::render('<acun:theme-switcher class="ms-auto" />');
 
-        self::assertStringContainsString('x-on:click="$store.appearance.toggle();', $html);
+        self::assertMatchesRegularExpression('~<button\s+type="button"\s+data-acun-theme-switcher="button"\s+data-dark="Koyu tema seçildi\."\s+data-light="Açık tema seçildi\."~', $html, 'The plugin switches the mode and says the new one.');
         self::assertStringContainsString('data-test="theme-toggle"', $html);
         self::assertMatchesRegularExpression('~class="flex size-9 [^"]*\bms-auto"~', $html, 'Attributes go on the button.');
         self::assertStringContainsString('Koyu moda geç', $html);
@@ -89,7 +89,7 @@ final class ThemeSwitcherTest extends TestCase
         $items = "[['key' => 'gece', 'name' => 'Gece', 'url' => '/tema/gece', 'active' => true], ['key' => 'gunduz', 'name' => 'Gündüz', 'url' => '/tema/gunduz', 'look' => 'modern']]";
         $themed = Blade::render('<acun:theme-switcher as="inline" :themes="'.$items.'" />');
         self::assertSame(['mode', 'color', 'theme'], self::sections($themed));
-        self::assertMatchesRegularExpression('~<a href="/tema/gece" x-on:click="keepOpen\(\)"\s+aria-current="true"~', $themed);
+        self::assertMatchesRegularExpression('~<a href="/tema/gece" data-switcher-keep-open\s+aria-current="true"~', $themed);
         self::assertMatchesRegularExpression('~<span data-theme="gunduz" class="[^"]*\bbg-page\b[^"]*rounded-\[12px\]~', $themed, 'A miniature in the theme\'s own tokens and look.');
         self::assertStringContainsString('(geçerli tema)', $themed);
         self::assertSame(['mode', 'color'], self::sections(Blade::render('<acun:theme-switcher as="inline" :themes="false" />')));
@@ -173,7 +173,7 @@ final class ThemeSwitcherTest extends TestCase
     {
         $edge = Blade::render('<acun:theme-switcher as="drawer" />');
         self::assertStringContainsString('data-theme-switcher="drawer"', $edge);
-        self::assertMatchesRegularExpression('~<button\s+type="button"\s+x-on:click="\$dispatch\(\'acun:drawer:open\', \{ name: \'theme-switcher\' \}\)"\s+class="group fixed top-1/2 right-0 ~', $edge, 'A gear on the right edge.');
+        self::assertMatchesRegularExpression('~<button\s+type="button"\s+data-acun-toggle="theme-switcher"\s+class="group fixed top-1/2 right-0 ~', $edge, 'A gear on the right edge.');
         self::assertStringContainsString('aria-label="Görünüm ayarları"', $edge);
         self::assertStringContainsString('aria-haspopup="dialog"', $edge);
         self::assertStringContainsString('aria-controls="theme-switcher"', $edge);
@@ -184,7 +184,7 @@ final class ThemeSwitcherTest extends TestCase
 
         $button = Blade::render('<acun:theme-switcher as="drawer" trigger="button" name="gorunum" label="Görünüm seçenekleri" title="Ayarlar" :description="false" />');
         self::assertDoesNotMatchRegularExpression('~class="group fixed~', $button);
-        self::assertMatchesRegularExpression('~<button\s+type="button"\s+x-on:click="\$dispatch\(\'acun:drawer:open\', \{ name: \'gorunum\' \}\)"\s+class="flex size-9 ~', $button, 'An icon button in place.');
+        self::assertMatchesRegularExpression('~<button\s+type="button"\s+data-acun-toggle="gorunum"\s+class="flex size-9 ~', $button, 'An icon button in place.');
         self::assertStringContainsString('aria-label="Görünüm seçenekleri"', $button);
         self::assertStringContainsString('data-acun-drawer="gorunum"', $button);
         self::assertStringContainsString('>Ayarlar</h3>', $button);
@@ -203,14 +203,15 @@ final class ThemeSwitcherTest extends TestCase
     public function test_reset_forgets_the_scope_and_may_return_a_server_choice_too(): void
     {
         $drawer = Blade::render('<acun:theme-switcher as="drawer" />');
-        self::assertStringContainsString('$store.customizer?.reset()', $drawer, 'The stores go back to the defaults and the scope\'s key is removed.');
-        self::assertMatchesRegularExpression('~<button[^>]*x-on:click="reset\(\)"[^>]*>\s*<svg[^>]*>.*?</svg>\s*Varsayılana döndür~s', $drawer);
+        self::assertMatchesRegularExpression('~data-acun-theme-switcher="drawer"\s+data-name="theme-switcher"~', $drawer, 'The plugin resets the choices (AcunUI.appearance.reset(): the scope\'s key is removed).');
+        self::assertMatchesRegularExpression('~<button[^>]*data-slot="theme-switcher-reset"[^>]*>\s*<svg[^>]*>.*?</svg>\s*Varsayılana döndür~s', $drawer);
+        self::assertStringContainsString('data-reset="Görünüm varsayılana döndü."', $drawer, 'What Reset did, for the status line.');
         self::assertMatchesRegularExpression('~<button[^>]*data-acun-close=""[^>]*>\s*Tamam~', $drawer, 'Done closes the drawer it is in.');
 
         self::assertStringNotContainsString('Varsayılana döndür', Blade::render('<acun:theme-switcher as="drawer" :reset="false" />'));
 
         $link = Blade::render('<acun:theme-switcher as="drawer" reset-url="/tema/gece?to=%2F" />');
-        self::assertMatchesRegularExpression('~<a href="/tema/gece\?to=%2F"[^>]*x-on:click="reset\(\); keepOpen\(\)"[^>]*data-drawer-keep-open~', $link, 'A link that also returns the server\'s choice; the drawer opens again on the next page.');
+        self::assertMatchesRegularExpression('~<a href="/tema/gece\?to=%2F"[^>]*data-slot="theme-switcher-reset"[^>]*data-switcher-keep-open[^>]*data-drawer-keep-open~', $link, 'A link that also returns the server\'s choice; the drawer opens again on the next page.');
         self::assertStringContainsString('<a href="#"', Blade::render('<acun:theme-switcher as="drawer" reset-url="javascript:alert(1)" />'));
     }
 

@@ -47,7 +47,7 @@
         <acun:theme-switcher as="inline" :sections="['color']" />  in a settings page
 
     Sections of your own go in the slot (acun:theme-switcher.section). A choice that reloads the page
-    (a theme, a header, the language: links and forms that call keepOpen()) opens the panel again at
+    (a theme, a header, the language: links, buttons and forms with data-switcher-keep-open) opens the panel again at
     once on the next page. 1.x tags, wrappers of this one until 3.0: acun:theme-toggle,
     acun:brand-color-picker, acun:theme-customizer and acun:shop.theme-switcher.
 --}}
@@ -64,15 +64,16 @@
 @if ($as === 'button')
 @if (in_array('light', $modes, true) && in_array('dark', $modes, true))
 {{--
-    One click switches to the dark mode, another back to light ($store.appearance.toggle(): <html
-    data-theme> changes at once and the choice is kept). The icon and the screen reader text follow
-    the dark: variant, not Alpine: data-theme is written before the first paint, so the right icon
-    shows on the first frame. The status next to it says the new mode to a screen reader.
+    One click switches to the dark mode, another back to light (AcunUI.appearance.toggleMode(): <html
+    data-theme> changes at once and the choice is kept; js/plugins/theme-switcher.js). The icon and the
+    screen reader text follow the dark: variant: data-theme is written before the first paint, so the
+    right icon shows on the first frame. The status next to it says the new mode to a screen reader.
 --}}
 <button
     type="button"
-    x-data
-    x-on:click="$store.appearance.toggle(); $el.nextElementSibling.textContent = $store.appearance.value === 'dark' ? @js(__('The dark theme is on.')) : @js(__('The light theme is on.'))"
+    data-acun-theme-switcher="button"
+    data-dark="{{ __('The dark theme is on.') }}"
+    data-light="{{ __('The light theme is on.') }}"
     title="{{ __('Change theme') }}"
     data-test="theme-toggle"
     {{ $attributes->merge(['class' => 'flex size-9 flex-none cursor-pointer items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus']) }}
@@ -116,62 +117,50 @@
 @foreach ($shown as $section)
 @switch ($section)
 @case ('mode')
-    <acun:theme-switcher.section name="mode" :title="__('Color mode')" :options="collect($modes)->mapWithKeys(fn ($mode) => [$mode => ['label' => $modeLabels[$mode][1], 'icon' => $modeLabels[$mode][0]]])->all()" value="$store.appearance.value" change="$store.appearance.set" />
+    <acun:theme-switcher.section name="mode" :title="__('Color mode')" :options="collect($modes)->mapWithKeys(fn ($mode) => [$mode => ['label' => $modeLabels[$mode][1], 'icon' => $modeLabels[$mode][0]]])->all()" setting="mode" />
     @break
 @case ('color')
     {{--
         Presets and a colour of the user's own, as one radio group plus the colour input. The choice goes
-        to $store.brand: the runtime measures its shades on the enabled themes' backgrounds (--ac-user-*).
-        "Default" is the page's own colour: the theme's --ac-tone-primary, which the user's colour never changes.
+        to AcunUI.appearance.setBrandColor(): the runtime measures its shades on the enabled themes'
+        backgrounds (--ac-user-*). "Default" is the page's own colour: the theme's --ac-tone-primary, which
+        the user's colour never changes (the plugin paints its swatch with it).
     --}}
     <acun:theme-switcher.section name="color" :id="$id.'-color'" :title="__('Primary color')" :group="false">
         <div
-            x-data="{
-                presets: @js(collect($presets)->map(fn ($preset) => $preset[0])),
-                themeColor: null,
-                get selected() { return $store.brand.color || 'default' },
-                get isCustom() { return /^#[0-9a-f]{6}$/i.test(this.selected) },
-                get themeHex() { return /^#[0-9a-f]{6}$/i.test(this.themeColor ?? '') ? this.themeColor.toLowerCase() : null },
-                get customColor() {
-                    if (this.isCustom) return this.selected;
-                    if (this.selected === 'default' && this.themeHex) return this.themeHex;
-                    return this.presets[this.selected] ?? this.themeHex ?? '#000000';
-                },
-                init() { this.themeColor = getComputedStyle(document.documentElement).getPropertyValue('--ac-tone-primary').trim() || null },
-                select(value) { $store.brand.set(value) },
-            }"
+            data-appearance="brandColor"
             class="flex flex-wrap items-center gap-2"
             role="radiogroup"
             aria-labelledby="{{ $id }}-color"
         >
             @foreach ($presets as $key => [$hex, $presetName])
                 <label class="relative size-9 cursor-pointer" title="{{ $presetName }}">
-                    <input data-acun-control type="radio" name="{{ $id }}-color" value="{{ $key }}" aria-label="{{ $presetName }}" class="peer sr-only" x-bind:checked="selected === @js((string) $key)" x-on:change="select(@js((string) $key))">
+                    <input data-acun-control type="radio" name="{{ $id }}-color" value="{{ $key }}" data-color="{{ $hex }}" aria-label="{{ $presetName }}" class="peer sr-only">
                     {{-- The default is the page's own colour; it carries white text (theming guide), so its tick stays white. --}}
                     <span
                         class="absolute inset-0 rounded-sm ring-offset-2 ring-offset-surface transition-shadow peer-checked:ring-2 peer-checked:ring-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"
                         style="background: {{ $hex }}"
-                        @if ($key === 'default') x-bind:style="themeColor ? { background: themeColor } : {}" @endif
+                        @if ($key === 'default') data-slot="theme-switcher-default-swatch" @endif
                     ></span>
                     {{-- The tick is a graphic: white while it stands out 3:1 on the swatch, else the light theme's ink. --}}
-                    <svg x-show="selected === @js((string) $key)" x-cloak data-theme="light" class="pointer-events-none absolute inset-0 m-auto size-4 {{ \Acun\Ui\Support\Contrast::whiteReads($hex) ? 'text-surface' : 'text-ink' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                    <svg data-theme="light" class="pointer-events-none absolute inset-0 m-auto hidden size-4 peer-checked:block {{ \Acun\Ui\Support\Contrast::whiteReads($hex) ? 'text-surface' : 'text-ink' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
                 </label>
             @endforeach
 
             @if ($custom)
+                {{-- data-custom while the colour is the user's own (the plugin keeps it, the swatch and the input in step). --}}
                 <label
-                    class="relative flex h-9 cursor-pointer items-center gap-2 rounded-sm px-3 text-sm ring-1 ring-line ring-inset hover:ring-line-strong has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus"
-                    x-bind:class="isCustom && 'ring-2 ring-ink'"
+                    data-slot="theme-switcher-custom"
+                    class="relative flex h-9 cursor-pointer items-center gap-2 rounded-sm px-3 text-sm ring-1 ring-line ring-inset hover:ring-line-strong has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus data-custom:ring-2 data-custom:ring-ink"
                     title="{{ __('Pick your own color') }}"
                 >
-                    <span class="size-5 rounded-sm ring-1 ring-ink/10" x-bind:style="`background: ${customColor}`"></span>
+                    <span data-slot="theme-switcher-custom-swatch" class="size-5 rounded-sm ring-1 ring-ink/10"></span>
                     <span class="font-medium text-body">{{ __('Custom') }}</span>
-                    <span x-show="isCustom" x-cloak class="font-mono text-xs text-muted uppercase" x-text="selected"></span>
+                    <span data-slot="theme-switcher-custom-value" hidden class="font-mono text-xs text-muted uppercase"></span>
                     <input
                         data-acun-control
+                        data-slot="theme-switcher-custom-input"
                         type="color"
-                        x-bind:value="customColor"
-                        x-on:input.debounce.150ms="select($event.target.value.toLowerCase())"
                         class="absolute inset-0 size-full cursor-pointer opacity-0"
                         aria-label="{{ __('Pick your own color') }}"
                     />
@@ -190,7 +179,7 @@
         <ul class="space-y-2">
             @foreach ($items as $item)
                 <li>
-                    <a href="{{ $item['url'] }}" x-on:click="keepOpen()" @if ($item['active']) aria-current="true" @endif @class([
+                    <a href="{{ $item['url'] }}" data-switcher-keep-open @if ($item['active']) aria-current="true" @endif @class([
                         'flex items-center gap-3 rounded-sm p-2 ring-inset transition-colors focus-visible:outline-2 focus-visible:outline-focus',
                         'bg-primary-tint ring-2 ring-primary-ink' => $item['active'],
                         'ring-1 ring-line hover:bg-hover hover:ring-line-strong' => ! $item['active'],
@@ -238,41 +227,14 @@
 @endforeach
 {{ $slot }}
 @php($body = ob_get_clean())
+{{--
+    Behaviour: js/plugins/theme-switcher.js (no Alpine). A link, button or form with data-switcher-keep-open
+    reloads the page with a choice the server keeps (a theme, a header, the language): the drawer opens again
+    at once there. Reset forgets the scope's saved choices (the other scopes keep theirs).
+--}}
 <div
-    x-data="{
-        // The page reloads after a choice the server keeps (a theme, a header, the language): the
-        // panel opens again at once there (sessionStorage 'acun-ui:{scope}:open' holds its name).
-        openKey() { return 'acun-ui:' + ($store.appearance?.scope ?? 'app') + ':open' },
-        keepOpen() {
-            if (! @js($drawer)) return
-            try { sessionStorage.setItem(this.openKey(), @js($name)) } catch {}
-        },
-        // Back to the defaults: the scope's saved choices are forgotten (the other scopes keep theirs).
-        reset() {
-            $store.customizer?.reset()
-            const status = document.getElementById(@js($id.'-status'))
-            if (! status) return
-            status.textContent = ''
-            setTimeout(() => (status.textContent = @js(__('The appearance is back to its defaults.'))), 100)
-        },
-        init() {
-            if (! @js($drawer)) return
-            try {
-                if (sessionStorage.getItem(this.openKey()) !== @js($name)) return
-                sessionStorage.removeItem(this.openKey())
-            } catch { return }
-            // Open at once, without sliding in: it looks as if the panel never closed. The drawer slides
-            // in a couple of frames after it opens (later while the page is still loading), so sliding
-            // stays off until its panel is in place.
-            this.$el.dataset.instant = ''
-            const panel = this.$el.querySelector('[data-acun-drawer] [data-slot=drawer-panel]')
-            const settle = () => { watch.disconnect(); requestAnimationFrame(() => delete this.$el.dataset.instant) }
-            const watch = new MutationObserver(() => panel.hasAttribute('data-open') && settle())
-            watch.observe(panel, { attributes: true, attributeFilter: ['data-open'] })
-            setTimeout(settle, 3000)
-            this.$nextTick(() => this.$dispatch('acun:drawer:open', { name: @js($name) }))
-        },
-    }"
+    data-acun-theme-switcher="{{ $as }}"
+    @if ($drawer) data-name="{{ $name }}" @endif
     data-theme-switcher="{{ $as }}"
     {{ $attributes->class(['data-instant:**:transition-none!' => $drawer, 'space-y-7' => ! $drawer]) }}
 >
@@ -280,7 +242,7 @@
     @if ($trigger === 'edge')
         <button
             type="button"
-            x-on:click="$dispatch('acun:drawer:open', { name: @js($name) })"
+            data-acun-toggle="{{ $name }}"
             class="group fixed top-1/2 right-0 z-40 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-l-sm bg-primary text-on-primary shadow-lg transition-[width,background-color] hover:w-11 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             aria-label="{{ $label ?? __('Appearance settings') }}"
             title="{{ $label ?? __('Appearance settings') }}"
@@ -293,7 +255,7 @@
     @elseif ($trigger === 'button')
         <button
             type="button"
-            x-on:click="$dispatch('acun:drawer:open', { name: @js($name) })"
+            data-acun-toggle="{{ $name }}"
             class="flex size-9 flex-none cursor-pointer items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             aria-label="{{ $label ?? __('Appearance settings') }}"
             title="{{ $label ?? __('Appearance settings') }}"
@@ -308,7 +270,7 @@
         {{-- data-drawer-keep-open: a link that reloads the page does not close the panel first. --}}
         <div class="space-y-7" data-drawer-keep-open>
             {{-- What Reset did, for a screen reader; first, so it adds no space (it is out of the flow). --}}
-            <p id="{{ $id }}-status" class="sr-only" role="status"></p>
+            <p id="{{ $id }}-status" data-slot="theme-switcher-status" data-reset="{{ __('The appearance is back to its defaults.') }}" class="sr-only" role="status"></p>
             @if ($description)
                 <p class="text-sm text-muted">{{ $description }}</p>
             @endif
@@ -317,11 +279,11 @@
 
         <acun:slot:footer>
             @if ($reset && $resetUrl !== null)
-                <acun:button variant="ghost" size="sm" :href="$resetUrl" x-on:click="reset(); keepOpen()" data-drawer-keep-open>
+                <acun:button variant="ghost" size="sm" :href="$resetUrl" data-slot="theme-switcher-reset" data-switcher-keep-open data-drawer-keep-open>
                     <acun:icon name="arrow-path" size="4" /> {{ __('Reset to defaults') }}
                 </acun:button>
             @elseif ($reset)
-                <acun:button variant="ghost" size="sm" x-on:click="reset()">
+                <acun:button variant="ghost" size="sm" data-slot="theme-switcher-reset">
                     <acun:icon name="arrow-path" size="4" /> {{ __('Reset to defaults') }}
                 </acun:button>
             @endif
@@ -329,7 +291,7 @@
         </acun:slot:footer>
     </acun:drawer>
 @else
-    <p id="{{ $id }}-status" class="sr-only" role="status"></p>
+    <p id="{{ $id }}-status" data-slot="theme-switcher-status" data-reset="{{ __('The appearance is back to its defaults.') }}" class="sr-only" role="status"></p>
     @if ($title)
         <p class="mb-3 text-sm font-medium text-ink">{{ $title }}</p>
     @endif
@@ -339,7 +301,7 @@
     {!! $body !!}
     @if ($reset)
         <div>
-            <acun:button variant="ghost" size="sm" :href="$resetUrl" x-on:click="reset()">
+            <acun:button variant="ghost" size="sm" :href="$resetUrl" data-slot="theme-switcher-reset">
                 <acun:icon name="arrow-path" size="4" /> {{ __('Reset to defaults') }}
             </acun:button>
         </div>

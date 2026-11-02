@@ -100,10 +100,12 @@ test('the command palette filters once per keystroke and keeps its list readable
     await settle();
 
     const input = document.querySelector('input[role="combobox"]');
-    const visible = () => [...document.querySelectorAll('[role="option"]')].map((option) => option.querySelector('.font-medium').textContent.trim().split(/\s+/)[0]);
+    // Shown means neither the element nor a row around it is hidden (the plugin toggles the hidden attribute).
+    const shown = (element) => !element.closest('[hidden]');
+    const visible = () => [...document.querySelectorAll('[role="option"]')].filter(shown).map((option) => option.querySelector('.font-medium').textContent.trim().split(/\s+/)[0]);
     // The first option of a group says the group's name to screen readers; the titles themselves are hidden from them.
-    const groupNames = () => [...document.querySelectorAll('[role="option"] .sr-only')].filter((span) => span.style.display !== 'none').map((span) => span.textContent);
-    const headings = () => [...document.querySelectorAll('[role="listbox"] p')].filter((p) => p.style.display !== 'none').map((p) => p.textContent);
+    const groupNames = () => [...document.querySelectorAll('[role="option"] .sr-only')].filter(shown).map((span) => span.textContent);
+    const headings = () => [...document.querySelectorAll('[role="listbox"] p')].filter(shown).map((p) => p.textContent);
 
     assert.deepEqual(visible(), ['İadeler', 'Siparişler', 'Kargolar', 'Kötü']);
     assert.deepEqual(headings(), ['Satış', 'Lojistik']);
@@ -121,8 +123,16 @@ test('the command palette filters once per keystroke and keeps its list readable
     await settle();
     assert.deepEqual(visible(), ['Kargolar'], 'The hint is searched too.');
     assert.deepEqual(headings(), ['Lojistik']);
-    assert.equal(input.getAttribute('aria-activedescendant'), document.querySelector('[role="option"]').id);
+    assert.equal(input.getAttribute('aria-activedescendant'), [...document.querySelectorAll('[role="option"]')].find(shown).id);
     assert.equal(input.getAttribute('aria-expanded'), 'true');
+
+    input.value = 'yok böyle';
+    input.dispatchEvent(new window.Event('input'));
+    await settle();
+    assert.deepEqual(visible(), []);
+    assert.ok(shown(document.querySelector('[data-slot="command-palette-empty"]')), 'The empty row shows.');
+    assert.equal(input.getAttribute('aria-expanded'), 'false');
+    assert.equal(input.hasAttribute('aria-activedescendant'), false);
 
     press('Escape', {}, input);
     await settle();
