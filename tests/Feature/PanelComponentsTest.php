@@ -217,7 +217,9 @@ final class PanelComponentsTest extends TestCase
 
         self::assertStringContainsString('role="navigation"', $html);
         self::assertStringContainsString('Sonuç yok', $html);
-        self::assertStringContainsString("closest('[wire\\\\:id]')", $html);
+        // The pagination plugin brings the Livewire component's top into view (plain-html.test.mjs).
+        self::assertStringContainsString('data-acun-pagination', $html);
+        self::assertStringNotContainsString('x-data', $html);
     }
 
     public function test_pagination_summary_is_one_translated_sentence_with_its_numbers(): void

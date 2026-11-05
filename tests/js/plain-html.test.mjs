@@ -984,3 +984,22 @@ test('a stacked table keeps its table roles, also on rows added later', async ()
     await mount('<div class="ui-table-box" data-acun-table-scroll><table class="ui-table"><tbody><tr><td>1</td></tr></tbody></table></div>');
     assert.equal(document.querySelector('[role]'), null);
 });
+
+test('pagination: a page button pressed below the top brings the Livewire component\'s top into view', async () => {
+    await mount(`<div wire:id="liste" id="liste"><nav data-acun-pagination><button type="button" id="sonraki">›</button><button type="button" id="kapali" disabled>‹</button><span id="bilgi">1–10</span></nav></div>`);
+    const component = document.getElementById('liste');
+    const scrolls = [];
+    component.scrollIntoView = (options) => scrolls.push(options);
+    let top = -200;
+    component.getBoundingClientRect = () => ({ top });
+
+    document.getElementById('sonraki').click();
+    document.getElementById('kapali').click();
+    document.getElementById('bilgi').click();
+    assert.deepEqual(scrolls, [{ block: 'start' }]);
+
+    // A list already in view does not move.
+    top = 40;
+    document.getElementById('sonraki').click();
+    assert.equal(scrolls.length, 1);
+});

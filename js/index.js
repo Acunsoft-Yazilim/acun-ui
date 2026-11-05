@@ -69,6 +69,7 @@ import { passkeyPlugin } from './plugins/passkey.js';
 import { scrollShadowsPlugin } from './plugins/scroll-shadows.js';
 import { downloadTextPlugin } from './plugins/download-text.js';
 import { tableScrollPlugin } from './plugins/table-scroll.js';
+import { paginationPlugin } from './plugins/pagination.js';
 import { connectAlpine, scope } from './adapters/alpine.js';
 import { followAppearanceThroughNavigation, keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
 import { drawer, drawerScope } from './components/drawer.js';
@@ -197,6 +198,7 @@ function setup(runtime, { observe: watch = true }) {
     plugins.define('scroll-shadows', scrollShadowsPlugin);
     plugins.define('download-text', downloadTextPlugin);
     plugins.define('table-scroll', tableScrollPlugin);
+    plugins.define('pagination', paginationPlugin);
     scope('modal', '[data-acun-modal]', modalScope);
     scope('drawer', '[data-acun-drawer]', drawerScope);
     scope('dropdown', '[data-acun-dropdown]', dropdownScope);
@@ -294,6 +296,7 @@ export {
     scrollShadowsPlugin,
     downloadTextPlugin,
     tableScrollPlugin,
+    paginationPlugin,
     // Deprecated (3.0): the Alpine data of the 2.0 drawer and modal; they delegate to the plugins.
     drawer,
     modal,

@@ -37,8 +37,7 @@
         class="flex flex-wrap items-center justify-between gap-3 p-3 bg-surface rounded-sm border border-line"
         role="navigation"
         aria-label="{{ __('Pagination Navigation') }}"
-        x-data
-        x-on:click="if ($event.target.closest('a, button:not([disabled])')) { const root = $el.closest('[wire\\:id]'); if (root && root.getBoundingClientRect().top < 0) root.scrollIntoView({ block: 'start' }); }"
+        data-acun-pagination
     >
         <div class="text-sm text-dim">
             @if ($paginator->isEmpty() && $paginator->onFirstPage())
