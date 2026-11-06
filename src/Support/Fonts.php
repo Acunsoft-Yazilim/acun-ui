@@ -13,7 +13,9 @@ use Illuminate\Support\HtmlString;
  * every page (one @font-face per weight, subset and format). This prints the same preload
  * links and a <link rel="stylesheet"> to the built file instead: cached by the browser,
  * nothing inline. While the Vite dev server runs it is @fonts as it is. Before Laravel 13
- * (no font plugin, no @fonts) it prints nothing: the fonts then come from the CSS.
+ * (no font plugin, no @fonts) it links the families from Bunny Fonts instead (fallback()), the
+ * provider the font plugin uses by default; config('acun-ui.fonts_fallback') false turns that off
+ * for an application that loads the fonts in its own CSS.
  * @acunFonts('inter') for some of the families preloads only theirs and links the same
  * file: it holds every family's @font-face, but a browser downloads only the fonts a page
  * uses, so one cached file is cheaper than inlining a page's families on every page.
@@ -28,7 +30,7 @@ final class Fonts
         $vite = app(Vite::class);
 
         if (! method_exists($vite, 'fonts')) {
-            return new HtmlString('');
+            return self::fallback($aliases);
         }
 
         $html = (string) $vite->fonts($aliases);
@@ -50,6 +52,35 @@ final class Fonts
         $link = '<link rel="stylesheet" href="'.e($url).'"'.($nonce ? ' nonce="'.e($nonce).'"' : '').' />';
 
         return new HtmlString((string) preg_replace('~<style\b[^>]*>.*?</style>~s', $link, $html, 1));
+    }
+
+    /**
+     * Before Laravel 13: the families (default: the kit's Public Sans and DM Mono) from Bunny Fonts,
+     * by their aliases (public-sans, dm-mono, fraunces…: Bunny's names too). Empty when
+     * acun-ui.fonts_fallback is false.
+     *
+     * @param  list<string>|string|null  $aliases
+     */
+    public static function fallback(array|string|null $aliases = null): HtmlString
+    {
+        if (! config('acun-ui.fonts_fallback', true)) {
+            return new HtmlString('');
+        }
+
+        $families = collect($aliases === null ? ['public-sans', 'dm-mono'] : (array) $aliases)
+            ->filter(fn ($alias): bool => is_string($alias) && preg_match('~^[a-z0-9]+(?:-[a-z0-9]+)*$~', $alias) === 1)
+            // DM Mono has 400 and 500 (the kit's code and numeric labels); a text family the weights the kit uses.
+            ->map(fn (string $alias): string => $alias.':'.($alias === 'dm-mono' ? '400,500' : '400,500,600,700'))
+            ->unique()
+            ->implode('|');
+
+        if ($families === '') {
+            return new HtmlString('');
+        }
+
+        $url = 'https://fonts.bunny.net/css?family='.$families.'&display=swap';
+
+        return new HtmlString('<link rel="preconnect" href="https://fonts.bunny.net" crossorigin /><link rel="stylesheet" href="'.e($url).'" />');
     }
 
     /** The decoded fonts manifest, read again only when the file changes. */

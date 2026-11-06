@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Vite;
  * - acun-ui.js: the runtime itself, for applications that do not import
  *   '@acunsoft/acun-ui' through Vite; @acunUiScripts prints its tag (and the PRO
  *   package adds its own).
+ * - acun-ui-carousel.js: acun:carousel's sliding (Swiper), which acun-ui.js loads from
+ *   beside itself (its own address, file name changed, same ?id=) only on a page with a
+ *   carousel; no tag of its own.
  *
  * Served by the package route like Livewire serves its own JS, from public/ once
  * published, or from config('acun-ui.assets.url'); every URL carries a content hash.
@@ -23,7 +26,12 @@ final class Assets
 
     public const RUNTIME = 'acun-ui.js';
 
-    public const FILES = [self::BOOT, self::RUNTIME];
+    public const CAROUSEL = 'acun-ui-carousel.js';
+
+    public const FILES = [self::BOOT, self::RUNTIME, self::CAROUSEL];
+
+    /** acun-ui.js and the files it loads from beside itself with its ?id= (see id()). */
+    public const RUNTIME_FILES = [self::RUNTIME, self::CAROUSEL];
 
     public const PUBLISH_TAG = 'acun-ui-assets';
 
@@ -76,12 +84,29 @@ final class Assets
     }
 
     /**
+     * The ?id= of a file: its content hash; for acun-ui.js one hash of it and the files it loads from beside itself
+     * (RUNTIME_FILES), which take its query: a change in any of them (the carousel built with another Swiper while
+     * acun-ui.js stays the same) gives them all a new address, so no year-long cached copy of an older one is used.
+     * $directory: a published copy's folder instead of dist/.
+     */
+    public static function id(string $file, ?string $directory = null): string
+    {
+        $path = fn (string $name): string => $directory === null ? self::distPath($name) : $directory.'/'.$name;
+
+        if (! in_array($file, self::RUNTIME_FILES, true)) {
+            return self::hash($path($file));
+        }
+
+        return substr(hash('xxh128', implode('|', array_map(fn (string $name): string => self::hash($path($name)), self::RUNTIME_FILES))), 0, 12);
+    }
+
+    /**
      * The URL of a file: config url, the published copy (when it is the same as the
-     * package's), or the package route.
+     * package's, the files acun-ui.js loads beside itself too), or the package route.
      */
     public static function url(string $file): string
     {
-        $hash = self::hash(self::distPath($file));
+        $hash = self::id($file);
         $configured = config('acun-ui.assets.url');
 
         if (is_string($configured) && $configured !== '') {
@@ -91,7 +116,7 @@ final class Assets
         $published = public_path(self::PUBLISHED_DIRECTORY.'/'.$file);
 
         // An outdated published copy is skipped: the package's own file is always right.
-        if (is_file($published) && self::hash($published) === $hash) {
+        if (is_file($published) && self::id($file, dirname($published)) === $hash) {
             return asset(self::PUBLISHED_DIRECTORY.'/'.$file).'?id='.$hash;
         }
 

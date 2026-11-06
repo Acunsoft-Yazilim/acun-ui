@@ -56,7 +56,7 @@ final class PanelComponentsTest extends TestCase
             'selection-bar' => ['<x-ui.selection-bar :count="3"><x-ui.button>Sil</x-ui.button></x-ui.selection-bar>', '3 kayıt seçildi.'],
             'accordion' => ["<x-ui.accordion open=\"a\">\n<x-ui.accordion-item name=\"a\" title=\"Başlık\">İçerik</x-ui.accordion-item>\n</x-ui.accordion>", 'data-acun-accordion'],
             'collapse' => ['<x-ui.collapse label="Ayrıntı">Gizli</x-ui.collapse>', 'data-acun-collapse'],
-            'carousel' => ['<x-ui.carousel :interval="3000"><div>1</div><div>2</div></x-ui.carousel>', 'aria-roledescription="carousel"'],
+            'carousel' => ['<x-ui.carousel :interval="3000"><div>1</div><div>2</div></x-ui.carousel>', 'aria-roledescription="karusel"'],
             'list-group' => ['<x-ui.list-group><x-ui.list-group-item href="/a" active>A</x-ui.list-group-item><x-ui.list-group-item disabled>B</x-ui.list-group-item></x-ui.list-group>', 'aria-disabled="true"'],
             'spinner' => ['<x-ui.spinner type="grow" />', 'role="status"'],
             'popover' => ["<x-ui.popover title=\"Kural\">\n<x-slot:trigger><button>?</button></x-slot:trigger>\nAçıklama\n</x-ui.popover>", 'Kural'],

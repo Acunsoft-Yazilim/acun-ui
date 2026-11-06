@@ -34,3 +34,18 @@ for (const { file } of BUILDS) {
 test('the boot script stays small: it blocks the first paint', () => {
     assert.ok(fs.statSync(new URL('acun-ui-boot.js', dist)).size < 5.75 * 1024);
 });
+
+// acun:carousel's Swiper is a file of its own beside the runtime (dist/acun-ui-carousel.js): only a page with a carousel
+// loads it (plugins/carousel-script.js; carousel-chrome.test.mjs loads it in a browser), so acun-ui.js carries none of it.
+test('acun-ui.js has no Swiper; acun-ui-carousel.js has it, with its version in the banner', () => {
+    const runtime = fs.readFileSync(new URL('acun-ui.js', dist), 'utf8');
+    const carousel = fs.readFileSync(new URL('acun-ui-carousel.js', dist), 'utf8');
+    const swiper = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).dependencies.swiper;
+
+    for (const marker of ['swiper-slide-active', 'swiper-zoom-target', 'slidesPerGroup']) {
+        assert.equal(runtime.includes(marker), false, `dist/acun-ui.js has ${marker} in it`);
+        assert.equal(carousel.includes(marker), true, `dist/acun-ui-carousel.js misses ${marker}`);
+    }
+    assert.match(carousel.split('\n')[0], new RegExp(`with Swiper ${swiper.replace(/\./g, '\\.')} \\(MIT`));
+    assert.match(swiper, /^\d+\.\d+\.\d+$/, 'An exact version.');
+});

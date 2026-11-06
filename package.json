@@ -1,6 +1,6 @@
 {
   "name": "@acunsoft/acun-ui",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Acun UI: design tokens, Tailwind CSS v4 sources, a compiled stylesheet and the browser runtime of the Acun UI components.",
   "homepage": "https://docs.acunui.com",
   "keywords": [
@@ -51,6 +51,9 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "prepublishOnly": "node --test tests/js/assets.test.mjs tests/js/css-dist.test.mjs"
+  },
+  "dependencies": {
+    "swiper": "14.3.0"
   },
   "peerDependencies": {
     "tailwindcss": "^4.1.0"

@@ -41,13 +41,16 @@ final class ComponentBehaviourTest extends TestCase
         self::assertStringContainsString('class="pt-4 p-2"', $html);
     }
 
-    public function test_carousel_does_not_resume_auto_advance_under_reduced_motion(): void
+    public function test_carousel_hands_its_auto_advance_to_the_plugin_with_a_pause_button(): void
     {
         $html = Blade::render('<x-ui.carousel :interval="3000"><div>1</div></x-ui.carousel>');
 
-        // start() runs on load and when the pointer or focus leaves (tests/js/components.test.mjs).
-        self::assertStringContainsString("if (this.paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;", $html);
-        self::assertStringContainsString('x-on:mouseleave="if (! $el.contains(document.activeElement)) start()"', $html);
+        // The plugin (js/plugins/carousel-engine.js) runs the timer: it never starts under reduced motion, stops under
+        // the pointer and the focus (tests/js/carousel.test.mjs). The view prints no Alpine.
+        self::assertMatchesRegularExpression('/<div\s+data-acun-carousel\s+data-interval="3000"/', $html);
+        self::assertStringContainsString('data-slot="carousel-pause" aria-label="Duraklat" data-label-pause="Duraklat" data-label-play="Oynat"', $html);
+        self::assertStringContainsString('aria-live="off"', $html, 'An auto-advancing carousel is not announced on every turn.');
+        self::assertDoesNotMatchRegularExpression('/\sx-[a-z]|\s:aria|\s@click/', $html);
     }
 
     /**

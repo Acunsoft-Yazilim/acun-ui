@@ -20,7 +20,8 @@
 //   colour, skin, content width, menu; appearance/preferences.js), and AcunUI.isDark(element) and AcunUI.tokenColor(element, '--ac-line') for code
 //   that draws in the theme's colours (charts);
 // - the loading of heavy components in chunks of their own, the first time their element
-//   (data-acun-component) is on the page (core/components.js; the PRO package defines its own);
+//   (data-acun-component) is on the page (core/components.js; the PRO package defines its own), and
+//   acun:carousel's sliding with Swiper (plugins/carousel.js: a chunk, dist/acun-ui-carousel.js in the browser build);
 // - the Livewire fixes (plugin state kept through morphs, select values, morphs after
 //   wire:navigate, lists kept in view, a full page load when leaving a page that forces its layout).
 //
@@ -33,6 +34,7 @@
 import { VERSION, createRuntime } from './core/runtime.js';
 import { EVENTS, commands } from './core/events.js';
 import { readConfig } from './core/config.js';
+import { startValidationMessages } from './behavior/validation-messages.js';
 import { focusable } from './core/dom.js';
 import { connectLivewire, onLivewire, onNavigated } from './core/livewire.js';
 import { components, deferLazyComponents, loadComponentsOnPage, watchLazyComponents } from './core/components.js';
@@ -62,6 +64,7 @@ import { inlineConfirmPlugin } from './plugins/inline-confirm.js';
 import { dismissiblePlugin } from './plugins/dismissible.js';
 import { cardPlugin } from './plugins/card.js';
 import { revealPlugin } from './plugins/reveal.js';
+import { colorInputPlugin } from './plugins/color-input.js';
 import { searchPlugin } from './plugins/search.js';
 import { commandPalettePlugin } from './plugins/command-palette.js';
 import { themeSwitcherPlugin, themeSwitcherScope } from './plugins/theme-switcher.js';
@@ -70,6 +73,7 @@ import { scrollShadowsPlugin } from './plugins/scroll-shadows.js';
 import { downloadTextPlugin } from './plugins/download-text.js';
 import { tableScrollPlugin } from './plugins/table-scroll.js';
 import { paginationPlugin } from './plugins/pagination.js';
+import { carouselPlugin } from './plugins/carousel.js';
 import { connectAlpine, scope } from './adapters/alpine.js';
 import { followAppearanceThroughNavigation, keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
 import { drawer, drawerScope } from './components/drawer.js';
@@ -183,6 +187,7 @@ function setup(runtime, { observe: watch = true }) {
         storesWaiting = null;
     });
     keepListsInView();
+    startValidationMessages();
     reloadWhenLeavingForcedLayout();
     onNavigated(forgetDetachedOverlays);
     keepDeprecatedNames(runtime);
@@ -201,6 +206,7 @@ function setup(runtime, { observe: watch = true }) {
     plugins.define('dismissible', dismissiblePlugin);
     plugins.define('card', cardPlugin);
     plugins.define('reveal', revealPlugin);
+    plugins.define('color-input', colorInputPlugin);
     plugins.define('search', searchPlugin);
     plugins.define('command-palette', commandPalettePlugin);
     plugins.define('theme-switcher', themeSwitcherPlugin);
@@ -209,6 +215,7 @@ function setup(runtime, { observe: watch = true }) {
     plugins.define('download-text', downloadTextPlugin);
     plugins.define('table-scroll', tableScrollPlugin);
     plugins.define('pagination', paginationPlugin);
+    plugins.define('carousel', carouselPlugin);
     scope('modal', '[data-acun-modal]', modalScope);
     scope('drawer', '[data-acun-drawer]', drawerScope);
     scope('dropdown', '[data-acun-dropdown]', dropdownScope);
@@ -302,6 +309,7 @@ export {
     dismissiblePlugin,
     cardPlugin,
     revealPlugin,
+    colorInputPlugin,
     searchPlugin,
     commandPalettePlugin,
     themeSwitcherPlugin,
@@ -310,6 +318,7 @@ export {
     downloadTextPlugin,
     tableScrollPlugin,
     paginationPlugin,
+    carouselPlugin,
     // Deprecated (3.0): the Alpine data of the 2.0 drawer and modal; they delegate to the plugins.
     drawer,
     modal,

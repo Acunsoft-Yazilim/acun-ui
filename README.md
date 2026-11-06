@@ -57,8 +57,6 @@ Without the `@source` line the components render unstyled. If Laravel's default 
 
 The kit draws its own form controls: every `<input>`, `<select>` and `<textarea>` a component renders carries `data-acun-control`, and `css/forms.css` styles only those (the `@tailwindcss/forms` plugin is not needed, and the application's other fields are left alone). Your own markup (the npm path) puts `data-acun-control` on a field to get the same base.
 
-Acun DataTable (`acunsoft/datatable-laravel`, a separate MIT package for server-side Livewire tables) brings its own stylesheet (`@import '@acunsoft/datatable-dom/styles.css';`); `css/acun-datatable.css` (imported by `css/panel.css`) sets its `--adt-*` colours, corners and font from the tokens, so it follows the theme, the dark theme and the primary colour. Docs: https://docs.acunui.com/components/acun-datatable.html
-
 **Global rules.** `css/panel.css` is `css/core.css` (tokens, themes, form base, the kit's own rules) plus `css/base.css` (rules that reach the whole page: the theme's line on a border without a colour class, the pointer cursor, the headings' letter spacing, the code font). For none of them, import `@acunsoft/acun-ui/css/core.css` instead of `@acunsoft/acun-ui`.
 
 **Without Tailwind.** Link the compiled stylesheet, built from the same Tailwind source (`npm run build:css`): Tailwind's preflight, the tokens and themes, the form base and every class the components use, minified.
@@ -120,7 +118,7 @@ The JS of the PRO components (charts, maps, date ranges, the unsaved-changes gua
 | `@acunsoft/acun-ui` (CSS, `style` condition) | `css/panel.css` — tokens, themes and component layer |
 | `@acunsoft/acun-ui` (JS) | `js/index.js` — sets up `window.AcunUI`; exports `VERSION`, `EVENTS`, `scrollLock`, `overlays`, `focusFirst`, `trapTab`, `rememberFocus`, `focusable`, `drawer`, `modal`, `syncSelectValues`, `skipDetachedMorphs` |
 | `@acunsoft/acun-ui/acun-ui.css` | `dist/acun-ui.css` — the compiled stylesheet, no Tailwind needed (`acun-ui-core.css`: without the global rules) |
-| `@acunsoft/acun-ui/css/*` | `panel.css` (= `core.css` + `base.css`; `core.css` imports `tokens.css`, `themes.css`, `forms.css` and `acun-datatable.css`) |
+| `@acunsoft/acun-ui/css/*` | `panel.css` (= `core.css` + `base.css`; `core.css` imports `tokens.css`, `themes.css` and `forms.css`) |
 | `@acunsoft/acun-ui/js/*` | individual modules, e.g. `js/behavior/select-sync.js` |
 | `@acunsoft/acun-ui/vite` | `woff2Only()` — a Vite plugin that keeps only the WOFF2 files of laravel-vite-plugin's font build |
 

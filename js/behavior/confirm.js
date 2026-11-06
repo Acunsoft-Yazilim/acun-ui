@@ -1,6 +1,6 @@
 // AcunUI.confirm(): the kit's confirmation dialog (acun:confirmation-dialog's look: an alertdialog with a title, a
 // question, Cancel and a confirm button) from JavaScript, as a promise of the answer. Packages built on the runtime
-// use it instead of the browser's confirm(): ACUN DataTable's actions find it on window.AcunUI.
+// use it instead of the browser's confirm(); they find it on window.AcunUI.
 //
 //     const yes = await AcunUI.confirm({ title: 'Delete the order?', text: 'This cannot be undone.', confirmLabel: 'Delete', tone: 'danger' });
 //
@@ -23,7 +23,7 @@ import { plugins } from '../core/plugins.js';
  * @property {'default' | 'danger'} [tone]  the confirm button's look: the primary colour, or red for what destroys
  */
 
-// The defaults; a page in another language passes its own (ACUN DataTable's Livewire views pass the translated texts).
+// The defaults; a page in another language passes its own (a Livewire view passes the translated texts).
 const TEXTS = { title: 'Are you sure?', confirmLabel: 'Confirm', cancelLabel: 'Cancel', close: 'Close' };
 
 // acun:button's classes (the white, primary and danger variants), as acun:confirmation-dialog prints them.

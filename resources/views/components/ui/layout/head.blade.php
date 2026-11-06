@@ -74,6 +74,8 @@
         'forced' => \Acun\Ui\Support\Layout::forcesAny(),
         // The select fix (core/js/behavior/select-sync.js) for every box; off unless config says so.
         'selectSync' => (bool) config('acun-ui.select_sync', false),
+        // The browser's validation bubbles of the kit's fields in the page's language (js/behavior/validation-messages.js).
+        'validation' => config('acun-ui.validation_messages', true) ? \Acun\Ui\Support\ValidationMessages::all() : null,
     ];
 @endphp
 {{-- Printed through Markup::lines (end of file): one tag per line, no blank lines in the page source. --}}

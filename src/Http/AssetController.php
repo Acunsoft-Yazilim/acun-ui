@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * GET /acun-ui/acun-ui-boot.js and /acun-ui/acun-ui.js: the runtime's browser builds,
+ * GET /acun-ui/acun-ui-boot.js and /acun-ui/acun-ui.js: the runtime's browser builds
+ * (and /acun-ui/acun-ui-carousel.js, which acun-ui.js loads on a page with a carousel),
  * served from the package like Livewire serves its own JS. The tags carry
  * ?id=<content hash>, so the files can be cached for a year; a changed build gets a new URL.
  */

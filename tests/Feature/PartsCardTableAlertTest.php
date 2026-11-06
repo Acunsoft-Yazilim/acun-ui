@@ -27,7 +27,7 @@ final class PartsCardTableAlertTest extends TestCase
             </acun:card>
         BLADE);
 
-        self::assertMatchesRegularExpression('/^\s*<div\s+data-acun-surface\s+class="flex flex-col rounded-sm bg-surface shadow-sm kart" id="siparisler"\s*>\s*<div data-slot="card-header" class="flex items-start justify-between gap-3 px-5 py-4 baslik">/', $html, 'The slot is rendered as it is, right inside the card box.');
+        self::assertMatchesRegularExpression('/^\s*<div\s+data-acun-surface\s+class="flex flex-col rounded-sm bg-surface shadow-sm kart" id="siparisler"\s*>\s*<div data-slot="card-header" class="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-5 py-4 baslik">/', $html, 'The slot is rendered as it is, right inside the card box.');
         self::assertStringContainsString('<div data-slot="card-body" class="flex-1 p-5 govde">', $html);
         self::assertStringContainsString('<div data-slot="card-footer" class="flex items-center gap-2 border-t border-line-soft px-5 py-3 alt">Tümünü gör</div>', $html);
         self::assertSame(1, substr_count($html, 'p-5'), 'No classic padded body around the parts.');
@@ -60,6 +60,29 @@ final class PartsCardTableAlertTest extends TestCase
         self::assertSame(self::normalize($unmarked($classic)), self::normalize($unmarked($parts)));
     }
 
+    /** Wide actions in a narrow card go to the next line instead of squeezing the title (classic and in parts). */
+    public function test_a_card_header_keeps_room_for_its_title_and_wraps_its_actions(): void
+    {
+        $classic = Blade::render(<<<'BLADE'
+            <acun:card title="Son siparişler">
+                <acun:slot:actions><button>Tümünü dışa aktar</button></acun:slot>
+                Gövde
+            </acun:card>
+        BLADE);
+        $parts = Blade::render(<<<'BLADE'
+            <acun:card>
+                <acun:card.header title="Son siparişler">
+                    <acun:slot:actions><button>Tümünü dışa aktar</button></acun:slot>
+                </acun:card.header>
+            </acun:card>
+        BLADE);
+
+        foreach (['classic' => $classic, 'parts' => $parts] as $mode => $html) {
+            self::assertMatchesRegularExpression('/<div[^>]*class="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-5 py-4">\s*<div class="min-w-0 flex-\[1_1_10rem\] break-words">/', $html, "$mode: the row wraps; the title keeps 10rem and breaks long words.");
+            self::assertStringContainsString('<div class="ms-auto flex flex-wrap items-center justify-end gap-1">', $html, "$mode: the actions stay on the right, on their own line when needed.");
+        }
+    }
+
     public function test_card_header_slot_is_the_heading_row(): void
     {
         $html = Blade::render(<<<'BLADE'
@@ -71,7 +94,7 @@ final class PartsCardTableAlertTest extends TestCase
 
         self::assertMatchesRegularExpression('/<h3 class="text-sm font-semibold text-ink flex items-center gap-2"><svg data-icon><\/svg> Siparişler <span[^>]*bg-success-tint[^>]*>\s*3 yeni\s*<\/span><\/h3>/', $html);
         self::assertStringContainsString('<p class="mt-0.5 text-xs text-muted">Bugün 12 sipariş</p>', $html);
-        self::assertMatchesRegularExpression('/<div class="flex flex-none items-center gap-1">\s*<button>Yeni sipariş<\/button>/', $html);
+        self::assertMatchesRegularExpression('/<div class="ms-auto flex flex-wrap items-center justify-end gap-1">\s*<button>Yeni sipariş<\/button>/', $html);
 
         // With a title the slot follows it in the same row.
         $titled = Blade::render('<acun:card.header title="Kargolar"><acun:badge>8</acun:badge></acun:card.header>');
@@ -153,7 +176,7 @@ final class PartsCardTableAlertTest extends TestCase
 
         self::assertSame(1, substr_count($html, 'data-slot="card-header"'));
         self::assertSame(1, substr_count($html, 'data-slot="card-body"'));
-        self::assertMatchesRegularExpression('/<div class="flex items-start justify-between gap-3 px-5 py-4">\s*<div class="min-w-0">\s*<h3[^>]*>İç<\/h3>/', $html, 'The inner card keeps its classic header.');
+        self::assertMatchesRegularExpression('/<div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-5 py-4">\s*<div class="min-w-0 flex-\[1_1_10rem\] break-words">\s*<h3[^>]*>İç<\/h3>/', $html, 'The inner card keeps its classic header.');
         self::assertMatchesRegularExpression('/<div\s+class="flex-1 p-5">\s*İç gövde/', $html);
 
         // Outer classic, inner in parts: the outer slot starts with the inner card's box, not a part.

@@ -1,15 +1,13 @@
 /*
  * Acun UI - the kit's CSS without the global base (Tailwind v4 source).
  *
- * The design tokens and themes, the form base, the Acun DataTable bridge, the dark: variant, the palette
+ * The design tokens and themes, the form base, the dark: variant, the palette
  * and the kit's own rules. css/panel.css imports it with css/base.css; import it alone when the page should
  * get no global rules from the kit (see css/base.css for what those are).
  */
 @import './tokens.css';
 @import './themes.css';
 @import './forms.css';
-/* Acun DataTable's --adt-* properties from the tokens (acunsoft/datatable-laravel; unlayered). */
-@import './acun-datatable.css';
 
 /*
  * dark: (application code, until 3.0; the kit's components paint with the tokens) follows the

@@ -35,6 +35,14 @@ return [
     // (Breeze's 'verification-link-sent') that are not messages.
     'toast_session_keys' => [],
 
+    // Before Laravel 13 (no font plugin in laravel-vite-plugin, no @fonts): @acunFonts links the kit's fonts
+    // (Public Sans, DM Mono) from fonts.bunny.net. false when the application loads them in its own CSS.
+    'fonts_fallback' => true,
+
+    // The browser's own validation bubbles ("Please fill out this field.") of the kit's fields in the application's
+    // language (lang/*.json: "Please fill in this field." …), instead of the browser's. false leaves them to the browser.
+    'validation_messages' => true,
+
     // The browser builds of the @acunsoft/acun-ui runtime: acun-ui-boot.js (acun:layout.head) and
     // acun-ui.js (@acunUiScripts, for applications without Vite).
     'assets' => [

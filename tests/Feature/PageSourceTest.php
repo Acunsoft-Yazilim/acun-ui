@@ -164,9 +164,9 @@ final class PageSourceTest extends TestCase
         self::assertSame('', trim(Blade::render('@acunFonts')));
     }
 
-    public function test_acun_fonts_prints_nothing_before_laravel_has_a_font_plugin(): void
+    /** Laravel 11/12 (the Vite helper has no fonts()): the families come from Bunny Fonts, unless fonts_fallback is false. */
+    public function test_acun_fonts_links_bunny_fonts_before_laravel_has_a_font_plugin(): void
     {
-        // Laravel 11/12: the Vite helper has no fonts().
         $this->app->instance(\Illuminate\Foundation\Vite::class, new class
         {
             public function __invoke(): string
@@ -175,7 +175,15 @@ final class PageSourceTest extends TestCase
             }
         });
 
-        self::assertSame('', trim(Blade::render('@acunFonts')));
+        self::assertSame(
+            '<link rel="preconnect" href="https://fonts.bunny.net" crossorigin /><link rel="stylesheet" href="https://fonts.bunny.net/css?family=public-sans:400,500,600,700|dm-mono:400,500&amp;display=swap" />',
+            trim(Blade::render('@acunFonts')),
+            'The kit\'s Public Sans and DM Mono by default.',
+        );
+        self::assertStringContainsString('family=fraunces:400,500,600,700&amp;', Blade::render("@acunFonts(['fraunces', '../evil'])"), 'A theme\'s families by their aliases; anything else is left out.');
+
+        config(['acun-ui.fonts_fallback' => false]);
+        self::assertSame('', trim(Blade::render('@acunFonts')), 'An application that loads the fonts itself.');
     }
 
     /**

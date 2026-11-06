@@ -28,6 +28,15 @@ final class AssetsTest extends TestCase
         return substr(hash_file('xxh128', Assets::distPath($file)), 0, 12);
     }
 
+    /**
+     * The ?id= of acun-ui.js: one hash of acun-ui.js and the files it loads from beside itself with that query, so a
+     * change in any of them changes the address of all (a year-long cache never serves an older carousel).
+     */
+    private static function runtimeId(): string
+    {
+        return substr(hash('xxh128', self::hash(Assets::RUNTIME).'|'.self::hash(Assets::CAROUSEL)), 0, 12);
+    }
+
     private function nextPage(): void
     {
         $this->app->forgetScopedInstances();
@@ -62,7 +71,7 @@ final class AssetsTest extends TestCase
 
     public function test_the_directive_prints_the_runtime_deferred_once_per_page(): void
     {
-        $tag = '<script src="http://localhost/acun-ui/acun-ui.js?id='.self::hash(Assets::RUNTIME).'" defer data-acun-ui data-navigate-track data-navigate-once></script>';
+        $tag = '<script src="http://localhost/acun-ui/acun-ui.js?id='.self::runtimeId().'" defer data-acun-ui data-navigate-track data-navigate-once></script>';
 
         self::assertSame($tag, Blade::render("@acunUiScripts\n@acunUiScripts"));
 
@@ -76,7 +85,7 @@ final class AssetsTest extends TestCase
         self::assertStringContainsString('src="http://localhost/assets/ui/acun-ui-boot.js?id=', Blade::render('<acun:layout.head />'));
 
         config()->set('acun-ui.assets.url', 'https://cdn.example.com/acun-ui/');
-        self::assertSame('https://cdn.example.com/acun-ui/acun-ui.js?id='.self::hash(Assets::RUNTIME), Assets::url(Assets::RUNTIME));
+        self::assertSame('https://cdn.example.com/acun-ui/acun-ui.js?id='.self::runtimeId(), Assets::url(Assets::RUNTIME));
     }
 
     public function test_a_published_copy_is_used_only_while_it_is_the_same_as_the_package_one(): void
@@ -90,6 +99,34 @@ final class AssetsTest extends TestCase
         File::put($published, '/* an older build */');
         clearstatcache();
         self::assertSame('http://localhost/acun-ui/acun-ui-boot.js?id='.self::hash(Assets::BOOT), Assets::url(Assets::BOOT), 'An outdated copy is skipped.');
+    }
+
+    public function test_the_runtimes_id_changes_with_the_carousel_file_it_loads_beside_itself(): void
+    {
+        $directory = sys_get_temp_dir().'/acun-ui-id-'.getmypid();
+        File::ensureDirectoryExists($directory);
+        File::put($directory.'/'.Assets::RUNTIME, 'runtime');
+        File::put($directory.'/'.Assets::CAROUSEL, 'carousel 1');
+        $first = Assets::id(Assets::RUNTIME, $directory);
+        self::assertSame($first, Assets::id(Assets::CAROUSEL, $directory), 'The carousel file takes acun-ui.js\'s query.');
+
+        File::put($directory.'/'.Assets::CAROUSEL, 'carousel 2, built with another Swiper');
+        clearstatcache();
+        self::assertNotSame($first, Assets::id(Assets::RUNTIME, $directory), 'Only the carousel changed: the address changes too.');
+        self::assertSame(self::hash(Assets::BOOT), Assets::id(Assets::BOOT), 'The boot script keeps its own hash.');
+        File::deleteDirectory($directory);
+    }
+
+    public function test_a_published_runtime_without_its_carousel_file_is_skipped(): void
+    {
+        $published = public_path(Assets::PUBLISHED_DIRECTORY.'/'.Assets::RUNTIME);
+        File::ensureDirectoryExists(dirname($published));
+        File::copy(Assets::distPath(Assets::RUNTIME), $published);
+        self::assertSame('http://localhost/acun-ui/acun-ui.js?id='.self::runtimeId(), Assets::url(Assets::RUNTIME), 'The package route: the copy misses the carousel file.');
+
+        File::copy(Assets::distPath(Assets::CAROUSEL), dirname($published).'/'.Assets::CAROUSEL);
+        clearstatcache();
+        self::assertSame('http://localhost/vendor/acun-ui/acun-ui.js?id='.self::runtimeId(), Assets::url(Assets::RUNTIME));
     }
 
     public function test_the_builds_can_be_published(): void

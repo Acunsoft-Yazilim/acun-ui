@@ -126,6 +126,17 @@ final class PartsListsTest extends TestCase
     }
 
     /** description-list renders its :items with the dotted item, so both rows look the same. */
+    /** A row that acts on a click is a button, not a div with wire:click (keyboard, screen reader). */
+    public function test_a_list_group_item_can_be_a_button(): void
+    {
+        $html = Blade::render('<acun:list-group><acun:list-group.item button wire:click="choose(3)" active>Kargo adresi</acun:list-group.item><acun:list-group.item button disabled>Fatura adresi</acun:list-group.item><acun:list-group.item button type="submit">Kaydet</acun:list-group.item></acun:list-group>');
+
+        self::assertMatchesRegularExpression('/<li>\s*<button type="button" class="[^"]*bg-primary-tint[^"]*w-full text-start cursor-pointer[^"]*" wire:click="choose\(3\)"\s+aria-current="true"\s*>Kargo adresi<\/button>/', $html);
+        self::assertMatchesRegularExpression('/<button type="button" class="[^"]*cursor-not-allowed text-faint[^"]*"\s+disabled\s*>Fatura adresi<\/button>/', $html, 'A disabled row is a disabled button.');
+        self::assertMatchesRegularExpression('/<button type="submit" class="[^"]*hover:bg-hover\/60[^"]*"\s*>Kaydet<\/button>/', $html, 'type="submit" inside a form.');
+        self::assertStringNotContainsString('<div', $html);
+    }
+
     public function test_description_list_items_and_dotted_rows_share_the_markup(): void
     {
         $fromItems = Blade::render('<acun:description-list :items="[\'Müşteri\' => \'Ayşe Yılmaz\']" />');
@@ -200,7 +211,7 @@ final class PartsListsTest extends TestCase
         self::assertSame(Blade::render('<acun:breadcrumb home-url="/" />'), Blade::render("<acun:breadcrumb home-url=\"/\">\n</acun:breadcrumb>"));
     }
 
-    /** A slide part: a named group for screen readers, inert while another slide is shown. */
+    /** A slide part: a named group for screen readers (the plugin makes it inert while another slide is shown). */
     public function test_carousel_item_is_a_named_slide(): void
     {
         $html = Blade::render(<<<'BLADE'
@@ -211,12 +222,12 @@ final class PartsListsTest extends TestCase
             </acun:carousel>
         BLADE);
 
-        // The carousel itself is unchanged: every direct child of the track is a slide.
-        self::assertStringContainsString('this.count = this.$refs.track.children.length;', $html);
-        self::assertMatchesRegularExpression('/<div\s+data-slot="carousel-item"\s+role="group"\s+aria-roledescription="slide"\s+aria-label="Depo girişi"\s+x-bind:inert="index !== \[\.\.\.\$el\.parentElement\.children\]\.indexOf\(\$el\)"\s+class="h-40" wire:key="giris"\s*>/', $html);
-        // Without a label, it names itself by its position.
-        self::assertStringContainsString('x-bind:aria-label="`${[...$el.parentElement.children].indexOf($el) + 1} / ${count}`"', $html);
-        self::assertSame(2, substr_count($html, 'aria-roledescription="slide"'));
+        // Every direct child of the track is a slide; the plugin names the unnamed ones by their position ("2 / 3").
+        self::assertMatchesRegularExpression('/data-slide-label=":number \/ :count"\s+data-slide-role="slayt"/', $html);
+        self::assertMatchesRegularExpression('/<div\s+data-slot="carousel-item"\s+role="group"\s+aria-roledescription="slayt"\s+aria-label="Depo girişi"\s+class="acun-carousel-slide h-40" wire:key="giris"\s*>/', $html);
+        // Without a label it carries no name of its own: the plugin gives it its position.
+        self::assertMatchesRegularExpression('/<div\s+data-slot="carousel-item"\s+role="group"\s+aria-roledescription="slayt"\s+class="acun-carousel-slide"\s*>/', $html);
+        self::assertSame(2, substr_count($html, 'aria-roledescription="slayt"'));
         self::assertStringContainsString('<div>Düz slayt</div>', $html);
     }
 

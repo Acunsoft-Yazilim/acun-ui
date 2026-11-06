@@ -626,3 +626,11 @@ test('the user\'s colour reaches every block and section: presets, custom colour
     assert.deepEqual(result.mismatches, []);
     assert.equal(result.compared, cases.length * 2 * 3 * Object.keys(cases[0].light).length);
 });
+
+test('the focus colour can be set apart from the brand colour with --ac-tone-focus, else it is the primary tone', () => {
+    // A red brand colour would make the focus frame look like the error frame: a theme or the application sets
+    // --ac-tone-focus (:root { --ac-tone-focus: #2563eb; }) and every focus ring (--color-focus) follows it.
+    assert.match(themesCss, /--ac-focus:\s*var\(--ac-tone-focus,\s*var\(--ac-p\)\);/);
+    assert.match(read('../css/tokens.css'), /--color-focus:\s*var\(--ac-focus\);/);
+    assert.doesNotMatch(themesCss.replace(/\/\*[\s\S]*?\*\//g, ''), /--ac-tone-focus\s*:/, 'No built-in theme sets it: the default stays the primary tone.');
+});

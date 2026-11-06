@@ -23,8 +23,8 @@
 --}}
 @php($row = $slot->hasActualContent())
 
-<div data-slot="card-header" {{ $attributes->merge(['class' => 'flex items-start justify-between gap-3 px-5 py-4']) }}>
-    <div class="min-w-0">
+<div data-slot="card-header" {{ $attributes->merge(['class' => 'flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-5 py-4']) }}>
+    <div class="min-w-0 flex-[1_1_10rem] break-words">
         @if ($title || $row)
             @php($headingTag = 'h'.max(2, min(6, (int) $headingLevel)))
             <{{ $headingTag }} @class(['text-sm font-semibold text-ink', 'flex items-center gap-2' => $row])>{{ $title }}{{ $slot }}</{{ $headingTag }}>
@@ -34,7 +34,7 @@
         @endif
     </div>
 
-    <div class="flex flex-none items-center gap-1">
+    <div class="ms-auto flex flex-wrap items-center justify-end gap-1">
         {{ $actions ?? '' }}
 
         @if ($collapsible)

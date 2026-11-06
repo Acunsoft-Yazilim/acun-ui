@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AcunUI, Alpine, dispatch, document, mount, press, render, settle, window } from './browser.mjs';
+import { AcunUI, Alpine, dispatch, document, mount, press, render, settle, viewport, window } from './browser.mjs';
+import { withCarouselLayout } from './carousel-layout.mjs';
 
 // Smaller components in the browser.
 //  - acun:toast-container: a toast dispatched straight from a component (not through
@@ -161,30 +162,50 @@ test('a toast stays while the pointer or the focus is on it; an error is announc
     assert.equal(data.timers.size, 0);
 });
 
-test('an auto-advancing carousel stops under the keyboard focus, can be paused and counts added slides', async () => {
+// acun:carousel is a plugin on Swiper (js/plugins/carousel.js; the sliding is a chunk, carousel-engine.js); jsdom gets a
+// layout for it from carousel-layout.mjs (carousel-chrome.test.mjs drives it in a real browser).
+test('an auto-advancing carousel stops under the keyboard focus, can be paused and counts added slides', () => withCarouselLayout(async () => {
     await mount(html.carousel);
     const carousel = document.getElementById('vitrin');
-    const data = Alpine.$data(carousel);
-    assert.ok(data.timer, 'It advances by itself.');
+    for (let i = 0; i < 100 && !carousel.hasAttribute('data-ready'); i++) await settle();
+    const track = carousel.querySelector('[data-slot="carousel-track"]');
+    const running = () => track.getAttribute('aria-live') === 'off';
+    assert.equal(carousel.hasAttribute('data-ready'), true, 'Swiper runs.');
+    assert.equal(carousel.hasAttribute('data-controls'), true, 'There is something to slide to: the controls show.');
+    assert.ok(running(), 'It advances by itself (not announced on every turn).');
+    assert.equal(Object.keys(Alpine.$data(carousel) ?? {}).length, 0, 'No Alpine scope of its own.');
 
     document.getElementById('slayt-dugme').dispatchEvent(new window.FocusEvent('focusin', { bubbles: true }));
-    assert.equal(data.timer, null, 'Stopped while the focus is inside.');
+    assert.equal(running(), false, 'Stopped while the focus is inside (and announced politely).');
     carousel.dispatchEvent(new window.FocusEvent('focusout', { relatedTarget: document.body }));
-    assert.ok(data.timer);
+    assert.ok(running());
 
-    const pause = carousel.querySelector('[aria-pressed]');
+    const pause = carousel.querySelector('[data-slot="carousel-pause"]');
+    assert.equal(pause.getAttribute('aria-label'), 'Duraklat');
     pause.click();
-    await settle();
-    assert.deepEqual([data.timer, pause.getAttribute('aria-pressed'), pause.getAttribute('aria-label')], [null, 'true', 'Oynat']);
+    assert.deepEqual([running(), carousel.hasAttribute('data-paused'), pause.getAttribute('aria-label'), pause.hasAttribute('aria-pressed')], [false, true, 'Oynat', false]);
     carousel.dispatchEvent(new window.MouseEvent('mouseleave'));
-    assert.equal(data.timer, null, 'Paused stays paused.');
+    assert.equal(running(), false, 'Paused stays paused.');
 
-    carousel.querySelector('[x-ref="track"]').insertAdjacentHTML('beforeend', '<div>Dört</div>');
+    // The slides name themselves by position (the root's data-slide-label); one added later is counted.
+    const slides = () => [...track.children];
+    assert.deepEqual(slides().map((slide) => slide.getAttribute('aria-label')), ['1 / 3', '2 / 3', null], 'A button slide keeps its own role and name.');
+    assert.deepEqual(slides().map((slide) => slide.getAttribute('aria-roledescription')), ['slayt', 'slayt', null]);
+    track.insertAdjacentHTML('beforeend', '<div>Dört</div>');
     await settle();
-    assert.equal(data.count, 4);
-    assert.equal(carousel.querySelectorAll('[aria-current]').length, 4);
-    data.destroy();
-});
+    assert.equal(AcunUI.plugins.get(carousel, 'carousel').count, 4);
+    assert.deepEqual(slides().map((slide) => slide.getAttribute('aria-label')), ['1 / 4', '2 / 4', null, '4 / 4']);
+    assert.ok(slides()[3].classList.contains('acun-carousel-slide'), 'Swiper takes the new slide in.');
+    assert.equal(slides().filter((slide) => slide.inert).length, 3, 'One slide in view: the others are inert.');
+
+    AcunUI.plugins.get(carousel, 'carousel').play();
+    assert.ok(running(), 'play() from the API.');
+    viewport.reducedMotion = true;
+    carousel.dispatchEvent(new window.MouseEvent('mouseenter'));
+    carousel.dispatchEvent(new window.MouseEvent('mouseleave'));
+    assert.equal(running(), false, 'Never under reduced motion.');
+    viewport.reducedMotion = false;
+}));
 test('a danger toast is an error toast; an unknown type is shown as info', async () => {
     await mount(html.container);
     const container = document.querySelector('[aria-live="polite"]');

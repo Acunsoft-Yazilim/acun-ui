@@ -426,6 +426,13 @@ final class InstallCommand extends Command
             }
         }
 
+        // Laravel 12: no font plugin and no @fonts, so @acunFonts falls back to Bunny Fonts (or to the application's CSS).
+        if (! method_exists(app(\Illuminate\Foundation\Vite::class), 'fonts')) {
+            $rows[] = config('acun-ui.fonts_fallback', true)
+                ? [null, 'Laravel '.app()->version().' has no font plugin (@fonts): @acunFonts links Public Sans and DM Mono from fonts.bunny.net', 'To serve the fonts yourself, set fonts_fallback to false in config/acun-ui.php and load them in your CSS.']
+                : [null, 'Laravel '.app()->version().' has no font plugin (@fonts) and fonts_fallback is false: @acunFonts prints nothing', 'Load Public Sans and DM Mono in your CSS, or the pages use the system font.'];
+        }
+
         $build = $this->build();
 
         // Built assets without node_modules (the starter kit and the demos of the Acun Pro zip, a server

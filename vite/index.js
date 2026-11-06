@@ -4,11 +4,18 @@
 //
 //     plugins: [laravel({ input: […], fonts: [bunny('Public Sans', { … })] }), woff2Only(), tailwindcss()],
 
-const WOFF_FACE = /@font-face\s*\{[^}]*?url\(\s*["']?[^"')]+\.woff["']?\s*\)\s*format\(\s*["']woff["']\s*\)[^}]*\}\s*/g;
+const WOFF_FACE = /@font-face\s*\{[^}]*?url\(\s*["']?([^"')]+\.woff)["']?\s*\)\s*format\(\s*["']woff["']\s*\)[^}]*\}\s*/g;
 
-/** The fonts CSS without the @font-face rules of WOFF files. */
-export function stripWoffFaces(css) {
-    return css.replace(WOFF_FACE, '');
+const baseName = (file) => String(file).split(/[\\/]/).pop();
+
+/**
+ * The fonts CSS without the @font-face rules of WOFF files: with `files`, only of those files
+ * (the font build's own, by name), so the application's other WOFF fonts keep their rules.
+ */
+export function stripWoffFaces(css, files = null) {
+    const names = files ? new Set([...files].map(baseName)) : null;
+
+    return css.replace(WOFF_FACE, (rule, url) => (!names || names.has(baseName(url)) ? '' : rule));
 }
 
 /**
@@ -19,6 +26,10 @@ export function stripWoffFaces(css) {
  * takes the last one, so it downloaded the bigger WOFF files and left the WOFF2
  * preloads unused. Every browser Acun UI supports reads WOFF2; this drops the WOFF
  * files, their rules (fonts-*.css) and their entries (fonts-manifest.json).
+ *
+ * Only the font build's own WOFF files go (the ones fonts-manifest.json lists): an icon
+ * font or another WOFF font of the application, and its @font-face rule, stay. Without
+ * the manifest (no fonts: [...] in laravel()) nothing is touched.
  */
 export function woff2Only() {
     return {
@@ -28,31 +39,48 @@ export function woff2Only() {
         apply: 'build',
 
         generateBundle(_options, bundle) {
-            const woff = Object.keys(bundle).filter((fileName) => fileName.endsWith('.woff'));
+            const manifestAsset = Object.values(bundle).find((asset) => asset.type === 'asset' && asset.fileName.endsWith('fonts-manifest.json'));
+            if (!manifestAsset) return;
+
+            const manifest = JSON.parse(String(manifestAsset.source));
+            const fontFiles = woffFilesOf(manifest);
+            const woff = Object.keys(bundle).filter((fileName) => fileName.endsWith('.woff') && fontFiles.has(baseName(fileName)));
             if (woff.length === 0) return;
 
             woff.forEach((fileName) => delete bundle[fileName]);
 
             for (const asset of Object.values(bundle)) {
-                if (asset.type !== 'asset') continue;
+                if (asset.type !== 'asset' || asset === manifestAsset) continue;
 
                 if (asset.fileName.endsWith('.css') && String(asset.source).includes('@font-face')) {
-                    asset.source = stripWoffFaces(String(asset.source));
-                } else if (asset.fileName.endsWith('fonts-manifest.json')) {
-                    asset.source = JSON.stringify(withoutWoff(JSON.parse(String(asset.source))), null, 2);
+                    asset.source = stripWoffFaces(String(asset.source), fontFiles);
                 }
             }
+
+            manifestAsset.source = JSON.stringify(withoutWoff(manifest, fontFiles), null, 2);
         },
     };
 }
 
-function withoutWoff(manifest) {
+/** The names of the WOFF files the font build wrote (fonts-manifest.json's variants). */
+function woffFilesOf(manifest) {
+    const names = new Set();
+    for (const family of Object.values(manifest.families ?? {})) {
+        for (const variant of Object.values(family.variants ?? {})) {
+            (variant.files ?? []).filter((file) => file.format === 'woff' && file.file).forEach((file) => names.add(baseName(file.file)));
+        }
+    }
+
+    return names;
+}
+
+function withoutWoff(manifest, fontFiles) {
     const familyStyles = manifest.style?.familyStyles ?? {};
     Object.keys(familyStyles).forEach((alias) => {
-        familyStyles[alias] = stripWoffFaces(familyStyles[alias]);
+        familyStyles[alias] = stripWoffFaces(familyStyles[alias], fontFiles);
     });
 
-    if (typeof manifest.style?.inline === 'string') manifest.style.inline = stripWoffFaces(manifest.style.inline);
+    if (typeof manifest.style?.inline === 'string') manifest.style.inline = stripWoffFaces(manifest.style.inline, fontFiles);
 
     for (const family of Object.values(manifest.families ?? {})) {
         for (const variant of Object.values(family.variants ?? {})) {

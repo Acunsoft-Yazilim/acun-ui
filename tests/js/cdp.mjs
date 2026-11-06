@@ -29,6 +29,8 @@ const KEYS = {
     Escape: { code: 'Escape', windowsVirtualKeyCode: 27 },
     Tab: { code: 'Tab', windowsVirtualKeyCode: 9 },
     Enter: { code: 'Enter', windowsVirtualKeyCode: 13 },
+    ArrowLeft: { code: 'ArrowLeft', windowsVirtualKeyCode: 37 },
+    ArrowRight: { code: 'ArrowRight', windowsVirtualKeyCode: 39 },
 };
 
 /**
@@ -181,7 +183,21 @@ export async function openPage(url, { width = 1280, height = 900, args = [] } = 
                 await page('Input.dispatchMouseEvent', { type, x, y, button: 'left', clickCount: 1 });
             }
         },
-        /** A real key press: Escape, Tab (shift: Shift+Tab), Enter. */
+        /** A real mouse drag from one point of the viewport to another, in steps (a swipe with the mouse). */
+        async drag(fromX, fromY, toX, toY, steps = 8) {
+            await page('Input.dispatchMouseEvent', { type: 'mouseMoved', x: fromX, y: fromY });
+            await page('Input.dispatchMouseEvent', { type: 'mousePressed', x: fromX, y: fromY, button: 'left', buttons: 1, clickCount: 1 });
+            for (let i = 1; i <= steps; i++) {
+                await page('Input.dispatchMouseEvent', { type: 'mouseMoved', x: fromX + ((toX - fromX) * i) / steps, y: fromY + ((toY - fromY) * i) / steps, button: 'left', buttons: 1 });
+                await wait(16);
+            }
+            await page('Input.dispatchMouseEvent', { type: 'mouseReleased', x: toX, y: toY, button: 'left', buttons: 0, clickCount: 1 });
+        },
+        /** Emulates media features, e.g. [{ name: 'prefers-reduced-motion', value: 'reduce' }]. */
+        async emulateMedia(features) {
+            await page('Emulation.setEmulatedMedia', { features });
+        },
+        /** A real key press: Escape, Tab (shift: Shift+Tab), Enter, ArrowLeft, ArrowRight. */
         async press(key, { shift = false } = {}) {
             const { code, windowsVirtualKeyCode } = KEYS[key];
             const modifiers = shift ? 8 : 0;

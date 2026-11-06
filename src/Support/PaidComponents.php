@@ -20,7 +20,7 @@ final class PaidComponents
         // The PRO components.
         'chart', 'combobox', 'datatables', 'date-picker', 'date-range', 'file-upload', 'form', 'form-actions',
         'form-guard-dialog', 'form-modal', 'input-otp', 'loading-overlay', 'map', 'media-player', 'option-card',
-        'pill-action', 'range', 'rating', 'sortable', 'sortable-item', 'sortable.item', 'step', 'stepper',
+        'pill-action', 'range', 'rating', 'rich-text', 'sortable', 'sortable-item', 'sortable.item', 'step', 'stepper',
         'stepper.step', 'tag-input', 'timeline', 'timeline-item', 'timeline.item', 'tour', 'tree', 'tree-branch',
         'tree.branch', 'unsaved-changes-dialog',
         // The storefront components.

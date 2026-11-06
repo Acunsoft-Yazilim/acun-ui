@@ -57,3 +57,38 @@ test('a build without WOFF files is left alone', () => {
 
     assert.equal(bundle['assets/app.css'].source, '@font-face { src: url(a.woff2) format("woff2") }');
 });
+
+test('only the font build\'s own WOFF files go: an icon font of the application and its rule stay', () => {
+    const iconFace = '@font-face {\n  font-family: "Shop Icons";\n  src: url("/build/assets/shop-icons.woff") format("woff");\n}\n';
+    const bundle = build();
+    bundle['assets/shop-icons.woff'] = { type: 'asset', fileName: 'assets/shop-icons.woff', source: 'icons' };
+    bundle['assets/app-abc.css'].source = iconFace + '.icon { font-family: "Shop Icons" }';
+
+    woff2Only().generateBundle({}, bundle);
+
+    assert.equal(bundle['assets/ps-400-latin.woff'], undefined, 'The font build\'s WOFF file goes.');
+    assert.ok(bundle['assets/shop-icons.woff'], 'The application\'s own WOFF font stays.');
+    assert.match(bundle['assets/app-abc.css'].source, /shop-icons\.woff"\) format\("woff"\)/, 'And its @font-face rule.');
+    assert.doesNotMatch(bundle['assets/fonts-abc.css'].source, /ps-400-latin\.woff"\)/);
+});
+
+test('without the font build\'s manifest no WOFF file is touched', () => {
+    const rule = '@font-face { src: url("/build/assets/legacy.woff") format("woff") }';
+    const bundle = {
+        'assets/legacy.woff': { type: 'asset', fileName: 'assets/legacy.woff', source: 'w1' },
+        'assets/app.css': { type: 'asset', fileName: 'assets/app.css', source: rule },
+    };
+
+    woff2Only().generateBundle({}, bundle);
+
+    assert.ok(bundle['assets/legacy.woff']);
+    assert.equal(bundle['assets/app.css'].source, rule);
+});
+
+test('stripWoffFaces with file names strips only the rules of those files', () => {
+    const both = face('ps-400-latin.woff', 'woff', 'U+0000-00FF') + '@font-face {\n  font-family: "Shop Icons";\n  src: url("/build/assets/shop-icons.woff") format("woff");\n}\n';
+
+    const result = stripWoffFaces(both, ['assets/ps-400-latin.woff']);
+    assert.doesNotMatch(result, /ps-400-latin\.woff/);
+    assert.match(result, /shop-icons\.woff/);
+});

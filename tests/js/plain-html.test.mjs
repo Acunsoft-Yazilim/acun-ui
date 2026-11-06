@@ -853,6 +853,97 @@ test('the password field shows and hides its value; the search box clears itself
     assert.equal(document.activeElement, byId('ara'), 'the shortcut focuses the search');
 });
 
+test('the colour field keeps the picker and the #rrggbb box in step', async () => {
+    await mount(`
+        <div data-acun-color-input>
+            <input type="color" data-slot="color-swatch" id="secici" value="#000000">
+            <input type="text" data-slot="color-value" id="renk" name="renk" value="#C2410C">
+        </div>`);
+    assert.equal(byId('secici').value, '#c2410c', 'The picker starts at the box\'s value.');
+
+    const heard = [];
+    for (const type of ['input', 'change']) byId('renk').addEventListener(type, () => heard.push([type, byId('renk').value]));
+    byId('secici').value = '#2563eb';
+    byId('secici').dispatchEvent(new Event('input', { bubbles: true }));
+    byId('secici').dispatchEvent(new Event('change', { bubbles: true }));
+    assert.equal(byId('renk').value, '#2563eb');
+    assert.deepEqual(heard, [['input', '#2563eb'], ['change', '#2563eb']], 'The binding (wire:model, x-model) hears the colour picked.');
+
+    for (const [typed, picker] of [['#abc', '#aabbcc'], ['15803d', '#15803d'], ['#15803', '#15803d']]) {
+        byId('renk').value = typed;
+        byId('renk').dispatchEvent(new Event('input', { bubbles: true }));
+        assert.equal(byId('secici').value, picker, `${typed}: a value that is not a colour yet leaves the picker where it was`);
+    }
+
+    // Left with a short form, the box writes it out before the binding hears the change.
+    const typedInputs = [];
+    byId('renk').addEventListener('change', () => typedInputs.push(byId('renk').value));
+    byId('renk').value = 'abc';
+    byId('renk').dispatchEvent(new Event('change', { bubbles: true }));
+    assert.equal(byId('renk').value, '#aabbcc');
+    assert.deepEqual(typedInputs, ['#aabbcc'], 'wire:model.change and .blur read the full form.');
+
+    // A server render writes a new value into the box (a Livewire morph of its value attribute).
+    byId('renk').setAttribute('value', '#7c3aed');
+    byId('renk').value = '#7c3aed';
+    await settle();
+    assert.equal(byId('secici').value, '#7c3aed');
+});
+
+test('the browser\'s validation bubbles of the kit\'s fields speak the page\'s language', async () => {
+    const messages = { valueMissing: 'Lütfen bu alanı doldurun.', valueMissingCheckbox: 'Lütfen bu kutuyu işaretleyin.', typeMismatchEmail: 'Lütfen bir e-posta adresi girin.' };
+    await mount(`
+        <script type="application/json" data-acun-ui-config="dogrulama">${JSON.stringify({ validation: messages })}</script>
+        <form id="form">
+            <input data-acun-control id="ad" required>
+            <input data-acun-control id="eposta" type="email" value="ayse">
+            <input data-acun-control id="sozlesme" type="checkbox" required>
+            <input id="kendi" required>
+            <input data-acun-control id="uygulamanin" required>
+        </form>`);
+    byId('uygulamanin').setCustomValidity('Ürün adı boş olamaz.');
+    byId('form').checkValidity();
+
+    assert.equal(byId('ad').validationMessage, 'Lütfen bu alanı doldurun.');
+    assert.equal(byId('eposta').validationMessage, 'Lütfen bir e-posta adresi girin.');
+    assert.equal(byId('sozlesme').validationMessage, 'Lütfen bu kutuyu işaretleyin.');
+    assert.equal(byId('uygulamanin').validationMessage, 'Ürün adı boş olamaz.', 'The application\'s own message stays.');
+    assert.notEqual(byId('kendi').validationMessage, 'Lütfen bu alanı doldurun.', 'A field that is not the kit\'s is the browser\'s.');
+
+    byId('ad').value = 'Ayşe';
+    byId('ad').dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(byId('ad').validationMessage, '', 'Typing takes the message away: the field is valid again.');
+    assert.equal(byId('ad').checkValidity(), true);
+});
+
+test('a stale validation message never blocks the form: a radio group, a field filled by code', async () => {
+    await mount(`
+        <script type="application/json" data-acun-ui-config="dogrulama-2">${JSON.stringify({ validation: { valueMissing: 'Lütfen bu alanı doldurun.', valueMissingChoice: 'Lütfen bir seçenek seçin.' } })}</script>
+        <form id="form2">
+            <input data-acun-control type="radio" name="kargo" id="r1" value="standart" required>
+            <input data-acun-control type="radio" name="kargo" id="r2" value="hizli">
+            <textarea data-acun-control id="aciklama" required hidden></textarea>
+            <button type="submit" id="gonder">Gönder</button>
+        </form>`);
+    byId('form2').addEventListener('submit', (event) => event.preventDefault());
+    byId('form2').checkValidity();
+    assert.equal(byId('r1').validationMessage, 'Lütfen bir seçenek seçin.');
+    assert.equal(byId('aciklama').validationMessage, 'Lütfen bu alanı doldurun.');
+
+    // Another radio of the group is chosen: the first one's message goes too.
+    byId('r2').checked = true;
+    byId('r2').dispatchEvent(new Event('change', { bubbles: true }));
+    assert.equal(byId('r1').validationMessage, '');
+    assert.equal(byId('r1').checkValidity(), true);
+
+    // A field filled by code (an editor behind it, Livewire) sends no event: the next press of submit clears it first.
+    byId('form2').checkValidity();
+    byId('aciklama').value = '<p>Kablosuz kulaklık</p>';
+    byId('gonder').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    assert.equal(byId('aciklama').validationMessage, '');
+    assert.equal(byId('form2').checkValidity(), true);
+});
+
 // --- accessibility fixes (2026-10-27) ------------------------------------------------------------------------
 
 test('a dismissed alert with the focus inside gives the focus to the next control, not to <body>', async () => {

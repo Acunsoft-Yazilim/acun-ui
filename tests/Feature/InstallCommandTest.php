@@ -367,6 +367,31 @@ final class InstallCommandTest extends TestCase
         self::assertStringContainsString('1 thing is missing: fix it as shown above.', $output);
     }
 
+    /** Laravel 12 has no font plugin: --check says where the fonts come from (a note, not a failure). */
+    public function test_check_notes_the_fonts_before_laravel_has_a_font_plugin(): void
+    {
+        $this->skeleton(theme: true);
+        $this->acun();
+        $this->linkNodeModules('acun-ui');
+        $this->write('public/build/manifest.json', '{}');
+        $this->app->instance(\Illuminate\Foundation\Vite::class, new class
+        {
+            public function __invoke(): string
+            {
+                return '';
+            }
+        });
+
+        [$exit, $output] = $this->acun(['--check' => true]);
+        self::assertSame(0, $exit, $output);
+        self::assertMatchesRegularExpression('/! Laravel \S+ has no font plugin \(@fonts\): @acunFonts links Public Sans and DM Mono from fonts\.bunny\.net/', $output);
+
+        config(['acun-ui.fonts_fallback' => false]);
+        [, $output] = $this->acun(['--check' => true]);
+        self::assertStringContainsString('fonts_fallback is false: @acunFonts prints nothing', $output);
+        self::assertStringContainsString('Load Public Sans and DM Mono in your CSS', $output);
+    }
+
     public function test_check_passes_with_built_assets_and_no_node_modules(): void
     {
         File::ensureDirectoryExists($this->root.'/vendor/acunsoft/acun-pro');

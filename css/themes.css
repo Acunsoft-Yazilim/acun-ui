@@ -154,8 +154,12 @@
         --ac-accent-soft: color-mix(in srgb, var(--ac-tone-accent) 14%, white);
         --ac-accent-tint-ink: color-mix(in srgb, var(--ac-tone-accent) 54%, black);
 
-        /* Focus: the frame of the focused field, button or link (3:1 on every surface). */
-        --ac-focus: var(--ac-p);
+        /*
+         * Focus: the frame of the focused field, button or link (3:1 on every surface). The primary's text
+         * tone by default; --ac-tone-focus (a theme's, or the application's CSS: :root { --ac-tone-focus: #2563eb; })
+         * sets it apart, e.g. when the brand colour is a red that the error frame also uses.
+         */
+        --ac-focus: var(--ac-tone-focus, var(--ac-p));
         --ac-focus-shadow: 0 0 #0000;
         --ac-focus-shadow-danger: 0 0 #0000;
 
