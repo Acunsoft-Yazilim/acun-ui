@@ -161,7 +161,10 @@ final class PageSourceTest extends TestCase
     {
         app(\Illuminate\Foundation\Vite::class)->useBuildDirectory(basename($this->build));
 
-        self::assertSame('', trim(Blade::render('@acunFonts')));
+        // Laravel 13 (the font plugin, @fonts): no font build, nothing. Laravel 12 has no font plugin at all, so the
+        // kit's fonts come from Bunny Fonts instead (test_acun_fonts_links_bunny_fonts_before_laravel_has_a_font_plugin).
+        $expected = method_exists(app(\Illuminate\Foundation\Vite::class), 'fonts') ? '' : (string) \Acun\Ui\Support\Fonts::fallback();
+        self::assertSame($expected, trim(Blade::render('@acunFonts')));
     }
 
     /** Laravel 11/12 (the Vite helper has no fonts()): the families come from Bunny Fonts, unless fonts_fallback is false. */

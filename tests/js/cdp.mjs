@@ -152,9 +152,19 @@ export async function openPage(url, { width = 1280, height = 900, args = [] } = 
     };
 
     /** Polls expression in the page until it is truthy; fails with message after timeout ms. */
+    // A check that runs while the page reloads or navigates loses its context: that is "not yet", not a failure.
+    const NAVIGATING = /navigated or closed|Cannot find context|Execution context was destroyed/;
+    const check = async (expression) => {
+        try {
+            return await evaluate(expression);
+        } catch (error) {
+            if (NAVIGATING.test(String(error?.message ?? error))) return false;
+            throw error;
+        }
+    };
     const waitFor = async (expression, { timeout = 5000, message = expression } = {}) => {
         const end = Date.now() + timeout;
-        while (!(await evaluate(expression))) {
+        while (!(await check(expression))) {
             if (Date.now() > end) throw new Error(`Timed out after ${timeout} ms waiting for: ${message}`);
             await wait(10);
         }
