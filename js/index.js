@@ -90,6 +90,9 @@ import { toastsScope } from './components/toast.js';
 /** @typedef {import('./core/plugins.js').OpenOptions} OpenOptions */
 /** @typedef {import('./plugins/modal.js').ModalInstance} ModalInstance */
 /** @typedef {import('./plugins/drawer.js').DrawerInstance} DrawerInstance */
+/** @typedef {import('./plugins/dropdown.js').DropdownInstance} DropdownInstance */
+/** @typedef {import('./plugins/tabs.js').TabsInstance} TabsInstance */
+/** @typedef {import('./appearance/preferences.js').AppearanceState} AppearanceState */
 /** @typedef {import('./behavior/overlay-manager.js').OverlayOptions} OverlayOptions */
 /** @typedef {import('./core/events.js').Commands} Commands */
 
@@ -113,6 +116,13 @@ const api = {
     // Whether an element is in a dark theme (its nearest data-theme ends in "dark"), and a token's colour on it as rgb().
     isDark,
     tokenColor,
+    // On a page with Alpine: alpine.scope(kind, selector, factory) gives a plugin's elements an Alpine scope, so content
+    // written for a 2.x Alpine component (x-on:click="next()", wire:model through x-modelable on `model`) keeps working.
+    // For packages built on the runtime (Acun Pro); call it before Alpine starts.
+    alpine: { scope },
+    // The kit's confirmation dialog from JavaScript: AcunUI.confirm({ title, text, confirmLabel, cancelLabel, tone }) → Promise<boolean>.
+    // Its code is a chunk of its own in a bundler build (loaded on the first question).
+    confirm: (/** @type {import('./behavior/confirm.js').ConfirmRequest} */ request) => import('./behavior/confirm.js').then((module) => module.confirm(request)),
 };
 
 /**
@@ -256,6 +266,8 @@ const liveFocusable = other?.focus?.focusable ?? focusable;
 const liveInit = other?.init ?? init;
 const liveDestroy = other?.destroy ?? destroy;
 const liveObserve = other?.observe ?? observe;
+// The appearance choices (AcunUI.appearance) for module users: the React and Vue adapters' useAppearance().
+const liveAppearance = other?.appearance ?? appearance;
 
 // The 2.x markup of acun:passkey-button (x-data="acunPasskey(…)", data-acun-component="passkey"): its Alpine
 // data comes in a chunk of its own, on pages that have one. The component itself is the passkey plugin now.
@@ -275,6 +287,7 @@ export {
     liveInit as init,
     liveDestroy as destroy,
     liveObserve as observe,
+    liveAppearance as appearance,
     modalPlugin,
     drawerPlugin,
     dropdownPlugin,

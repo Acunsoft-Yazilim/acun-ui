@@ -29,6 +29,12 @@ return [
     // selected). Off by default; a container with data-acun-select-sync turns it on for the boxes in it.
     'select_sync' => false,
 
+    // acun:toast-container also shows the application's own session messages: a flash key => a toast type
+    // (success | error | warning | info), e.g. ['status' => 'success', 'error' => 'error'] for
+    // redirect()->with('status', 'Kaydedildi.'). Empty by default: some packages flash codes under 'status'
+    // (Breeze's 'verification-link-sent') that are not messages.
+    'toast_session_keys' => [],
+
     // The browser builds of the @acunsoft/acun-ui runtime: acun-ui-boot.js (acun:layout.head) and
     // acun-ui.js (@acunUiScripts, for applications without Vite).
     'assets' => [

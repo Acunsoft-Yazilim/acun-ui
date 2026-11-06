@@ -127,6 +127,24 @@ final class PartsTabsDropdownPopoverTest extends TestCase
     }
 
 
+    /** wire:model alone: the server draws the bound tab open (no :active="$tab" beside it), in parts and classic. */
+    public function test_tabs_draw_the_bound_tab_open_on_the_server(): void
+    {
+        $html = Livewire::test(RouteTabs::class)->html();
+
+        self::assertMatchesRegularExpression('/data-acun-tabs="" data-slot="tabs" data-value="orders"/', $html);
+        self::assertMatchesRegularExpression('/data-value="orders"[^>]*aria-selected="true"/s', $html);
+        self::assertSame(1, preg_match_all('/aria-selected="true"/', $html));
+        self::assertMatchesRegularExpression('/<div\s+role="tabpanel"\s+data-slot="tabs-panel"\s+data-value="orders"\s+class=/', $html, 'The bound panel is not hidden.');
+        self::assertSame(2, preg_match_all('/data-slot="tabs-panel"\s+data-value="(?:overview|settings)"\s+hidden/', $html));
+
+        $classic = Livewire::test(RouteClassicTabs::class)->html();
+        self::assertMatchesRegularExpression('/data-value="seo"[^>]*aria-selected="true"/s', $classic);
+        // A value that is not a tab: the first one, as before.
+        $unknown = Livewire::test(RouteClassicTabs::class, ['tab' => 'yok'])->html();
+        self::assertMatchesRegularExpression('/data-value="genel"[^>]*aria-selected="true"/s', $unknown);
+    }
+
     public function test_classic_tabs_are_drawn_by_the_parts_with_their_aria_and_keys(): void
     {
         $classic = Blade::render('<acun:tabs :tabs="[\'a\' => \'A\', \'b\' => \'B\']" wire:model.live="tab"><acun:tab-panel value="a">x</acun:tab-panel><acun:tab-panel value="b">y</acun:tab-panel></acun:tabs>');
@@ -435,6 +453,23 @@ final class RouteTabs extends Component
                     <acun:tabs.panel value="overview">Özet</acun:tabs.panel>
                     <acun:tabs.panel value="orders">Siparişler</acun:tabs.panel>
                     <acun:tabs.panel value="settings">Ayarlar</acun:tabs.panel>
+                </acun:tabs>
+            </div>
+            BLADE;
+    }
+}
+
+final class RouteClassicTabs extends Component
+{
+    public string $tab = 'seo';
+
+    public function render(): string
+    {
+        return <<<'BLADE'
+            <div>
+                <acun:tabs :tabs="['genel' => 'Genel', 'seo' => 'SEO']" wire:model="tab">
+                    <acun:tab-panel value="genel">Genel</acun:tab-panel>
+                    <acun:tab-panel value="seo">SEO</acun:tab-panel>
                 </acun:tabs>
             </div>
             BLADE;

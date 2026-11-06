@@ -17,6 +17,10 @@ test('importing the runtime without a DOM does not throw and starts nothing', as
     assert.equal(typeof runtime.destroy, 'function');
     assert.equal(typeof runtime.modalPlugin.mount, 'function');
     assert.equal(typeof globalThis.AcunUI, 'undefined', 'No global without a browser.');
+    // The appearance choices for module users (the React and Vue adapters' useAppearance): nothing to read on the server.
+    assert.equal(typeof runtime.appearance.subscribe, 'function');
+    assert.equal(runtime.appearance.get(), null);
+    assert.equal(runtime.appearance.ready, false);
     // A component's effect cleanup that runs on the server anyway does nothing.
     assert.doesNotThrow(() => runtime.destroy());
     assert.doesNotThrow(() => runtime.init());

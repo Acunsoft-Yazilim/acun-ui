@@ -37,6 +37,17 @@
     tab into view. Works without Alpine (the tabs plugin of the runtime); with active,
     the server already draws the open tab.
 --}}
+@php
+    // wire:model without active: the server draws the bound property's tab (Acun\Ui\Support\Bound reads it from the
+    // Livewire component being rendered), so the first frame already shows it; no :active="$tab" beside wire:model.
+    // The parts do the same (they read the binding around them). A value that is not a tab: the first tab, as before.
+    if ($active === null || $active === '') {
+        $bound = \Acun\Ui\Support\Bound::value($attributes);
+        if (is_scalar($bound) && (string) $bound !== '' && (empty($tabs) || array_key_exists((string) $bound, $tabs))) {
+            $active = (string) $bound;
+        }
+    }
+@endphp
 @if (! empty($tabs))
 {{-- Classic: drawn by the parts, so it gets their ids, aria-controls, arrow keys and focus order. --}}
 <acun:tabs :active="$active ?? array_key_first($tabs)" :variant="$variant" :size="$size" {{ $attributes }}>

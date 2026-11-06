@@ -23,6 +23,11 @@
     }
 
     $value = (string) $value;
+    // wire:model on acun:tabs without active: the bound property's tab (Acun\Ui\Support\Bound).
+    if ($active === null || $active === '') {
+        $bound = \Acun\Ui\Support\Bound::value();
+        $active = is_scalar($bound) && (string) $bound !== '' ? (string) $bound : null;
+    }
     $pills = $variant === 'pills';
 
     // md is the classic look (acun:tabs with :tabs); keep the two in sync.

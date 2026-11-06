@@ -26,7 +26,7 @@ register_shutdown_function(fn () => (new Filesystem)->deleteDirectory($compiled)
 $app = Application::create(options: ['load_environment_variables' => false]);
 $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
 // The browser tests read the Turkish interface, like the PHP tests (lang/tr.json).
-$app->setLocale('tr');
+$app->setLocale(getenv('ACUN_RENDER_LOCALE') ?: 'tr');
 $app->register(LivewireServiceProvider::class);
 $app->register(AcunUiServiceProvider::class);
 View::share('errors', new ViewErrorBag);

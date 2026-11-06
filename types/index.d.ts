@@ -29,6 +29,7 @@ import { scrollShadowsPlugin } from './plugins/scroll-shadows.js';
 import { downloadTextPlugin } from './plugins/download-text.js';
 import { tableScrollPlugin } from './plugins/table-scroll.js';
 import { paginationPlugin } from './plugins/pagination.js';
+import { scope } from './adapters/alpine.js';
 import { drawer } from './components/drawer.js';
 import { modal } from './components/modal.js';
 export type Plugins = import('./core/plugins.js').Plugins;
@@ -38,6 +39,9 @@ export type PluginContext = import('./core/plugins.js').PluginContext;
 export type OpenOptions = import('./core/plugins.js').OpenOptions;
 export type ModalInstance = import('./plugins/modal.js').ModalInstance;
 export type DrawerInstance = import('./plugins/drawer.js').DrawerInstance;
+export type DropdownInstance = import('./plugins/dropdown.js').DropdownInstance;
+export type TabsInstance = import('./plugins/tabs.js').TabsInstance;
+export type AppearanceState = import('./appearance/preferences.js').AppearanceState;
 export type OverlayOptions = import('./behavior/overlay-manager.js').OverlayOptions;
 export type Commands = import('./core/events.js').Commands;
 /** @import { AcunWindow, AlpineLike } from './core/types.js' */
@@ -48,6 +52,9 @@ export type Commands = import('./core/events.js').Commands;
 /** @typedef {import('./core/plugins.js').OpenOptions} OpenOptions */
 /** @typedef {import('./plugins/modal.js').ModalInstance} ModalInstance */
 /** @typedef {import('./plugins/drawer.js').DrawerInstance} DrawerInstance */
+/** @typedef {import('./plugins/dropdown.js').DropdownInstance} DropdownInstance */
+/** @typedef {import('./plugins/tabs.js').TabsInstance} TabsInstance */
+/** @typedef {import('./appearance/preferences.js').AppearanceState} AppearanceState */
 /** @typedef {import('./behavior/overlay-manager.js').OverlayOptions} OverlayOptions */
 /** @typedef {import('./core/events.js').Commands} Commands */
 declare const api: {
@@ -123,6 +130,10 @@ declare const api: {
     };
     isDark: typeof isDark;
     tokenColor: typeof tokenColor;
+    alpine: {
+        scope: typeof scope;
+    };
+    confirm: (/** @type {import('./behavior/confirm.js').ConfirmRequest} */ request: import('./behavior/confirm.js').ConfirmRequest) => Promise<boolean>;
 };
 export type AcunUIRuntime = typeof api & {
     version: string;
@@ -157,4 +168,23 @@ declare const liveFocusable: typeof focusable;
 declare const liveInit: typeof init;
 declare const liveDestroy: typeof destroy;
 declare const liveObserve: typeof observe;
-export { VERSION, EVENTS, liveComponents as components, liveScrollLock as scrollLock, liveOverlays as overlays, liveFocusFirst as focusFirst, liveTrapTab as trapTab, liveRememberFocus as rememberFocus, liveFocusable as focusable, livePlugins as plugins, liveInit as init, liveDestroy as destroy, liveObserve as observe, modalPlugin, drawerPlugin, dropdownPlugin, popoverPlugin, tooltipPlugin, tabsPlugin, accordionPlugin, collapsePlugin, toastsPlugin, copyPlugin, inlineConfirmPlugin, dismissiblePlugin, cardPlugin, revealPlugin, searchPlugin, commandPalettePlugin, themeSwitcherPlugin, passkeyPlugin, scrollShadowsPlugin, downloadTextPlugin, tableScrollPlugin, paginationPlugin, drawer, modal, syncSelectValues, skipDetachedMorphs, isDark, tokenColor, };
+declare const liveAppearance: {
+    readonly ready: boolean;
+    readonly scope: any;
+    get(): import("./appearance/preferences.js").AppearanceState | null;
+    subscribe(listener: import("./appearance/preferences.js").AppearanceListener): () => void;
+    setMode(mode: 'light' | 'dark' | 'system'): void;
+    toggleMode(): void;
+    setBrandColor(color: string): void;
+    forgetBrandColor(): void;
+    setSkin(skin: string): void;
+    setContentWidth(width: string): void;
+    setSemiDark(on: boolean): void;
+    setSidebarCollapsed(collapsed: boolean, { save }?: {
+        save?: boolean;
+    }): void;
+    setNavbarMode(mode: string): void;
+    reset(): void;
+    apply: () => void;
+};
+export { VERSION, EVENTS, liveComponents as components, liveScrollLock as scrollLock, liveOverlays as overlays, liveFocusFirst as focusFirst, liveTrapTab as trapTab, liveRememberFocus as rememberFocus, liveFocusable as focusable, livePlugins as plugins, liveInit as init, liveDestroy as destroy, liveObserve as observe, liveAppearance as appearance, modalPlugin, drawerPlugin, dropdownPlugin, popoverPlugin, tooltipPlugin, tabsPlugin, accordionPlugin, collapsePlugin, toastsPlugin, copyPlugin, inlineConfirmPlugin, dismissiblePlugin, cardPlugin, revealPlugin, searchPlugin, commandPalettePlugin, themeSwitcherPlugin, passkeyPlugin, scrollShadowsPlugin, downloadTextPlugin, tableScrollPlugin, paginationPlugin, drawer, modal, syncSelectValues, skipDetachedMorphs, isDark, tokenColor, };

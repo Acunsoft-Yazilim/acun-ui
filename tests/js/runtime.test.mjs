@@ -39,8 +39,9 @@ test('the runtime sets up window.AcunUI with its public API', () => {
     assert.equal(window.AcunUI, AcunUI);
     assert.equal(AcunUI.version, releaseVersion);
     assert.equal(AcunUI.initialized, true);
-    assert.deepEqual(Object.keys(AcunUI).sort(), ['appearance', 'components', 'destroy', 'drawer', 'events', 'focus', 'init', 'initialized', 'isDark', 'load', 'modal', 'observe', 'overlays', 'plugins', 'scrollLock', 'tokenColor', 'version']);
+    assert.deepEqual(Object.keys(AcunUI).sort(), ['alpine', 'appearance', 'components', 'confirm', 'destroy', 'drawer', 'events', 'focus', 'init', 'initialized', 'isDark', 'load', 'modal', 'observe', 'overlays', 'plugins', 'scrollLock', 'tokenColor', 'version']);
     assert.deepEqual(Object.keys(AcunUI.components).sort(), ['define', 'isLoaded', 'load']);
+    assert.deepEqual(Object.keys(AcunUI.alpine), ['scope']);
     assert.deepEqual(AcunUI.plugins.names, ['modal', 'drawer', 'dropdown', 'popover', 'tooltip', 'tabs', 'accordion', 'collapse', 'toasts', 'copy', 'inline-confirm', 'dismissible', 'card', 'reveal', 'search', 'command-palette', 'theme-switcher', 'passkey', 'scroll-shadows', 'download-text', 'table-scroll', 'pagination']);
     assert.deepEqual(Object.keys(AcunUI.drawer).sort(), ['close', 'open', 'toggle']);
     assert.deepEqual(Object.keys(AcunUI.modal).sort(), ['close', 'open']);

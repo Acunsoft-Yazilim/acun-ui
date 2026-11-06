@@ -16,6 +16,11 @@
     }
 
     $value = (string) $value;
+    // wire:model on acun:tabs without active: the bound property's tab (Acun\Ui\Support\Bound).
+    if ($active === null || $active === '') {
+        $bound = \Acun\Ui\Support\Bound::value();
+        $active = is_scalar($bound) && (string) $bound !== '' ? (string) $bound : null;
+    }
     // Without the server knowing the open tab (no active), every panel waits hidden for the runtime.
     $selected = $active !== null && (string) $active === $value;
 @endphp

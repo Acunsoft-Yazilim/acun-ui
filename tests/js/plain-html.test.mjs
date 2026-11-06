@@ -1003,3 +1003,43 @@ test('pagination: a page button pressed below the top brings the Livewire compon
     document.getElementById('sonraki').click();
     assert.equal(scrolls.length, 1);
 });
+
+test('AcunUI.confirm: the kit\'s confirmation dialog as a promise; Confirm is true, Cancel, Escape and the backdrop false; one at a time', async () => {
+    await mount('<button id="sor">Sil</button>');
+    const opener = document.getElementById('sor');
+    opener.focus();
+    const dialogs = () => [...document.querySelectorAll('body > [data-acun-modal^="acun-confirm-"]')];
+
+    const first = AcunUI.confirm({ title: 'Sipariş silinsin mi?', text: 'Geri alınamaz.', confirmLabel: 'Sil', cancelLabel: 'Vazgeç', tone: 'danger' });
+    await settle();
+    let dialog = dialogs().at(-1);
+    const panel = dialog.querySelector('[role="alertdialog"]');
+    assert.ok(dialog.hasAttribute('data-open'));
+    assert.equal(document.getElementById(panel.getAttribute('aria-labelledby')).textContent, 'Sipariş silinsin mi?');
+    assert.equal(document.getElementById(panel.getAttribute('aria-describedby')).textContent, 'Geri alınamaz.');
+    const yes = dialog.querySelector('[data-acun-confirm]');
+    assert.equal(yes.textContent, 'Sil');
+    assert.match(yes.className, /\bbg-danger\b/, 'tone danger: the red button');
+    // A second question waits for the first.
+    const second = AcunUI.confirm({ title: 'İkinci' });
+    await settle();
+    assert.equal(dialogs().filter((element) => element.hasAttribute('data-open')).length, 1);
+    yes.click();
+    assert.equal(await first, true);
+
+    await settle();
+    dialog = dialogs().find((element) => element.hasAttribute('data-open'));
+    assert.match(dialog.querySelector('[data-acun-confirm]').className, /\bbg-primary\b/, 'the default tone');
+    assert.equal(dialog.querySelector('h3').textContent, 'İkinci');
+    press('Escape', {}, dialog.querySelector('[role="alertdialog"]'));
+    assert.equal(await second, false);
+
+    const third = AcunUI.confirm();
+    await settle();
+    dialog = dialogs().find((element) => element.hasAttribute('data-open'));
+    dialog.querySelector('[data-acun-close-now]').click();
+    assert.equal(await third, false);
+    await sleep(350);
+    assert.equal(dialogs().length, 0, 'The dialogs are removed after the answer.');
+    assert.equal(document.activeElement, opener, 'The focus goes back.');
+});

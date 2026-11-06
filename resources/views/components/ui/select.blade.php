@@ -4,6 +4,9 @@
     'hint' => null,
     'options' => [],
     'placeholder' => null,
+    // true: the placeholder is an option one can choose again (the empty value: "no brand", "none"), for a field
+    // that may stay empty; false (default): it only shows while nothing is chosen.
+    'nullable' => false,
     // The selected option(s) of a classic form (a <select> has no value attribute); old() wins after a failed validation.
     'value' => null,
     'variant' => 'default',
@@ -64,7 +67,7 @@
             @endif
             @if ($error) aria-invalid="true" @endif
                 @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
-                {{ $controlAttributes->except(['id', 'label', 'hint', 'options', 'placeholder', 'value', 'aria-describedby'])->merge([
+                {{ $controlAttributes->except(['id', 'label', 'hint', 'options', 'placeholder', 'nullable', 'value', 'aria-describedby'])->merge([
                 'class' => \Acun\Ui\Support\Field::controlClass('block w-full appearance-none rounded-sm border-0 bg-field bg-none text-ink ring-1 ring-inset transition-colors '
                     . ($floating ? 'peer flex h-[45px] items-center pl-3 pr-9' : 'flex h-10 items-center pl-3 pr-9')
                     . ' '
@@ -79,7 +82,10 @@
                 that must be the placeholder, not the first real option. hidden keeps it
                 out of the list, as disabled did.
             --}}
-            @if ($placeholder)
+            @if ($placeholder && $nullable)
+                {{-- nullable: the placeholder is the empty choice, in the list. --}}
+                <option value="" @selected($chosen === [])>{{ $placeholder }}</option>
+            @elseif ($placeholder)
                 <option value="" hidden @selected($chosen === [])>{{ $placeholder }}</option>
             @elseif ($bound)
                 {{-- Without it a null model would show the first option, a value the model does not have. --}}

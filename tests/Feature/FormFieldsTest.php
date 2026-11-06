@@ -446,4 +446,14 @@ final class FormFieldsTest extends TestCase
         // Without a name the id is the same on every render (it was random).
         self::assertSame(Blade::render('<x-ui.switch label="Karanlık" />'), Blade::render('<x-ui.switch label="Karanlık" />'));
     }
+
+    /** nullable: the placeholder is the empty choice one can pick again; without it, it only shows while nothing is chosen. */
+    public function test_a_nullable_select_offers_its_placeholder_as_a_choice(): void
+    {
+        $nullable = Blade::render('<acun:select name="marka" placeholder="Marka seçilmedi" nullable :options="[1 => \'Acme\']" :value="1" />');
+        self::assertMatchesRegularExpression('/<option value=""\s*>Marka seçilmedi<\/option>/', $nullable);
+        self::assertStringNotContainsString('nullable', $nullable);
+
+        self::assertMatchesRegularExpression('/<option value="" hidden\s*>Marka seçilmedi<\/option>/', Blade::render('<acun:select name="marka" placeholder="Marka seçilmedi" :options="[1 => \'Acme\']" :value="1" />'));
+    }
 }

@@ -22,6 +22,24 @@ final class ToastTest extends TestCase
         $this->app['request']->setLaravelSession($this->app['session']->driver());
     }
 
+    /** config acun-ui.toast_session_keys: the application's own flash messages become toasts; off by default. */
+    public function test_the_applications_session_messages_become_toasts_when_mapped(): void
+    {
+        session()->flash('status', 'Kaydedildi.');
+        session()->flash('error', 'Kaydedilemedi.');
+        self::assertSame([], Toast::pull(), 'Off by default.');
+
+        config(['acun-ui.toast_session_keys' => ['status' => 'success', 'error' => 'danger']]);
+        session()->flash('status', 'Kaydedildi.');
+        session()->flash('error', '   ');
+        Toast::flash('Kuyruktaki', 'info');
+
+        self::assertSame([
+            ['type' => 'info', 'message' => 'Kuyruktaki', 'link' => null, 'linkLabel' => null],
+            ['type' => 'success', 'message' => 'Kaydedildi.', 'link' => null, 'linkLabel' => null],
+        ], array_map(fn (array $toast) => array_intersect_key($toast, array_flip(['type', 'message', 'link', 'linkLabel'])), Toast::pull()));
+    }
+
     public function test_a_link_with_an_unsafe_scheme_is_dropped(): void
     {
         self::assertNull(Toast::payload('Hazır', link: 'javascript:alert(document.cookie)')['link']);

@@ -75,6 +75,16 @@ final class Toast
             return [];
         }
 
-        return array_values((array) session()->pull(self::SESSION_KEY, []));
+        $toasts = array_values((array) session()->pull(self::SESSION_KEY, []));
+
+        // The application's own flash messages (config acun-ui.toast_session_keys: key => type), after the queued ones.
+        foreach ((array) config('acun-ui.toast_session_keys', []) as $key => $type) {
+            $message = session($key);
+            if (is_string($key) && is_string($message) && trim($message) !== '') {
+                $toasts[] = ['type' => self::type((string) $type), 'message' => $message, 'link' => null, 'linkLabel' => null];
+            }
+        }
+
+        return $toasts;
     }
 }
