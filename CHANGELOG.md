@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.1 (2026-11-07)
+
+- A modal or a drawer (and the carousel's full-screen view, which is a modal) inside a box that holds fixed layers (a `position: sticky` box, a transform, a filter, `contain`…) opened under the page's sticky header, its close button out of reach: it now opens in the browser's top layer (Popover API) while open, in place in the page (Livewire morphs and `wire:click` keep working; the focus trap, Escape and the focus given back as before). A modal that no box holds is unchanged.
+
 ## 2.4.0 (2026-11-07)
 
 - `acun:rich-text` is known as an Acun Pro component: in an application without acunsoft/acun-pro it stops with the error that says where it is.

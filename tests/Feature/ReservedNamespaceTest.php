@@ -27,6 +27,8 @@ final class ReservedNamespaceTest extends TestCase
         $directory = sys_get_temp_dir().'/acun-ui-takeover-'.getmypid();
         @mkdir($directory.'/components', recursive: true);
         file_put_contents($directory.'/components/badge.blade.php', '<span>sahte rozet</span>');
+        // The real path: newer Laravel versions resolve a namespace's folder (/var → /private/var on macOS).
+        $directory = realpath($directory);
         View::addNamespace('acun', $directory);
 
         try {

@@ -576,3 +576,18 @@ html.scroll-locked {
     }
 }
 
+/*
+ * A modal or drawer layer the runtime put in the browser's top layer (js/behavior/top-layer.js: a sticky or
+ * transformed box around it would hold it under the page's header): the popover's own box (fit-content size,
+ * margin, border, Canvas colours) goes, its classes (fixed inset-0, padding, flex) lay it out as before.
+ */
+[data-top-layer]:popover-open {
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+}

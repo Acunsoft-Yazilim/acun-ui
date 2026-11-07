@@ -21,7 +21,7 @@
 // Events (from the root, bubbling to window): acun:modal:opened ({ name }), acun:modal:closed and modal-closed
 // ({ name, reason }): reason 'user' (the X, Escape, the backdrop, data-acun-close, another modal opening),
 // 'command' (AcunUI.modal.close(), a close-modal event: the page or the server asked) or 'removed' (taken off the
-// page while open). A framework adapter tells a user's close from its own with it (React/Vue onOpenChange).
+// page while open). The page's code tells a user's close from its own with it.
 
 import { EVENTS, dispatch, listen } from '../core/events.js';
 import { focusable, ownPart } from '../core/dom.js';
@@ -30,6 +30,7 @@ import { enter, leave } from '../core/transition.js';
 import { keepHeaderName } from '../behavior/dialog-name.js';
 import { focusFirst } from '../behavior/focus-trap.js';
 import { overlays } from '../behavior/overlay-manager.js';
+import { raise } from '../behavior/top-layer.js';
 
 /** @import { OpenOptions, PluginDefinition } from '../core/plugins.js' */
 
@@ -82,6 +83,8 @@ function createModal(root) {
 
     let isOpen = false;
     let cancelLeave = () => {};
+    // Inside a sticky or transformed box the layer would stay under the page's header: the top layer then.
+    let lower = () => {};
 
     plugins.own(root, 'hidden', 'data-open');
     parts.forEach((part) => plugins.own(part, 'data-open'));
@@ -111,6 +114,8 @@ function createModal(root) {
             isOpen = true;
             openModals.add(instance);
             cancelLeave();
+            lower();
+            lower = layers.length ? raise(root) : () => {};
             enter(layers, parts);
             overlays.open(root, {
                 close: () => instance.requestClose(),
@@ -129,7 +134,10 @@ function createModal(root) {
 
             isOpen = false;
             openModals.delete(instance);
-            cancelLeave = leave(layers, parts);
+            cancelLeave = leave(layers, parts, () => {
+                lower();
+                lower = () => {};
+            });
             overlays.close(root);
 
             /** @type {CloseReason} */
@@ -157,6 +165,7 @@ function createModal(root) {
         destroy() {
             stopNaming();
             cancelLeave();
+            lower();
             openModals.delete(instance);
             overlays.close(root);
             // Removed while open (a morph, an @if, an unmount): the triggers and the listeners learn it closed.

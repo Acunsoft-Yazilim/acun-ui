@@ -24,6 +24,7 @@ import { enter, leave } from '../core/transition.js';
 import { keepHeaderName } from '../behavior/dialog-name.js';
 import { focusFirst } from '../behavior/focus-trap.js';
 import { overlays } from '../behavior/overlay-manager.js';
+import { raise } from '../behavior/top-layer.js';
 
 /** @import { OpenOptions, PluginDefinition } from '../core/plugins.js' */
 
@@ -93,6 +94,8 @@ function createDrawer(root) {
     // Modal: always, except a docked panel on desktop (beside the content, the page stays in use).
     let overlay = !docked || !onDesktop();
     let cancelLeave = () => {};
+    // Inside a sticky or transformed box the overlay would stay under the page's header: the top layer then.
+    let lower = () => {};
     /** @type {(() => void)[]} */
     const stop = [];
 
@@ -147,6 +150,9 @@ function createDrawer(root) {
             if (docked) overlay = !onDesktop();
             markModal();
             cancelLeave();
+            lower();
+            const lowers = overlay ? layers.map((layer) => raise(layer)) : [];
+            lower = () => lowers.forEach((undo) => undo());
             enter(layers, parts);
             register(opener ?? document.activeElement);
             // On desktop a docked panel leaves the focus on the trigger beside it. The markup of 2.0
@@ -160,7 +166,10 @@ function createDrawer(root) {
             if (!opened) return;
 
             opened = false;
-            cancelLeave = leave(layers, parts);
+            cancelLeave = leave(layers, parts, () => {
+                lower();
+                lower = () => {};
+            });
             overlays.close(root);
             announce();
         },
@@ -177,6 +186,7 @@ function createDrawer(root) {
         destroy() {
             stop.splice(0).forEach((undo) => undo());
             cancelLeave();
+            lower();
             overlays.close(root);
             // Removed while open (a morph, an @if, an unmount): the triggers and the listeners learn it closed.
             if (opened) {
