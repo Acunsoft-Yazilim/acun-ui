@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.1 (2026-11-08)
+
+- No changes in Acun UI; released together with Acun Pro 2.5.1 (the storefront's filters, picture shapes and heading sizes).
+
 ## 2.5.0 (2026-11-07)
 
 - **Removed:** the React and Vue adapters (`@acunsoft/acun-ui-react`, `@acunsoft/acun-ui-vue`; never published) and the plain HTML path (the `examples/html` page, the docs' HTML code tab, npm-registry and CDN installs): Acun UI is for Laravel + Livewire + Tailwind CSS. The npm package keeps coming from `vendor/` (`file:vendor/acunsoft/acun-ui`, written by `php artisan acun:install`); the runtime, `dist/` and the exports stay.
