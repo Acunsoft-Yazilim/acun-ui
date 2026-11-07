@@ -42,7 +42,7 @@ test('the runtime sets up window.AcunUI with its public API', () => {
     assert.deepEqual(Object.keys(AcunUI).sort(), ['alpine', 'appearance', 'components', 'confirm', 'destroy', 'drawer', 'events', 'focus', 'init', 'initialized', 'isDark', 'load', 'modal', 'observe', 'overlays', 'plugins', 'scrollLock', 'tokenColor', 'version']);
     assert.deepEqual(Object.keys(AcunUI.components).sort(), ['define', 'isLoaded', 'load']);
     assert.deepEqual(Object.keys(AcunUI.alpine), ['scope']);
-    assert.deepEqual(AcunUI.plugins.names, ['modal', 'drawer', 'dropdown', 'popover', 'tooltip', 'tabs', 'accordion', 'collapse', 'toasts', 'copy', 'inline-confirm', 'dismissible', 'card', 'reveal', 'color-input', 'search', 'command-palette', 'theme-switcher', 'passkey', 'scroll-shadows', 'download-text', 'table-scroll', 'pagination', 'carousel']);
+    assert.deepEqual(AcunUI.plugins.names, ['modal', 'drawer', 'dropdown', 'popover', 'tooltip', 'tabs', 'accordion', 'collapse', 'toasts', 'copy', 'inline-confirm', 'dismissible', 'card', 'reveal', 'color-input', 'search', 'command-palette', 'theme-switcher', 'passkey', 'scroll-shadows', 'download-text', 'table-scroll', 'pagination', 'carousel', 'carousel-controls']);
     assert.deepEqual(Object.keys(AcunUI.drawer).sort(), ['close', 'open', 'toggle']);
     assert.deepEqual(Object.keys(AcunUI.modal).sort(), ['close', 'open']);
     assert.deepEqual(Object.keys(AcunUI.appearance).sort(), ['apply', 'forgetBrandColor', 'get', 'ready', 'reset', 'scope', 'setBrandColor', 'setContentWidth', 'setMode', 'setNavbarMode', 'setSemiDark', 'setSidebarCollapsed', 'setSkin', 'subscribe', 'toggleMode']);

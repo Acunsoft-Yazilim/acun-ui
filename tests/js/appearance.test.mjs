@@ -14,7 +14,7 @@ const PAGE = { scope: 'panel', theme: THEME, targets: TARGETS, colors: COLORS, m
 globalThis.acunTestPage = { head: island(PAGE) };
 
 const { Alpine, AcunUI, document, setColorScheme, window } = await import('./browser.mjs');
-const { USER_PROPERTIES, applyColor, applyContentWidth, brandShades, initialPreferences, isDark, readStored, storageKey, tokenColor } = await import('../../js/appearance/theme.js');
+const { USER_PROPERTIES, applyColor, applyContentWidth, applyInitialAppearance, brandShades, contentWidthOf, initialPreferences, isDark, readStored, storageKey, tokenColor } = await import('../../js/appearance/theme.js');
 
 const root = document.documentElement;
 const user = () => Object.fromEntries(USER_PROPERTIES.map((name) => [name, root.style.getPropertyValue(name)]).filter(([, value]) => value !== ''));
@@ -89,18 +89,84 @@ test('two scopes on one origin do not share the colour or the mode', () => {
     window.localStorage.clear();
 });
 
-test('content width: boxed sets the container width on <html>, wide clears it', () => {
+test('content width: a name, a CSS length or default; boxed (2.x) is wide (as ContentWidth::normalize())', () => {
+    for (const [value, expected] of [
+        ['default', 'default'], ['wide', 'wide'], ['wider', 'wider'], ['full', 'full'], ['boxed', 'wide'], [' Wide ', 'wide'],
+        ['1520px', '1520px'], ['90rem', '90rem'], ['87.5rem', '87.5rem'], ['92vw', '92vw'], ['95%', '95%'],
+        [null, null], [undefined, null], ['  ', null],
+        ['xl', 'default'], ['1280', 'default'], ['0px', 'default'], ['-10px', 'default'], ['calc(100% - 2rem)', 'default'], ['1px; color: red', 'default'], [1280, 'default'],
+    ]) {
+        assert.equal(contentWidthOf(value), expected, String(value));
+    }
+});
+
+test('content width: the page, then the browser, then the default; a saved boxed comes back as wide', () => {
     window.localStorage.clear();
-    assert.equal(initialPreferences({ defaults: { content_width: 'boxed' } }).contentWidth, 'boxed', 'The application default.');
+    assert.equal(initialPreferences({ defaults: { content_width: 'boxed' } }).contentWidth, 'wide', 'The application default.');
     window.localStorage.setItem('acun-ui:app', JSON.stringify({ contentWidth: 'full' }));
     assert.equal(initialPreferences({ defaults: { content_width: 'boxed' } }).contentWidth, 'full', 'The browser beats the default.');
-    assert.equal(initialPreferences({ contentWidth: 'boxed', defaults: {} }).contentWidth, 'boxed', 'The page beats the browser.');
+    assert.equal(initialPreferences({ contentWidth: 'boxed', defaults: {} }).contentWidth, 'wide', 'The page beats the browser.');
+    window.localStorage.setItem('acun-ui:app', JSON.stringify({ contentWidth: 'boxed' }));
+    assert.equal(initialPreferences({ defaults: {} }).contentWidth, 'wide', 'A choice saved by 2.x.');
+    window.localStorage.setItem('acun-ui:app', JSON.stringify({ contentWidth: '<b>' }));
+    assert.equal(initialPreferences({ defaults: {} }).contentWidth, 'default', 'Anything else is default.');
     window.localStorage.clear();
+    assert.equal(initialPreferences({ defaults: {} }).contentWidth, 'full', 'Nothing: the whole width.');
+});
 
+test('content width on <html>: data-content-width for a name, --ac-container-width for a length, nothing for full', () => {
+    const state = () => [root.dataset.contentWidth, root.style.getPropertyValue('--ac-container-width')];
+
+    applyContentWidth('wide');
+    assert.deepEqual(state(), ['wide', '']);
     applyContentWidth('boxed');
-    assert.equal(root.dataset.contentWidth, 'boxed');
+    assert.deepEqual(state(), ['wide', ''], 'boxed is wide.');
+    applyContentWidth('wider');
+    assert.deepEqual(state(), ['wider', '']);
+    applyContentWidth('1520px');
+    assert.deepEqual(state(), ['custom', '1520px']);
+    applyContentWidth('default');
+    assert.deepEqual(state(), ['default', ''], 'A name clears the length.');
+    applyContentWidth('nonsense');
+    assert.deepEqual(state(), ['default', '']);
     applyContentWidth('full');
+    assert.deepEqual(state(), [undefined, '']);
+});
+
+test('content width: the boot script leaves a page that names none as its <html> says', () => {
+    window.localStorage.clear();
+    root.dataset.contentWidth = 'wider';
+    applyInitialAppearance({ scope: 'app', defaults: {} });
+    assert.equal(root.dataset.contentWidth, 'wider', 'Nothing given: the server\'s (or the page\'s own) attribute stays.');
+
+    applyInitialAppearance({ scope: 'app', defaults: { content_width: 'full' } });
+    assert.equal(root.dataset.contentWidth, undefined, 'A default given: applied.');
+
+    window.localStorage.setItem('acun-ui:app', JSON.stringify({ contentWidth: '96rem' }));
+    applyInitialAppearance({ scope: 'app', contentWidth: null, defaults: { content_width: 'default' } });
+    assert.deepEqual([root.dataset.contentWidth, root.style.getPropertyValue('--ac-container-width')], ['custom', '96rem'], 'The browser\'s choice before the first paint.');
+    window.localStorage.clear();
+    applyContentWidth('full');
+});
+
+test('content width: the setter takes the new names, boxed as wide, and keeps and saves the name', () => {
+    window.localStorage.clear();
+    AcunUI.appearance.setContentWidth('boxed');
+    assert.equal(AcunUI.appearance.get().contentWidth, 'wide');
+    assert.equal(root.dataset.contentWidth, 'wide');
+    assert.equal(saved('panel').contentWidth, 'wide');
+
+    AcunUI.appearance.setContentWidth('1600px');
+    assert.deepEqual([root.dataset.contentWidth, root.style.getPropertyValue('--ac-container-width')], ['custom', '1600px']);
+    // After wire:navigate rewrote <html>, the choice is put back.
+    delete root.dataset.contentWidth;
+    root.style.removeProperty('--ac-container-width');
+    AcunUI.appearance.apply();
+    assert.equal(root.style.getPropertyValue('--ac-container-width'), '1600px');
+
+    AcunUI.appearance.setContentWidth('full');
     assert.equal(root.dataset.contentWidth, undefined);
+    window.localStorage.clear();
 });
 
 test('the user\'s colour is measured on the island\'s targets and written once on <html>', () => {

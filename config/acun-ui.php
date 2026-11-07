@@ -16,7 +16,7 @@ return [
         'scope' => null,          // the browser storage of the choices, localStorage 'acun-ui:{scope}' (app; the panel layouts use panel)
         'brand_color' => null,    // default | green | red | yellow | blue | gray | dark | #rrggbb (default)
         'skin' => null,           // default | bordered (default)
-        'content_width' => null,  // full | boxed: at most 1440px, centred (full)
+        'content_width' => null,  // the page container (ac-container): default 1280px | wide 1440px | wider 1600px | full | a CSS length such as 1520px; boxed is wide (full)
         'semi_dark' => null,      // true: dark menu in the light theme (false)
         'sidebar_mode' => null,   // expanded | collapsed (expanded)
         'navbar_mode' => null,    // fixed | static | hidden (fixed)

@@ -79,3 +79,28 @@ export const carouselPlugin = {
         };
     },
 };
+
+/**
+ * acun:carousel.controls (data-acun-carousel-controls="the carousel's id"): the carousel runs its arrows (see
+ * carousel-engine.js); a group that enters the page after the carousel (a Livewire update) asks it for a render.
+ *
+ * @type {PluginDefinition}
+ */
+export const carouselControlsPlugin = {
+    selector: '[data-acun-carousel-controls]',
+    mount(element) {
+        const id = element.getAttribute('data-acun-carousel-controls');
+        const render = () => /** @type {any} */ (window).AcunUI?.plugins?.get(id ? document.getElementById(id) : null, 'carousel')?.update();
+        render();
+        // A morph that emptied the counter (the server's markup; Livewire keeps it under wire:ignore) is drawn again.
+        const observer = new MutationObserver(() => {
+            if (element.querySelector('[data-slot="carousel-counter"]')?.textContent === '') render();
+        });
+        observer.observe(element, { childList: true, characterData: true, subtree: true });
+
+        return {
+            element,
+            destroy: () => observer.disconnect(),
+        };
+    },
+};

@@ -42,7 +42,7 @@ export declare function fallbackStores(config: Record<string, any> | null): {
     };
     customizer: {
         skin: any;
-        contentWidth: any;
+        contentWidth: string;
         semiDark: boolean;
         setSkin: typeof noop;
         setContentWidth: typeof noop;

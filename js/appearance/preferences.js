@@ -4,7 +4,7 @@
 // to the document at once, kept in the browser per scope (localStorage 'acun-ui:{scope}', so two products
 // on one origin never share a colour or a mode) and saved to the account when the page has a preference
 // address. AcunUI.appearance is the public API; the Alpine stores of the layouts (appearance/stores.js)
-// and the React and Vue adapters are views of it (subscribe).
+// and an application's own code (subscribe) are views of it.
 
 import { csrfHeader } from '../core/url.js';
 import {
@@ -15,7 +15,9 @@ import {
     applySemiDark,
     applySidebar,
     applySkin,
+    chosenContentWidth,
     clearStored,
+    contentWidthOf,
     initialPreferences,
     isDark,
     themeOf,
@@ -29,7 +31,7 @@ import {
  * @property {'light' | 'dark' | 'system'} mode
  * @property {string} brandColor        a preset name or #rrggbb
  * @property {string} skin              default, bordered…
- * @property {string} contentWidth      full or boxed
+ * @property {string} contentWidth      default, wide, wider, full or a CSS length (1520px)
  * @property {string} navbarMode        fixed, static, hidden
  * @property {boolean} sidebarCollapsed
  * @property {boolean} semiDark
@@ -45,6 +47,8 @@ let settings = null;
 let state = null;
 /** @type {Set<AppearanceListener>} */
 const listeners = new Set();
+// Whether a content width was given (the page, the browser, the defaults or a setter): a page that names none keeps its <html>'s.
+let widthChosen = false;
 
 const scopeOf = () => settings?.scope || 'app';
 
@@ -90,7 +94,7 @@ const applyNavbars = () => document.querySelectorAll('[data-acun-navbar]')
  * @param {{ apply: () => void, stored: Record<string, unknown>, saved: Record<string, unknown> | null }} effects
  */
 function change(key, value, { apply, stored, saved }) {
-    // A page without acun:layout.head (plain HTML, React, Vue): the first change starts the choices from the
+    // A page without acun:layout.head (a Blade page with its own <head>): the first change starts the choices from the
     // defaults, so the setters work there too (they did nothing before).
     if (!state) startAppearance({});
     if (!state) return;
@@ -110,7 +114,7 @@ function applyAll() {
     applyMode(state.mode, themeOf(settings));
     applyColor(state.brandColor, settings);
     applySkin(state.skin);
-    applyContentWidth(state.contentWidth);
+    if (widthChosen) applyContentWidth(state.contentWidth);
     applySemiDarkMenus();
 }
 
@@ -168,9 +172,11 @@ export const appearance = {
         change('skin', skin, { apply: () => applySkin(skin), stored: { skin }, saved: { skin } });
     },
 
-    /** @param {string} width full or boxed */
+    /** @param {string} width default, wide, wider, full or a CSS length (1520px); boxed is wide */
     setContentWidth(width) {
-        change('contentWidth', width, { apply: () => applyContentWidth(width), stored: { contentWidth: width }, saved: { content: width } });
+        const value = contentWidthOf(width) ?? 'full';
+        change('contentWidth', value, { apply: () => applyContentWidth(value), stored: { contentWidth: value }, saved: { content: value } });
+        widthChosen = true;
     },
 
     /** @param {boolean} on */
@@ -221,6 +227,7 @@ export function startAppearance(config) {
 
     settings = config;
     state = /** @type {AppearanceState} */ (initialPreferences(config));
+    widthChosen = chosenContentWidth(config) !== null;
     // "system" follows the operating system switching while the page is open.
     window.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener?.('change', () => {
         if (state?.mode === 'system') applyMode('system', themeOf(settings));

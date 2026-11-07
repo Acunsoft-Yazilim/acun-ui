@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-// The appearance choices on a page with acun:layout.head's settings but no Alpine (plain HTML, React, Vue):
+// The appearance choices on a page with acun:layout.head's settings but no Alpine (no Livewire on the page):
 // AcunUI.appearance applies, keeps and announces them by itself (appearance/preferences.js).
 
 const PAGE = { scope: 'panel', theme: { key: 'default', light: 'light', dark: 'dark' }, targets: { light: '#fafafa', dark: '#1f1f1f' }, colors: { green: '#008933' }, mode: null, brandColor: null, sidebarMode: null, navbarMode: null, skin: null, semiDark: null, preferenceUrl: null, defaults: {}, forced: false };

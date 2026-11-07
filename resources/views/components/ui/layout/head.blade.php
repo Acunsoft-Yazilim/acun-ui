@@ -18,7 +18,12 @@
     'sidebarMode' => null,    // 'expanded' | 'collapsed'
     'navbarMode' => null,     // 'fixed' | 'static' | 'hidden'
     'skin' => null,           // 'default' | 'bordered'
-    'contentWidth' => null,   // 'full' | 'boxed' (at most 1440px, centred)
+    // The page container's width (ac-container, .panel-container): 'default' (1280px) | 'wide' (1440px) | 'wider'
+    // (1600px) | 'full' | a CSS length ('1520px'); 'boxed' is 'wide' (Acun\Ui\Support\ContentWidth).
+    'contentWidth' => null,
+    // The width when the user has none of their own, in place of config('acun-ui.layout.content_width'): a
+    // package's default (the storefront's commerce.content_width) that a choice in the browser may still change.
+    'defaultContentWidth' => null,
     'semiDark' => null,       // true | false (dark menu in the light theme)
     // POST URL that saves appearance preferences to the account: { mode } / { sidebar } / { brand } /
     // { navbar } / { skin } / { content } / { semiDark }.
@@ -42,7 +47,10 @@
     Order of precedence for every setting: a value the page forces (Acun\Ui\Support\Layout::page()),
     then the user's choice (the props above, else the browser's, kept per scope), then
     config('acun-ui.layout'), then the package default. The boot script writes <html data-theme>
-    (and class="dark", for application code, until 3.0) and the user's colour (--ac-user-*).
+    (and class="dark", for application code, until 3.0), the user's colour (--ac-user-*) and the
+    content width (data-content-width, --ac-container-width). A layout that prints <html> itself
+    writes the width there too, for the first frame without JavaScript:
+        <html {!! \Acun\Ui\Support\ContentWidth::rootAttributes('wide') !!}> (acun:layout.blank's content-width does it)
 --}}
 @php
     $appearance = \Acun\Ui\Support\Appearance::page($mode, $theme);
@@ -50,7 +58,7 @@
     $sidebarMode = \Acun\Ui\Support\Layout::forced('sidebar_mode') ?? $sidebarMode;
     $navbarMode = \Acun\Ui\Support\Layout::forced('navbar_mode') ?? $navbarMode;
     $skin = \Acun\Ui\Support\Layout::forced('skin') ?? $skin;
-    $contentWidth = \Acun\Ui\Support\Layout::forced('content_width') ?? $contentWidth;
+    $contentWidth = \Acun\Ui\Support\ContentWidth::normalize(\Acun\Ui\Support\Layout::forced('content_width') ?? $contentWidth);
     $semiDark = \Acun\Ui\Support\Layout::forced('semi_dark') ?? $semiDark;
     $config = [
         'scope' => \Acun\Ui\Support\Appearance::scopeName($scope ?? \Acun\Ui\Support\Appearance::scope() ?? config('acun-ui.layout.scope') ?? 'app'),
@@ -69,7 +77,7 @@
         'semiDark' => $semiDark,
         'preferenceUrl' => $preferenceUrl,
         // The application's defaults (config/acun-ui.php); used when neither the server nor the browser has a value.
-        'defaults' => array_replace(\Acun\Ui\Support\Layout::clientDefaults(), array_filter(['brand_color' => $defaultBrandColor])),
+        'defaults' => array_replace(\Acun\Ui\Support\Layout::clientDefaults(), array_filter(['brand_color' => $defaultBrandColor, 'content_width' => \Acun\Ui\Support\ContentWidth::normalize($defaultContentWidth)])),
         // A page with forced settings is left with a full page load, so the user's own come back.
         'forced' => \Acun\Ui\Support\Layout::forcesAny(),
         // The select fix (core/js/behavior/select-sync.js) for every box; off unless config says so.

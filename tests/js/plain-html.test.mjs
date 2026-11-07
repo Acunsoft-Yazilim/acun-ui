@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-// The modal and the drawer on a page with no Alpine and no Livewire: the free npm package's
-// HTML (as the documentation shows it, written by hand), the runtime alone. Opening and closing
+// The modal and the drawer on a page with no Alpine and no Livewire: the components' data-acun-*
+// markup, written by hand, the runtime alone. Opening and closing
 // by the triggers, the API and the events; Escape, the backdrop, the close guard; focus first,
 // trap and restore; the page scroll lock and its release (close-releases-page.test.mjs in plain
 // HTML); one modal replacing another; the state on the markup; elements added and removed later.
@@ -311,7 +311,7 @@ test('elements added later are mounted, removed ones stop (the lock goes), moved
     assert.ok(main.isConnected);
 });
 
-test('AcunUI.init / AcunUI.destroy by hand, any number of times (React StrictMode, route changes)', async () => {
+test('AcunUI.init / AcunUI.destroy by hand, any number of times (route changes, re-renders)', async () => {
     await mount('<div id="kutu"></div>');
     assert.equal(AcunUI.observe(false), false, 'The observer is off.');
 

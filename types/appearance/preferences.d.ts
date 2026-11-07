@@ -9,7 +9,7 @@ export type AppearanceState = {
      */
     skin: string;
     /**
-     * full or boxed
+     * default, wide, wider, full or a CSS length (1520px)
      */
     contentWidth: string;
     /**
@@ -48,7 +48,7 @@ export declare const appearance: {
     forgetBrandColor(): void;
     /** @param {string} skin */
     setSkin(skin: string): void;
-    /** @param {string} width full or boxed */
+    /** @param {string} width default, wide, wider, full or a CSS length (1520px); boxed is wide */
     setContentWidth(width: string): void;
     /** @param {boolean} on */
     setSemiDark(on: boolean): void;
@@ -95,7 +95,7 @@ export declare function startAppearance(config: AppearanceSettings): {
     forgetBrandColor(): void;
     /** @param {string} skin */
     setSkin(skin: string): void;
-    /** @param {string} width full or boxed */
+    /** @param {string} width default, wide, wider, full or a CSS length (1520px); boxed is wide */
     setContentWidth(width: string): void;
     /** @param {boolean} on */
     setSemiDark(on: boolean): void;

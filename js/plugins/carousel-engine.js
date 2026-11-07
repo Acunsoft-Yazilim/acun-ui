@@ -40,6 +40,15 @@
 // data-slot="carousel-lightbox" and opens it at the shown slide; closed, the page's carousel goes to the slide the
 // dialog showed last. In the dialog Left / Right move and Escape first zooms out, then closes (the modal plugin).
 // data-start: the slide a carousel starts at.
+//
+// Controls elsewhere on the page (acun:carousel.controls for="the carousel's id", a section heading's actions):
+//
+//     <div data-acun-carousel-controls="best-sellers"><button data-slot="carousel-prev">…</button>
+//         <span data-slot="carousel-counter" aria-hidden="true"></span><button data-slot="carousel-next">…</button></div>
+//
+// The carousel runs them as its own arrows and counter: data-controls on the group while there is something to slide
+// to, aria-disabled at an end (data-loop="off"). plugins/carousel.js asks for a render when such a group enters the
+// page (a Livewire update) after the carousel.
 
 import Swiper from 'swiper';
 import { FreeMode, Thumbs, Zoom } from 'swiper/modules';
@@ -123,6 +132,10 @@ export function mount(root) {
     const lightbox = part('carousel-lightbox');
     const lightboxCarousel = /** @type {HTMLElement | null} */ (lightbox?.querySelector('[data-carousel-lightbox]') ?? null);
     const fullscreenButton = part('carousel-fullscreen');
+    /** acun:carousel.controls elsewhere on the page, linked by the carousel's id. */
+    const remoteControls = () => (root.id ? /** @type {HTMLElement[]} */ ([...document.querySelectorAll('[data-acun-carousel-controls]')]).filter((controls) => controls.getAttribute('data-acun-carousel-controls') === root.id && !root.contains(controls)) : []);
+    /** @type {WeakSet<HTMLElement>} */
+    const ownedControls = new WeakSet();
     const thumbButtons = () => /** @type {HTMLElement[]} */ (thumbsTrack ? [...thumbsTrack.children].filter((child) => child instanceof HTMLElement && child.matches('[data-slot="carousel-thumb"]')) : []);
 
     const data = root.dataset;
@@ -302,17 +315,33 @@ export function mount(root) {
         if (swiper.destroyed) return;
         const count = slides().length;
         const index = current();
-        root.toggleAttribute('data-controls', !swiper.isLocked && count > 1);
-        if (loop === 'off') {
-            prev?.setAttribute('aria-disabled', String(swiper.isBeginning));
-            next?.setAttribute('aria-disabled', String(swiper.isEnd));
-        }
+        const active = !swiper.isLocked && count > 1;
+        // A strip counts its positions (as its dots do): two in view of four slides is "1 / 3".
+        const total = strip ? positions() : count;
+        const text = `${Math.min(index + 1, total)} / ${total}`;
+        root.toggleAttribute('data-controls', active);
+        /** @param {Element | null} back @param {Element | null} forward @param {Element | null} number */
+        const arrows = (back, forward, number) => {
+            if (loop === 'off') {
+                back?.setAttribute('aria-disabled', String(swiper.isBeginning));
+                forward?.setAttribute('aria-disabled', String(swiper.isEnd));
+            }
+            if (number && number.textContent !== text) number.textContent = text;
+        };
+        arrows(prev, next, counter);
+        remoteControls().forEach((controls) => {
+            const [back, forward, number] = ['carousel-prev', 'carousel-next', 'carousel-counter'].map((slot) => controls.querySelector(`[data-slot="${slot}"]`));
+            if (!ownedControls.has(controls)) {
+                ownedControls.add(controls);
+                own(controls, 'data-controls');
+                own(back, 'aria-disabled');
+                own(forward, 'aria-disabled');
+            }
+            controls.toggleAttribute('data-controls', active);
+            arrows(back, forward, number);
+        });
         label();
         renderDots();
-        if (counter) {
-            const text = `${Math.min(index + 1, count)} / ${count}`;
-            if (counter.textContent !== text) counter.textContent = text;
-        }
         thumbButtons().forEach((thumb, i) => {
             const value = String(i === index);
             if (thumb.getAttribute('aria-current') !== value) thumb.setAttribute('aria-current', value);
@@ -542,6 +571,15 @@ export function mount(root) {
             goTo(thumbButtons().indexOf(button));
         }
     };
+    // acun:carousel.controls elsewhere on the page: its arrows are this carousel's.
+    const onRemoteClick = (/** @type {MouseEvent} */ event) => {
+        const button = /** @type {HTMLElement | null} */ (/** @type {Element} */ (event.target).closest?.('[data-acun-carousel-controls] button'));
+        const controls = button?.closest('[data-acun-carousel-controls]');
+        if (!button || !root.id || controls?.getAttribute('data-acun-carousel-controls') !== root.id || root.contains(button)) return;
+        if (button.getAttribute('aria-disabled') === 'true') return;
+        if (button.dataset.slot === 'carousel-prev') goPrevious();
+        else if (button.dataset.slot === 'carousel-next') goNext();
+    };
     const inThumbs = (/** @type {EventTarget | null} */ target) => data.thumbs === 'vertical' && !!thumbsRoot?.contains(/** @type {Node} */ (target));
     const onKeydown = (/** @type {KeyboardEvent} */ event) => {
         if (lightbox?.contains(/** @type {Node} */ (event.target))) {
@@ -597,6 +635,7 @@ export function mount(root) {
     };
 
     root.addEventListener('click', onClick);
+    document.addEventListener('click', onRemoteClick);
     root.addEventListener('keydown', onKeydown);
     root.addEventListener('mouseenter', onEnter);
     root.addEventListener('mouseleave', onLeave);
@@ -678,6 +717,7 @@ export function mount(root) {
             stop();
             observer.disconnect();
             root.removeEventListener('click', onClick);
+            document.removeEventListener('click', onRemoteClick);
             root.removeEventListener('keydown', onKeydown);
             root.removeEventListener('mouseenter', onEnter);
             root.removeEventListener('mouseleave', onLeave);
@@ -692,6 +732,7 @@ export function mount(root) {
             thumbs?.destroy(true, true);
             dots?.querySelectorAll('[data-slot="carousel-dot-button"]').forEach((button) => button.remove());
             if (counter) counter.textContent = '';
+            remoteControls().forEach((controls) => controls.removeAttribute('data-controls'));
             slides().forEach((slide) => {
                 slide.inert = false;
                 if (named.has(slide)) slide.removeAttribute('aria-label');

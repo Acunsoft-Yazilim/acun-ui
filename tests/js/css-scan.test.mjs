@@ -5,15 +5,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compile } from '@tailwindcss/node';
 import { Scanner } from '@tailwindcss/oxide';
-import { listFiles } from '../../../../scripts/build-css.mjs';
 
-// An application's Tailwind scans the kit's Blade views (the @source lines of acun:install) and the
-// compiled stylesheets do the same (npm run build:css). A utility the kit only writes from PHP or
-// JavaScript would be missing from both. This compiles the kit's CSS once with the views and once with
+// An application's Tailwind scans the kit's Blade views (the @source lines of acun:install). A utility
+// the kit only writes from PHP or JavaScript would be missing from it. This compiles the kit's CSS once with the views and once with
 // the views, the PHP support classes and the JavaScript, and checks that the second adds nothing but
 // words that are never written as classes (names in parsers, variables, comments, examples).
 
 const root = fileURLToPath(new URL('../../../../', import.meta.url));
+
+/** Every file under the folders with one of the extensions (paths from the workspace root), sorted. */
+const listFiles = (folders, extensions) => folders.flatMap((folder) => fs.readdirSync(path.join(root, folder), { recursive: true })
+    .filter((file) => extensions.some((extension) => file.endsWith(extension)))
+    .map((file) => path.join(folder, file).split(path.sep).join('/')))
+    .sort();
 
 // Not classes the kit writes: Support\Field parses an application's classes with these names; theme.js
 // names CSS properties (--ac-user-fill-hover…); the others are words in comments, messages and examples.

@@ -1,6 +1,8 @@
 @props([
     'name',
     'title' => null,
+    // The panel's width from sm (640px) up: sm, md (default), lg, xl, 2xl, 3xl, 4xl, 5xl or full (the screen less its
+    // margin). Another value is an error, not a narrow dialog. Under sm it is always the screen's width.
     'maxWidth' => 'md',
     'closeAction' => null,
     'ariaLabel' => null,
@@ -17,7 +19,14 @@
         'lg' => 'sm:max-w-lg',
         'xl' => 'sm:max-w-xl',
         '2xl' => 'sm:max-w-2xl',
+        '3xl' => 'sm:max-w-3xl',
+        '4xl' => 'sm:max-w-4xl',
+        '5xl' => 'sm:max-w-5xl',
+        'full' => 'sm:max-w-none',
     ];
+    if (! isset($widths[$maxWidth])) {
+        throw new \InvalidArgumentException('acun:modal ['.$name.']: max-width "'.$maxWidth.'" is not one of '.implode(', ', array_keys($widths)).'.');
+    }
 
     // Written in parts (acun:modal.header, acun:modal.body, acun:modal.footer), the
     // slot fills the panel as it is. modal.trigger and modal.close are not layout
@@ -51,7 +60,7 @@
 
 {{--
     The behaviour is the modal plugin of the @acunsoft/acun-ui runtime (js/plugins/modal.js), plain
-    JavaScript bound to this markup by data-* attributes, the same HTML the free npm package documents;
+    JavaScript bound to this markup by data-* attributes, with or without Livewire;
     Escape, Tab, the page scroll lock and the focus restore come from its overlay manager. One modal
     is open at a time: opening one closes the other.
     To open it from anywhere: data-acun-open="{{ $name }}" on a button, AcunUI.modal.open('{{ $name }}'),
@@ -103,7 +112,7 @@
         @if ($labelledBy) aria-labelledby="{{ $labelledBy }}"@if ($describedBy) aria-describedby="{{ $describedBy }}"@endif @else aria-label="{{ $ariaLabel ?? __('Dialog') }}" @endif
         tabindex="-1"
         {{-- Written in parts, a nested Livewire component that starts with a part (body and footer after the header) is layout-neutral, so its parts are the panel's rows. --}}
-        class="relative z-10 flex max-h-[85vh] w-full flex-col {{ $widths[$maxWidth] ?? $widths['md'] }} overflow-hidden rounded-sm bg-surface shadow-xl scale-95 opacity-0 transition-[opacity,scale] duration-150 ease-in data-open:scale-100 data-open:opacity-100 data-open:duration-200 data-open:ease-out motion-reduce:transition-none{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=modal-header],[data-slot=modal-body],[data-slot=modal-footer]))]:contents' : '' }}"
+        class="relative z-10 flex max-h-[85vh] w-full flex-col {{ $widths[$maxWidth] }} overflow-hidden rounded-sm bg-surface shadow-xl scale-95 opacity-0 transition-[opacity,scale] duration-150 ease-in data-open:scale-100 data-open:opacity-100 data-open:duration-200 data-open:ease-out motion-reduce:transition-none{{ $parts ? ' [&>[wire\:id]:has(>:first-child:is([data-slot=modal-header],[data-slot=modal-body],[data-slot=modal-footer]))]:contents' : '' }}"
     >
         @if ($titleRow)
             <div class="flex flex-none items-center justify-between border-b border-line px-5 py-4">

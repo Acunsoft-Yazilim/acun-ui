@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-// A page without acun:layout.head's settings (plain HTML, a React or Vue app): AcunUI.appearance has no choices
+// A page without acun:layout.head's settings (a Blade page with its own <head>): AcunUI.appearance has no choices
 // until a setter is called, which starts them from the defaults (it did nothing before), and then works as on a
-// page with settings. The plain HTML example's colour picker uses it (examples/html/index.html).
+// page with settings.
 
 globalThis.acunTestPage = { alpine: false };
 const { AcunUI, document, window } = await import('./browser.mjs');

@@ -8,7 +8,7 @@
 // the first page load, after wire:navigate, for elements a Livewire morph adds and inside nested
 // or lazy Livewire components alike. A deferred component's element is left to Alpine until
 // its module is here (it registers the component's Alpine data), then Alpine starts it. The
-// server's HTML shows in the meantime. Without Alpine (plain HTML, React, Vue) the page's elements
+// server's HTML shows in the meantime. Without Alpine (a page without Livewire) the page's elements
 // and the ones added later start the loading (watchLazyComponents); both ways load a module once.
 //
 // A module that fails to load (the network dropped, a deploy replaced the chunk mid-session) is

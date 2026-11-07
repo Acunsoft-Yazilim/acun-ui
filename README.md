@@ -1,18 +1,18 @@
 # Acun UI
 
-The free edition of **Acun UI**, one package on Composer (`acunsoft/acun-ui`) and npm (`@acunsoft/acun-ui`):
+The free edition of **Acun UI** for Laravel + Livewire + Tailwind CSS, one Composer package (`acunsoft/acun-ui`) that also carries its npm package (`@acunsoft/acun-ui`, linked from `vendor/` by `acun:install`):
 
 - **Blade and Livewire components** for Laravel (`<acun:*>`, `src/`, `resources/views`), auto-discovered through `Acun\Ui\AcunUiServiceProvider`: buttons, cards, alerts, badges, form fields, tables and list parts, modals, drawers, dropdowns, tabs, the command palette, toasts, avatars, keyboard keys, skeletons, switches, empty states, copy buttons and more, the theme switcher (`acun:theme-switcher`), and the document layouts `acun:layout.head` and `acun:layout.blank`.
-- **The CSS and JavaScript core**: a Tailwind CSS v4 layer with the design tokens and the built-in light and dark themes (`css/panel.css`, `tokens.css`, `themes.css`) and the Alpine.js runtime (`js/`). It is framework-agnostic; the Acun UI HTML pages use the same classes and scripts.
+- **The CSS and JavaScript core**: a Tailwind CSS v4 layer with the design tokens and the built-in light and dark themes (`css/panel.css`, `tokens.css`, `themes.css`) and the runtime (`js/`) the components' markup runs on, with or without Livewire.
 
-**Acun Pro** (`acunsoft/acun-pro`, Composer, paid) adds the panel (the sidebar, horizontal, auth, message and print layouts, the JSON menu, the user menu and the list filters), advanced components, guarded form modals, charts, maps and e-commerce (storefront pages and the Nova, Vivid and Atelier themes) on top of this package. Its JS and CSS ship inside that package (npm `@acunsoft/acun-pro` from `vendor/`), not on npm. Without it, a tag of Acun Pro (`<acun:layout.sidebar>`, `<acun:menu>`, `<acun:combobox>`…) stops with an error that says so.
+**Acun Pro** (`acunsoft/acun-pro`, Composer, paid) adds the panel (the sidebar, horizontal, auth, message and print layouts, the JSON menu, the user menu and the list filters), advanced components, guarded form modals, charts, maps and e-commerce (storefront pages and the Nova, Vivid and Atelier themes) on top of this package. Its JS and CSS ship inside that package (npm `@acunsoft/acun-pro` from `vendor/`). Without it, a tag of Acun Pro (`<acun:layout.sidebar>`, `<acun:menu>`, `<acun:combobox>`…) stops with an error that says so.
 
 A package of components can join the `acun` tag prefix with `Acun\Ui\AcunUi::addComponentPath($path)`; folders added with `published: true` (vendor:publish copies) are searched before every package folder.
 
 ## Requirements
 
-- Tailwind CSS 4 for the source path (no plugin: the kit draws its own form controls, `css/forms.css`); none for the compiled stylesheet `dist/acun-ui.css`
-- Alpine.js 3 (bundled with Livewire 4 in Laravel apps)
+- Laravel 12 or 13 with Livewire 4 (it brings Alpine.js 3)
+- Tailwind CSS 4 (no plugin: the kit draws its own form controls, `css/forms.css`)
 
 ## Install
 
@@ -33,13 +33,7 @@ It no longer adds `@tailwindcss/forms` (2.1 and older did; a line that is there 
 
 The same lines by hand: https://docs.acunui.com/installation.html#manual
 
-Without Composer (any Tailwind CSS 4 project), install it from npm (the CSS, `js/`, `dist/` and `vite/` only):
-
-```bash
-npm install @acunsoft/acun-ui
-```
-
-In a Laravel app keep the `file:` line above instead: an npm copy of another version would not match the Blade components.
+The npm package always comes from `vendor/` through that `file:` line, so the CSS and JavaScript match the installed Blade components; it is not installed from the npm registry.
 
 ### CSS
 
@@ -55,17 +49,9 @@ Import it after Tailwind and tell Tailwind where your markup lives (in `resource
 
 Without the `@source` line the components render unstyled. If Laravel's default file has an `@theme` block that sets `--font-sans`, remove it: Acun UI sets the fonts.
 
-The kit draws its own form controls: every `<input>`, `<select>` and `<textarea>` a component renders carries `data-acun-control`, and `css/forms.css` styles only those (the `@tailwindcss/forms` plugin is not needed, and the application's other fields are left alone). Your own markup (the npm path) puts `data-acun-control` on a field to get the same base.
+The kit draws its own form controls: every `<input>`, `<select>` and `<textarea>` a component renders carries `data-acun-control`, and `css/forms.css` styles only those (the `@tailwindcss/forms` plugin is not needed, and the application's other fields are left alone). Your own markup puts `data-acun-control` on a field to get the same base.
 
 **Global rules.** `css/panel.css` is `css/core.css` (tokens, themes, form base, the kit's own rules) plus `css/base.css` (rules that reach the whole page: the theme's line on a border without a colour class, the pointer cursor, the headings' letter spacing, the code font). For none of them, import `@acunsoft/acun-ui/css/core.css` instead of `@acunsoft/acun-ui`.
-
-**Without Tailwind.** Link the compiled stylesheet, built from the same Tailwind source (`npm run build:css`): Tailwind's preflight, the tokens and themes, the form base and every class the components use, minified.
-
-```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@acunsoft/acun-ui@2/dist/acun-ui.css">
-```
-
-or `import '@acunsoft/acun-ui/acun-ui.css';` with a bundler (`acun-ui-core.css` without the global rules). It has only the components' classes: the page's own layout needs your CSS or Tailwind. Example: `examples/html/index.html` in the repository.
 
 ### Theming
 
@@ -98,15 +84,6 @@ This is the Acun UI runtime; panel pages need it. It sets up one global, `window
 
 Without Vite, `@acunUiScripts` loads a browser build of the same code (`dist/`). The mode, the theme (`data-theme`) and the user's colour are applied before the first paint by a small blocking script that `acun:layout.head` loads (`js/boot.js`).
 
-Without a bundler the browser build also comes from a CDN. Load it before Alpine:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@acunsoft/acun-ui@2/dist/acun-ui.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
-```
-
-The modals, drawers and the scroll lock work this way. The CSS still goes through Tailwind (the `@import` above), and the theme switcher needs `acun:layout.head` (it prints the settings and loads `dist/acun-ui-boot.js`).
-
 The API: `AcunUI.modal.open(name)` / `close(name?)`, `AcunUI.drawer.open(name)` / `close(name?)` / `toggle(name)`, `AcunUI.scrollLock.lock()` / `unlock()`, and `AcunUI.overlays.open(element, { close, trap })` / `close(element)` for a dialog of your own (scroll lock, Escape, Tab trap and focus restore together). The same commands as events on `window`, with `{ name }`: `acun:modal:open`, `acun:modal:close`, `acun:drawer:open`, `acun:drawer:close`, `acun:drawer:toggle` (close without a name closes every open one). Notifications: `acun:modal:opened`, `acun:modal:closed`, `acun:drawer:opened`, `acun:drawer:closed`. The first names (`open-modal`, `close-drawer`, `drawer-state-changed`, `modal-closed`…) and `window.acunScrollLock` (with a console warning) still work.
 
 The JS of the PRO components (charts, maps, date ranges, the unsaved-changes guard, the form modal) and the form modal and dialog styles come with `acunsoft/acun-pro`; see its README.
@@ -117,14 +94,13 @@ The JS of the PRO components (charts, maps, date ranges, the unsaved-changes gua
 |---|---|
 | `@acunsoft/acun-ui` (CSS, `style` condition) | `css/panel.css` — tokens, themes and component layer |
 | `@acunsoft/acun-ui` (JS) | `js/index.js` — sets up `window.AcunUI`; exports `VERSION`, `EVENTS`, `scrollLock`, `overlays`, `focusFirst`, `trapTab`, `rememberFocus`, `focusable`, `drawer`, `modal`, `syncSelectValues`, `skipDetachedMorphs` |
-| `@acunsoft/acun-ui/acun-ui.css` | `dist/acun-ui.css` — the compiled stylesheet, no Tailwind needed (`acun-ui-core.css`: without the global rules) |
 | `@acunsoft/acun-ui/css/*` | `panel.css` (= `core.css` + `base.css`; `core.css` imports `tokens.css`, `themes.css` and `forms.css`) |
 | `@acunsoft/acun-ui/js/*` | individual modules, e.g. `js/behavior/select-sync.js` |
 | `@acunsoft/acun-ui/vite` | `woff2Only()` — a Vite plugin that keeps only the WOFF2 files of laravel-vite-plugin's font build |
 
 ## Türkçe
 
-Acun UI'nin ücretsiz sürümü: Laravel için Blade ve Livewire bileşenleri, `acun:layout.head` ve `acun:layout.blank` belge düzenleri, CSS ve JavaScript çekirdeği tek pakette (Composer `acunsoft/acun-ui`, npm `@acunsoft/acun-ui`). Panel düzenleri, JSON menü ve PRO bileşenler ücretli `acunsoft/acun-pro` paketindedir; o paket ve HTML sürümü bu paketi kullanır. Kurulum iki komuttur: `composer require acunsoft/acun-ui`, ardından `php artisan acun:install`. Türkçe doküman ürün sitesindedir.
+Acun UI'nin ücretsiz sürümü: Laravel için Blade ve Livewire bileşenleri, `acun:layout.head` ve `acun:layout.blank` belge düzenleri, CSS ve JavaScript çekirdeği tek pakette (Composer `acunsoft/acun-ui`; npm paketi `@acunsoft/acun-ui` `vendor/` klasöründen bağlanır). Acun UI yalnız Laravel + Livewire + Tailwind CSS içindir. Panel düzenleri, JSON menü ve PRO bileşenler ücretli `acunsoft/acun-pro` paketindedir; o paket bu paketi kullanır. Kurulum iki komuttur: `composer require acunsoft/acun-ui`, ardından `php artisan acun:install`. Türkçe doküman ürün sitesindedir.
 
 ## License
 

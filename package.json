@@ -1,7 +1,8 @@
 {
   "name": "@acunsoft/acun-ui",
-  "version": "2.4.1",
-  "description": "Acun UI: design tokens, Tailwind CSS v4 sources, a compiled stylesheet and the browser runtime of the Acun UI components.",
+  "version": "2.5.0",
+  "private": true,
+  "description": "Acun UI: the design tokens, Tailwind CSS v4 sources, compiled stylesheet and browser runtime of the Composer package acunsoft/acun-ui (Laravel + Livewire). Not on npm: the application installs it from its Composer copy, \"file:vendor/acunsoft/acun-ui\".",
   "homepage": "https://docs.acunui.com",
   "keywords": [
     "tailwindcss",
@@ -18,16 +19,12 @@
   "type": "module",
   "style": "./css/panel.css",
   "types": "./types/index.d.ts",
-  "jsdelivr": "./dist/acun-ui.js",
-  "unpkg": "./dist/acun-ui.js",
   "exports": {
     ".": {
       "types": "./types/index.d.ts",
       "style": "./css/panel.css",
       "default": "./js/index.js"
     },
-    "./acun-ui.css": "./dist/acun-ui.css",
-    "./acun-ui-core.css": "./dist/acun-ui-core.css",
     "./css/*": "./css/*",
     "./js/*": {
       "types": "./types/*",
@@ -35,22 +32,13 @@
     },
     "./vite": "./vite/index.js"
   },
-  "files": [
-    "css",
-    "js",
-    "types",
-    "dist",
-    "vite",
-    "CHANGELOG.md"
-  ],
   "sideEffects": [
     "**/*.css",
     "./js/index.js",
     "./js/boot.js"
   ],
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
-    "prepublishOnly": "node --test tests/js/assets.test.mjs tests/js/css-dist.test.mjs"
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "swiper": "14.3.0"
@@ -62,8 +50,5 @@
     "tailwindcss": {
       "optional": true
     }
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

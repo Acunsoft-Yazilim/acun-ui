@@ -6,6 +6,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chrome, openPage, wait } from './cdp.mjs';
 import { renderBlade } from './css-samples.mjs';
+import { stylesheet } from './chrome.mjs';
 
 // acun:carousel in headless Chrome with real input, on a plain HTML page with the compiled stylesheet and the browser
 // build alone (dist/acun-ui.js, no Alpine, no Livewire): the runtime loads dist/acun-ui-carousel.js (Swiper) from
@@ -29,15 +30,25 @@ const markup = renderBlade({
         ${Array.from({ length: 3 }, (_, i) => `<acun:carousel.item><div class="swiper-zoom-target" role="img" aria-label="Görsel ${i + 1}" style="height: 240px; background: linear-gradient(135deg, #888, #222)"></div></acun:carousel.item>`).join('')}
         <acun:slot:thumbnails>${Array.from({ length: 3 }, (_, i) => `<acun:carousel.thumb label="Görsel ${i + 1}"><div style="height: 60px; background: #999"></div></acun:carousel.thumb>`).join('')}</acun:slot:thumbnails>
     </acun:carousel>`,
+    controls: `<div style="width: 480px; margin-top: 2rem; display: flex; align-items: end; justify-content: space-between"><h2 style="margin: 0">Çok satanlar</h2><acun:carousel.controls for="uzak" counter /></div>
+    <acun:carousel id="uzak" :arrows="false" :per-view="2" :loop="false" :pagination="false" label="Çok satanlar" style="width: 480px">
+        ${Array.from({ length: 4 }, (_, i) => `<acun:carousel.item label="Ürün ${i + 1}"><a href="#k${i}" style="display: block; height: 6rem">Ürün ${i + 1}</a></acun:carousel.item>`).join('')}
+    </acun:carousel>
+    <acun:carousel id="ust" arrows="top-end" :per-view="2" :loop="false" :pagination="false" label="Yeni gelenler" style="width: 480px; margin-top: 2rem">
+        ${Array.from({ length: 4 }, (_, i) => `<acun:carousel.item label="Yeni ${i + 1}"><a href="#y${i}" style="display: block; height: 6rem">Yeni ${i + 1}</a></acun:carousel.item>`).join('')}
+    </acun:carousel>`,
 });
 
-function page() {
+// The page's CSS: the kit's Tailwind sources compiled for this markup (as an application's build does).
+const css = await stylesheet(Object.values(markup).join('\n'));
+
+function page(body = markup.hero + markup.strip + markup.gallery) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'acun-carousel-'));
     const file = path.join(dir, 'index.html');
     fs.writeFileSync(file, `<!doctype html><html lang="tr" data-theme="light"><head><meta charset="utf-8">
-<link rel="stylesheet" href="${new URL('acun-ui.css', dist).href}">
+<style>${css}</style>
 <script src="${new URL('acun-ui.js', dist).href}" defer data-acun-ui></script>
-</head><body style="padding: 2rem">${markup.hero}${markup.strip}${markup.gallery}</body></html>`);
+</head><body style="padding: 2rem">${body}</body></html>`);
 
     return { url: pathToFileURL(file).href, remove: () => fs.rmSync(dir, { recursive: true, force: true }) };
 }
@@ -146,6 +157,45 @@ test('under reduced motion the carousel does not advance by itself', { skip }, a
         await wait(1800);
         assert.deepEqual(await browser.evaluate(state('vitrin')), { ready: true, index: first, live: 'polite' });
         assert.equal(await browser.evaluate(`window.AcunUI.plugins.get(document.getElementById('vitrin'), 'carousel').swiper.params.speed`), 0, 'No sliding animation either.');
+    } finally {
+        await browser.close();
+        remove();
+    }
+});
+
+test('arrows in a section heading (acun:carousel.controls) and above the strip (top-end) show, move it and stop at its ends', { skip }, async () => {
+    const { url, remove } = page(markup.controls);
+    const browser = await openPage(url, { width: 900, height: 900 });
+    try {
+        await browser.waitFor(`document.getElementById('uzak').hasAttribute('data-ready') && document.getElementById('ust').hasAttribute('data-ready')`, { message: 'Swiper to start' });
+        const box = (selector) => browser.evaluate(`(() => { const r = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(); return { top: r.top, bottom: r.bottom, right: r.right, width: r.width }; })()`);
+        const controls = '[data-acun-carousel-controls="uzak"]';
+
+        // Shown in the heading, at its end, above the slides; the counter between the arrows.
+        assert.equal(await browser.evaluate(`getComputedStyle(document.querySelector('${controls}')).display`), 'flex');
+        assert.ok((await box(controls)).bottom <= (await box('#uzak-viewport')).top, 'In the heading, above the slides.');
+        assert.equal(await browser.evaluate(`document.querySelector('${controls} [data-slot="carousel-counter"]').textContent`), '1 / 3');
+        assert.equal(await browser.evaluate(`document.querySelector('${controls} [data-slot="carousel-prev"]').getAttribute('aria-disabled')`), 'true');
+
+        for (let i = 0; i < 2; i++) {
+            await browser.click(`${controls} [data-slot="carousel-next"]`);
+            await browser.settle();
+        }
+        await browser.waitFor(`${state('uzak')}.index === 2`, { message: 'the heading\'s Next' });
+        assert.equal(await browser.evaluate(`document.querySelector('${controls} [data-slot="carousel-next"]').getAttribute('aria-disabled')`), 'true', 'At the end.');
+
+        // top-end: side by side above the slides, at their end.
+        const [prev, next, viewport] = [await box('#ust [data-slot="carousel-prev"]'), await box('#ust [data-slot="carousel-next"]'), await box('#ust-viewport')];
+        assert.ok(next.bottom <= viewport.top, 'Above the slides.');
+        assert.ok(Math.abs(next.right - viewport.right) < 1 && prev.right < next.right, 'Side by side, at the end.');
+        await browser.click('#ust [data-slot="carousel-next"]');
+        await browser.waitFor(`${state('ust')}.index === 1`, { message: 'the top-end Next' });
+
+        // The keyboard focus on an arrow is visible.
+        await browser.evaluate(`document.querySelector('#ust [data-slot="carousel-prev"]').blur()`);
+        await browser.evaluate(`document.querySelector('${controls} [data-slot="carousel-prev"]').focus({ focusVisible: true })`);
+        assert.notEqual(await browser.evaluate(`getComputedStyle(document.activeElement).outlineStyle`), 'none', 'A visible focus ring.');
+        assert.deepEqual(browser.problems, []);
     } finally {
         await browser.close();
         remove();

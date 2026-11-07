@@ -3,9 +3,13 @@
     'interval' => null,
     // Accessible name of the region; default "Images" in the current language.
     'label' => null,
-    // Slides in view: a number (1–6), or one per breakpoint: ['base' => 2, 'sm' => 3, 'lg' => 4] (a breakpoint
-    // left out takes the one before it). More than one makes a strip (product rows).
+    // Slides in view: a number (1–6), or one per breakpoint: ['base' => 2, 'sm' => 3, 'lg' => 4] (sm, md, lg, xl, 2xl;
+    // a breakpoint left out takes the one before it). More than one makes a strip (product rows).
     'perView' => 1,
+    // What the per-view breakpoints measure (Swiper's breakpointsBase): 'screen' (the viewport: sm 40rem … 2xl 96rem),
+    // or 'container': the carousel's own width at the same sizes (a container query), so a strip in a wider page
+    // container or beside a sidebar holds as many slides as its width does.
+    'perViewBase' => 'screen',
     // Space between the slides, a spacing step: 0, 2, 3, 4, 6 or 8 (default 0 with one slide in view, else 4).
     'gap' => null,
     // true: after the last slide comes the first again (and back); 'infinite': a seamless loop (Swiper moves the
@@ -19,7 +23,10 @@
     'snap' => true,
     // The carousel takes the height of the shown slide.
     'autoHeight' => false,
-    // The previous / next buttons, the dots (one per position) and the "3 / 8" counter.
+    // The previous / next buttons: true or 'sides' (on both sides of the slides, in the middle), 'top-end' (side by
+    // side above the slides, at the end), 'bottom-center' (under the slides, around a strip's dots) or false (none;
+    // acun:carousel.controls puts them elsewhere, e.g. in a section heading). Then the dots (one per position) and
+    // the "3 / 8" counter.
     'arrows' => true,
     'pagination' => true,
     'counter' => false,
@@ -49,6 +56,11 @@
         <acun:carousel.item label="Depo girişi"><img src="…" alt="…"></acun:carousel.item>
     A product strip: several slides in view, stops at the ends:
         <acun:carousel :per-view="['base' => 2, 'md' => 3, 'xl' => 4]" :loop="false" :label="__('Related products')">…</acun:carousel>
+    The same, counted by the strip's own width (it follows the page container: more slides in a wider one):
+        <acun:carousel per-view-base="container" :per-view="['base' => 2, 'md' => 3, 'lg' => 4, 'xl' => 5, '2xl' => 6]" :loop="false">…</acun:carousel>
+    A strip whose arrows sit in its section heading (acun:carousel.controls, linked by the carousel's id):
+        <div class="flex items-end justify-between"><h2>Best sellers</h2> <acun:carousel.controls for="best-sellers" /></div>
+        <acun:carousel id="best-sellers" :arrows="false" :per-view="['base' => 2, 'lg' => 4]" :loop="false">…</acun:carousel>
     A gallery: thumbnails (one per slide, in the same order), zoom and a full-screen view:
         <acun:carousel zoom fullscreen :pagination="false">
             <acun:carousel.item label="Front"><img src="…" alt="…"></acun:carousel.item> …
@@ -61,7 +73,7 @@
     motion. Slides added or removed later (a Livewire update) are counted. Without JavaScript the slides scroll sideways.
 --}}
 @php
-    $breakpoints = ['base', 'sm', 'md', 'lg', 'xl'];
+    $breakpoints = ['base', 'sm', 'md', 'lg', 'xl', '2xl'];
     $given = is_array($perView) ? $perView : ['base' => $perView];
     $views = [];
     $previous = 1;
@@ -71,6 +83,7 @@
         $views[$breakpoint] = $previous;
     }
     $strip = max($views) > 1;
+    $byContainer = $strip && $perViewBase === 'container';
     $gaps = [
         0 => '[--carousel-gap:0px]',
         2 => '[--carousel-gap:--spacing(2)]',
@@ -88,8 +101,18 @@
     $overlay = 'absolute z-10 hidden size-9 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-ink shadow group-data-controls/carousel:flex hover:bg-surface focus-visible:outline-2 focus-visible:outline-surface aria-disabled:cursor-default aria-disabled:opacity-40';
     $edge = 'absolute z-10 hidden size-10 cursor-pointer items-center justify-center rounded-full bg-surface text-ink shadow sm:group-data-controls/carousel:flex hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus aria-disabled:cursor-default aria-disabled:opacity-0';
     $button = $framed ? $overlay : $edge;
-    // The full-screen dialog's name (the modal plugin's): from the carousel's id, else one made from its content.
-    $carouselId = $fullscreen ? \Acun\Ui\Support\Field::id('carousel', $attributes, null, $label, $thumbsMode) : null;
+    $arrowsAt = match (true) {
+        $arrows === false || $arrows === null || $arrows === 'false' => null,
+        in_array($arrows, ['top-end', 'bottom-center'], true) => $arrows,
+        default => 'sides',
+    };
+    // Arrows outside the slides: a slider's dark frame goes round the slides alone, the buttons sit on the page.
+    $outside = 'flex size-9 cursor-pointer items-center justify-center rounded-full border border-line bg-surface text-ink shadow-xs hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus aria-disabled:cursor-default aria-disabled:opacity-40 aria-disabled:hover:bg-surface';
+    $frameSlides = $framed && in_array($arrowsAt, ['top-end', 'bottom-center'], true);
+    // The carousel's id (an id attribute, else one made from its content): the viewport's id (the arrows' aria-controls)
+    // and the full-screen dialog's name (the modal plugin's).
+    $carouselId = \Acun\Ui\Support\Field::id('carousel', $attributes, null, $label, $thumbsMode);
+    $viewportId = $carouselId.'-viewport';
     $hasSets = str_contains($slot->toHtml(), 'data-slot="carousel-set"');
 @endphp
 <div
@@ -114,13 +137,27 @@
     {{ $attributes->class([
         'group/carousel relative',
         $gapClass,
-        'overflow-hidden rounded-sm bg-inverse' => $framed,
+        'overflow-hidden rounded-sm bg-inverse' => $framed && ! $frameSlides,
         'grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 sm:grid-cols-[5.5rem_minmax(0,1fr)]' => $thumbsMode === 'vertical',
-        '[--carousel-per-view:var(--carousel-per-view-base)] sm:[--carousel-per-view:var(--carousel-per-view-sm)] md:[--carousel-per-view:var(--carousel-per-view-md)] lg:[--carousel-per-view:var(--carousel-per-view-lg)] xl:[--carousel-per-view:var(--carousel-per-view-xl)]' => $strip,
+        '[--carousel-per-view:var(--carousel-per-view-base)] sm:[--carousel-per-view:var(--carousel-per-view-sm)] md:[--carousel-per-view:var(--carousel-per-view-md)] lg:[--carousel-per-view:var(--carousel-per-view-lg)] xl:[--carousel-per-view:var(--carousel-per-view-xl)] 2xl:[--carousel-per-view:var(--carousel-per-view-2xl)]' => $strip && ! $byContainer,
+        // By the carousel's own width: the root is the query container, the track (inside it) takes the count.
+        '@container/carousel' => $byContainer,
     ]) }}
 >
-    <div data-slot="carousel-viewport" @class([
+    @if ($arrowsAt === 'top-end')
+        <div @class(['mb-3 hidden justify-end gap-2 group-data-controls/carousel:flex', 'col-span-2' => $thumbsMode === 'vertical'])>
+            <button type="button" data-slot="carousel-prev" aria-label="{{ __('Previous') }}" aria-controls="{{ $viewportId }}" class="{{ $outside }}">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button type="button" data-slot="carousel-next" aria-label="{{ __('Next') }}" aria-controls="{{ $viewportId }}" class="{{ $outside }}">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    @endif
+
+    <div data-slot="carousel-viewport" id="{{ $viewportId }}" @class([
         'relative min-w-0 overflow-hidden group-data-ready/carousel:touch-pan-y',
+        'rounded-sm bg-inverse' => $frameSlides,
         'rounded-sm' => $thumbsMode,
         'col-start-2 row-start-1' => $thumbsMode === 'vertical',
     ])>
@@ -128,6 +165,7 @@
         <div data-slot="carousel-track" aria-live="{{ $interval ? 'off' : 'polite' }}" @class([
             'acun-carousel-track flex gap-(--carousel-gap) overflow-x-auto [scrollbar-width:none] ease-out motion-reduce:transition-none group-data-ready/carousel:gap-0 group-data-ready/carousel:overflow-visible',
             '[&>*]:w-[calc((100%_-_(var(--carousel-per-view,1)_-_1)_*_var(--carousel-gap))_/_var(--carousel-per-view,1))] [&>*]:flex-none',
+            '[--carousel-per-view:var(--carousel-per-view-base)] @min-[40rem]/carousel:[--carousel-per-view:var(--carousel-per-view-sm)] @min-[48rem]/carousel:[--carousel-per-view:var(--carousel-per-view-md)] @min-[64rem]/carousel:[--carousel-per-view:var(--carousel-per-view-lg)] @min-[80rem]/carousel:[--carousel-per-view:var(--carousel-per-view-xl)] @min-[96rem]/carousel:[--carousel-per-view:var(--carousel-per-view-2xl)]' => $byContainer,
             'snap-x snap-mandatory group-data-ready/carousel:snap-none' => $snap,
             '[&>*]:snap-start' => $snap && ! $centered,
             '[&>*]:snap-center' => $snap && $centered,
@@ -137,11 +175,11 @@
             {{ $slot }}
         </div>
 
-        @if ($arrows)
-            <button type="button" data-slot="carousel-prev" aria-label="{{ __('Previous') }}" @if ($framed) data-theme="light" @endif @class([$button, 'top-1/2 -translate-y-1/2', 'left-3' => $framed, 'left-2' => ! $framed])>
+        @if ($arrowsAt === 'sides')
+            <button type="button" data-slot="carousel-prev" aria-label="{{ __('Previous') }}" aria-controls="{{ $viewportId }}" @if ($framed) data-theme="light" @endif @class([$button, 'top-1/2 -translate-y-1/2', 'left-3' => $framed, 'left-2' => ! $framed])>
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>
-            <button type="button" data-slot="carousel-next" aria-label="{{ __('Next') }}" @if ($framed) data-theme="light" @endif @class([$button, 'top-1/2 -translate-y-1/2', 'right-3' => $framed, 'right-2' => ! $framed])>
+            <button type="button" data-slot="carousel-next" aria-label="{{ __('Next') }}" aria-controls="{{ $viewportId }}" @if ($framed) data-theme="light" @endif @class([$button, 'top-1/2 -translate-y-1/2', 'right-3' => $framed, 'right-2' => ! $framed])>
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </button>
         @endif
@@ -179,7 +217,22 @@
         @endif
     </div>
 
-    @if ($pagination && $strip)
+    @if ($arrowsAt === 'bottom-center')
+        {{-- The arrows under the slides, a strip's dots between them. --}}
+        <div @class(['mt-4 hidden items-center justify-center gap-3 group-data-controls/carousel:flex', 'col-span-2' => $thumbsMode === 'vertical'])>
+            <button type="button" data-slot="carousel-prev" aria-label="{{ __('Previous') }}" aria-controls="{{ $viewportId }}" class="{{ $outside }}">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            @if ($pagination && $strip)
+                <div data-slot="carousel-dots" wire:ignore class="flex justify-center gap-1.5">
+                    <template data-slot="carousel-dot"><button type="button" aria-label="{{ __('Slide :number') }}" aria-current="false" class="h-1.5 w-1.5 cursor-pointer rounded-full bg-line-strong transition-all motion-reduce:transition-none aria-[current=true]:w-5 aria-[current=true]:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"></button></template>
+                </div>
+            @endif
+            <button type="button" data-slot="carousel-next" aria-label="{{ __('Next') }}" aria-controls="{{ $viewportId }}" class="{{ $outside }}">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    @elseif ($pagination && $strip)
         <div data-slot="carousel-dots" wire:ignore class="mt-4 hidden justify-center gap-1.5 group-data-controls/carousel:flex">
             <template data-slot="carousel-dot"><button type="button" aria-label="{{ __('Slide :number') }}" aria-current="false" class="h-1.5 w-1.5 cursor-pointer rounded-full bg-line-strong transition-all motion-reduce:transition-none aria-[current=true]:w-5 aria-[current=true]:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"></button></template>
         </div>

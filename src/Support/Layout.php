@@ -101,7 +101,7 @@ final class Layout
     public static function clientDefaults(): array
     {
         return collect(['mode', 'brand_color', 'skin', 'content_width', 'semi_dark', 'sidebar_mode', 'navbar_mode'])
-            ->mapWithKeys(fn (string $key) => [$key => self::default($key)])
+            ->mapWithKeys(fn (string $key) => [$key => $key === 'content_width' ? ContentWidth::normalize(self::default($key)) : self::default($key)])
             ->all();
     }
 }

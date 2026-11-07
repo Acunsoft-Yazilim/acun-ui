@@ -5,8 +5,8 @@
 // or, without a build step, the browser build dist/acun-ui.js (@acunUiScripts with Laravel). It
 // sets up window.AcunUI once per page and installs, once:
 // - the plugins: the components' behaviour in plain JavaScript, bound to their markup by data-*
-//   attributes (core/plugins.js; modal and drawer in plugins/): the same in plain HTML, React,
-//   Vue, Blade and Livewire, with no Alpine. They start on the page's elements, and a
+//   attributes (core/plugins.js; modal and drawer in plugins/): the same on Blade pages with and
+//   without Livewire, with no Alpine. They start on the page's elements, and a
 //   MutationObserver starts added ones and stops removed ones (AcunUI.init(root) /
 //   AcunUI.destroy(root) by hand; AcunUI.observe(false) turns the observer off). Other packages
 //   define their own with AcunUI.plugins.define (Acun Pro);
@@ -73,7 +73,7 @@ import { scrollShadowsPlugin } from './plugins/scroll-shadows.js';
 import { downloadTextPlugin } from './plugins/download-text.js';
 import { tableScrollPlugin } from './plugins/table-scroll.js';
 import { paginationPlugin } from './plugins/pagination.js';
-import { carouselPlugin } from './plugins/carousel.js';
+import { carouselControlsPlugin, carouselPlugin } from './plugins/carousel.js';
 import { connectAlpine, scope } from './adapters/alpine.js';
 import { followAppearanceThroughNavigation, keepPluginStateThroughMorphs, runCloseActions } from './adapters/livewire.js';
 import { drawer, drawerScope } from './components/drawer.js';
@@ -216,6 +216,7 @@ function setup(runtime, { observe: watch = true }) {
     plugins.define('table-scroll', tableScrollPlugin);
     plugins.define('pagination', paginationPlugin);
     plugins.define('carousel', carouselPlugin);
+    plugins.define('carousel-controls', carouselControlsPlugin);
     scope('modal', '[data-acun-modal]', modalScope);
     scope('drawer', '[data-acun-drawer]', drawerScope);
     scope('dropdown', '[data-acun-dropdown]', dropdownScope);
@@ -273,7 +274,7 @@ const liveFocusable = other?.focus?.focusable ?? focusable;
 const liveInit = other?.init ?? init;
 const liveDestroy = other?.destroy ?? destroy;
 const liveObserve = other?.observe ?? observe;
-// The appearance choices (AcunUI.appearance) for module users: the React and Vue adapters' useAppearance().
+// The appearance choices (AcunUI.appearance) for module users: an application's own JavaScript.
 const liveAppearance = other?.appearance ?? appearance;
 
 // The 2.x markup of acun:passkey-button (x-data="acunPasskey(…)", data-acun-component="passkey"): its Alpine
@@ -319,6 +320,7 @@ export {
     tableScrollPlugin,
     paginationPlugin,
     carouselPlugin,
+    carouselControlsPlugin,
     // Deprecated (3.0): the Alpine data of the 2.0 drawer and modal; they delegate to the plugins.
     drawer,
     modal,

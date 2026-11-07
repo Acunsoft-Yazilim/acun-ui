@@ -6,6 +6,11 @@
     'scope' => null,
     'brandColor' => null,
     'defaultBrandColor' => null,
+    // The page container's width (ac-container, acun:container): default · wide · wider · full · a CSS length. A
+    // value the user chose; defaultContentWidth is the page's own default that a choice kept in the browser may
+    // change (see acun:layout.head). Without either: config('acun-ui.layout.content_width'), else full.
+    'contentWidth' => null,
+    'defaultContentWidth' => null,
     // Spaces before the <head> lines in the page source (see acun:layout.head).
     'indent' => 8,
 ])
@@ -24,11 +29,13 @@
     $appearance = \Acun\Ui\Support\Appearance::page($mode, $theme);
     // Without JS the page keeps this theme; the boot script sets the saved one before the first paint.
     $documentTheme = \Acun\Ui\Support\Appearance::documentTheme($appearance);
+    // The first frame's width on <html> (the boot script applies a choice kept in the browser before the first paint).
+    $width = \Acun\Ui\Support\ContentWidth::resolve(\Acun\Ui\Support\Layout::forced('content_width'), $contentWidth, $defaultContentWidth, \Acun\Ui\Support\Layout::default('content_width'));
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $documentTheme }}"@if ($documentTheme === $appearance['theme']['dark']) class="dark"@endif>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $documentTheme }}"@if ($documentTheme === $appearance['theme']['dark']) class="dark"@endif{!! \Acun\Ui\Support\ContentWidth::rootAttributes($width) !!}>
     <head>
-        <acun:layout.head :title="$title" :mode="$appearance['mode']" :theme="$appearance['theme']['key']" :scope="$scope" :brand-color="$brandColor" :default-brand-color="$defaultBrandColor" :indent="$indent">
+        <acun:layout.head :title="$title" :mode="$appearance['mode']" :theme="$appearance['theme']['key']" :scope="$scope" :brand-color="$brandColor" :default-brand-color="$defaultBrandColor" :content-width="$contentWidth" :default-content-width="$defaultContentWidth" :indent="$indent">
             {{ $head ?? '' }}
         </acun:layout.head>
     </head>

@@ -50,7 +50,10 @@ test('each prop reaches Swiper as its option; the counter shows the position', (
 test('a strip: several in view by breakpoint, the CSS gap is Swiper\'s space, and it stops at the ends', () => withLayout(async () => {
     await mount(html.strip);
     const root = document.getElementById('serit');
-    assert.equal(root.getAttribute('style'), '--carousel-per-view-base: 2; --carousel-per-view-sm: 2; --carousel-per-view-md: 2; --carousel-per-view-lg: 4; --carousel-per-view-xl: 4');
+    // 2xl (96rem) is a breakpoint too (2026-11-07): left out, it takes xl's.
+    assert.equal(root.getAttribute('style'), '--carousel-per-view-base: 2; --carousel-per-view-sm: 2; --carousel-per-view-md: 2; --carousel-per-view-lg: 4; --carousel-per-view-xl: 4; --carousel-per-view-2xl: 4');
+    assert.match(root.className, /2xl:\[--carousel-per-view:var\(--carousel-per-view-2xl\)\]/);
+    assert.doesNotMatch(root.className, /@container/, 'By the screen unless per-view-base="container".');
     assert.ok(root.hasAttribute('data-strip'));
     assert.match(root.className, /\[--carousel-gap:--spacing\(3\)\]/);
     const { carousel } = await ready('serit');
@@ -171,7 +174,8 @@ test('full screen: the dialog opens at the shown slide with copies of the slides
     assert.equal(innerCarousel.index, 1, 'At the shown slide.');
     assert.deepEqual([...inner.querySelectorAll('[data-slot="carousel-item"]')].map((slide) => slide.textContent.trim()), ['1', '2', '3']);
     assert.equal(inner.querySelectorAll('[data-slot="carousel-thumb"]').length, 3, 'The thumbnails come too.');
-    assert.equal(inner.querySelectorAll('[id]').length, 0, 'The copies carry no id of the page.');
+    assert.equal(inner.querySelectorAll('[data-slot="carousel-track"] [id], [data-slot="carousel-thumbs"] [id]').length, 0, 'The copies carry no id of the page.');
+    assert.notEqual(inner.querySelector('[data-slot="carousel-viewport"]').id, root.querySelector('[data-slot="carousel-viewport"]').id, 'The dialog\'s viewport has an id of its own (its arrows\' aria-controls).');
     assert.ok([...inner.querySelectorAll('[data-slot="carousel-item"]')].every((slide) => slide.querySelector('.acun-carousel-zoom > .swiper-zoom-target')), 'Every picture zooms there.');
     assert.equal(innerCarousel.swiper.params.zoom.toggle, true, 'In the dialog a double tap zooms.');
 

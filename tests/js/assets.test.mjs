@@ -27,12 +27,14 @@ for (const { file } of BUILDS) {
     });
 }
 
-// 5.75 KB (was 5.5, before that 5): since 2.0 it also gives the semi-dark menu and the navbar their saved choice as
+// 6.25 KB (was 5.75, 5.5, before that 5): since 2.0 it also gives the semi-dark menu and the navbar their saved choice as
 // the parser adds them (no flash of the server's value) and reads the choices of the page's scope; since 2.1 its
 // stand-ins (a page whose runtime did not load) also give the modal and drawer roots, which carry no x-data any
-// more, a scope, so their content's close() does not reach window.close().
+// more, a scope, so their content's close() does not reach window.close(). Since 2026-11-07 it puts the page
+// container's width on <html> (the named widths, a CSS length, boxed as wide; 5.6 → 6.1 KB measured), so a width
+// kept in the browser is on the first frame.
 test('the boot script stays small: it blocks the first paint', () => {
-    assert.ok(fs.statSync(new URL('acun-ui-boot.js', dist)).size < 5.75 * 1024);
+    assert.ok(fs.statSync(new URL('acun-ui-boot.js', dist)).size < 6.25 * 1024);
 });
 
 // acun:carousel's Swiper is a file of its own beside the runtime (dist/acun-ui-carousel.js): only a page with a carousel

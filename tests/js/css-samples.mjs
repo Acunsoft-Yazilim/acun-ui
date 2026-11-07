@@ -1,5 +1,5 @@
 // The free components with the states their markup carries, rendered by the kit (render.php): the
-// sample page of the CSS parity test (css-parity.test.mjs) and the HTML example (npm run build:example).
+// sample page of the CSS parity test (css-parity.test.mjs) and the class check of css-dist.test.mjs.
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 

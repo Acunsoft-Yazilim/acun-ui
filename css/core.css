@@ -228,18 +228,35 @@ dialog#livewire-error::backdrop {
 }
 
 /*
- * The panel container. The top bar, the page and the footer each sit in one, so their edges
- * line up on every screen: the gutter around them grows with the screen (16 / 24 / 32px) and
- * the width is either the whole content area (wide, like Bootstrap's container-fluid) or at
- * most 1440px, centred (boxed, like container-xxl): <html data-content-width="boxed">, the
- * layouts' content-width prop, config('acun-ui.layout.content_width') or Appearance → Content width.
+ * The page container: one width for the panel's top bar, page and footer and for the storefront's
+ * bands, so their edges line up on every screen.
  *
- * Not Tailwind's `container`: its width jumps at the viewport breakpoints and does not know the
- * side menu's width, so the page would neither fill the space nor line up with the top bar.
+ *   ac-container       mx-auto, the whole width up to --ac-container-width, the gutter inside
+ *                      (--ac-container-gutter: 16px on phones growing to 32px). <acun:container> is the
+ *                      same element; its width prop sets the variable on itself.
+ *   panel-container    the panel layouts' container: the same width, without a gutter of its own (its
+ *                      .panel-gutter is outside it, 16 / 24 / 32px). --panel-container-width (2.x) still
+ *                      sets it.
+ *
+ * The width is the page's: <html data-content-width> names one (default 1280px, wide 1440px, wider
+ * 1600px; boxed is the 2.x name of wide), data-content-width="custom" comes with style="--ac-container-width:
+ * 1520px", and without the attribute it is full (no limit). The layouts write it from their content-width prop,
+ * a package's default (the storefront's commerce.content_width) and config('acun-ui.layout.content_width'),
+ * the panel's Appearance → Content width changes it (Acun\Ui\Support\ContentWidth, js/appearance/theme.js).
+ * A theme or the application may change the named widths: :root { --ac-container-default: 1320px; }.
+ *
+ * Not Tailwind's `container`: its width jumps at the viewport breakpoints and does not know the side
+ * menu's width, so the page would neither fill the space nor line up with the top bar. Grids inside follow
+ * the container's width with container queries (@container), not the screen's.
  */
 :root {
+    --ac-container-default: 1280px;
+    --ac-container-wide: 1440px;
+    --ac-container-wider: 1600px;
+    --ac-container-width: none;
+    --ac-container-gutter: clamp(1rem, 3vw, 2rem);
     --panel-gutter: 1rem;
-    --panel-container-width: none;
+    --panel-container-width: var(--ac-container-width);
 }
 
 @media (width >= 40rem) {
@@ -254,11 +271,27 @@ dialog#livewire-error::backdrop {
     }
 }
 
-:root[data-content-width='boxed'] {
-    --panel-container-width: 1440px;
+:root[data-content-width='default'] {
+    --ac-container-width: var(--ac-container-default);
+}
+
+:root:is([data-content-width='wide'], [data-content-width='boxed']) {
+    --ac-container-width: var(--ac-container-wide);
+}
+
+:root[data-content-width='wider'] {
+    --ac-container-width: var(--ac-container-wider);
 }
 
 @layer components {
+    .ac-container {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: var(--ac-container-width);
+        margin-inline: auto;
+        padding-inline: var(--ac-container-gutter);
+    }
+
     .panel-gutter {
         padding-inline: var(--panel-gutter);
     }
@@ -354,6 +387,22 @@ html.scroll-locked {
         outline-offset: -2px;
     }
     }
+}
+
+/*
+ * A modal or drawer layer the runtime put in the browser's top layer (js/behavior/top-layer.js: a sticky or
+ * transformed box around it would hold it under the page's header): the popover's own box (fit-content size,
+ * margin, border, Canvas colours) goes, its classes (fixed inset-0, padding, flex) lay it out as before.
+ */
+[data-top-layer]:popover-open {
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
 }
 
 /*
@@ -576,18 +625,3 @@ html.scroll-locked {
     }
 }
 
-/*
- * A modal or drawer layer the runtime put in the browser's top layer (js/behavior/top-layer.js: a sticky or
- * transformed box around it would hold it under the page's header): the popover's own box (fit-content size,
- * margin, border, Canvas colours) goes, its classes (fixed inset-0, padding, flex) lay it out as before.
- */
-[data-top-layer]:popover-open {
-    width: auto;
-    height: auto;
-    max-width: none;
-    max-height: none;
-    margin: 0;
-    border: 0;
-    background: transparent;
-    color: inherit;
-}

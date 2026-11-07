@@ -1,5 +1,5 @@
 // The plain-JavaScript components (plugins): one behaviour per component, bound to its markup
-// through data-* attributes, the same in plain HTML, React, Vue, Blade and Livewire. No Alpine.
+// through data-* attributes, the same on Blade pages with and without Livewire. No Alpine.
 //
 // A plugin is defined once, by this package or by another one (Acun Pro registers its own):
 //
@@ -19,7 +19,7 @@
 // has when it starts (before or after DOMContentLoaded), and a MutationObserver mounts elements
 // added later and unmounts removed ones (an element moved within the page, as a Livewire morph
 // or @persist does, keeps its instance). AcunUI.init(root) and AcunUI.destroy(root) do the same
-// by hand: React and Vue call them on mount / unmount when the observer is off
+// by hand: code that renders markup itself calls them when the observer is off
 // (AcunUI.observe(false), or window.AcunUI = { observe: false } before the script).
 //
 // Triggers need no mounting: one click listener on the document handles

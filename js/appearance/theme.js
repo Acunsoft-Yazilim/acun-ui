@@ -2,7 +2,7 @@
 // by the public API carry JSDoc types for the declaration files.
 //
 // The look of the page, on <html>: the mode and theme (data-theme), the user's colour
-// (--ac-user-*), the skin and the menu width. The boot script applies it before the first
+// (--ac-user-*), the skin, the content width and the menu width. The boot script applies it before the first
 // paint; the stores keep it.
 //
 // Every setting starts from: the value the page or the user's account gives (acun:layout.head
@@ -149,6 +149,34 @@ export const themeOf = (config) => (config?.theme?.light ? config.theme : DEFAUL
 
 const modeOf = (value) => (MODES.includes(value) ? value : null);
 
+/* ── Content width ───────────────────────────────────────────────────────────── */
+
+/** The named widths of the page container (css/core.css; Acun\Ui\Support\ContentWidth). */
+export const CONTENT_WIDTHS = ['default', 'wide', 'wider', 'full'];
+const LENGTH = /^(\d{1,5}(\.\d{1,4})?|\.\d{1,4})(px|rem|em|vw|ch|%)$/;
+
+/**
+ * A content width as the container takes it: a name (boxed, the 2.x name, is wide) or a CSS length
+ * (1520px, 90rem); null for nothing, and default for anything else (as ContentWidth::normalize()).
+ *
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+export function contentWidthOf(value) {
+    if (value == null || String(value).trim() === '') return null;
+    const width = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    const named = width === 'boxed' ? 'wide' : width;
+
+    return CONTENT_WIDTHS.includes(named) || (LENGTH.test(named) && parseFloat(named) > 0) ? named : 'default';
+}
+
+/** The width the page, the browser or the defaults give (in that order), or null when none does. */
+export function chosenContentWidth(config) {
+    const page = config ?? {};
+
+    return contentWidthOf(page.contentWidth) ?? contentWidthOf(readStored(page.scope).contentWidth) ?? contentWidthOf(page.defaults?.content_width);
+}
+
 /** The starting value of every setting. */
 export function initialPreferences(config) {
     const page = config ?? {};
@@ -160,7 +188,7 @@ export function initialPreferences(config) {
         mode: modeOf(page.mode) ?? modeOf(saved.mode) ?? modeOf(defaults.mode) ?? 'system',
         brandColor: page.brandColor || saved.brandColor || defaults.brand_color || 'default',
         skin: page.skin || saved.skin || defaults.skin || 'default',
-        contentWidth: page.contentWidth || saved.contentWidth || defaults.content_width || 'full',
+        contentWidth: chosenContentWidth(config) ?? 'full',
         navbarMode: page.navbarMode || saved.navbar || defaults.navbar_mode || 'fixed',
         sidebarCollapsed: page.sidebarMode ? page.sidebarMode === 'collapsed' : saved.sidebar ? saved.sidebar === 'collapsed' : defaults.sidebar_mode === 'collapsed',
         semiDark: flag(page.semiDark) ?? flag(saved.semiDark) ?? defaults.semi_dark === true,
@@ -256,8 +284,17 @@ function setRoot(name, value) {
 /** Skin (bordered): <html data-skin>. */
 export const applySkin = (skin) => setRoot('skin', skin !== 'default' && skin);
 
-/** Content width (boxed: at most 1440px, centred; see panel.css .panel-container): <html data-content-width>. */
-export const applyContentWidth = (width) => setRoot('contentWidth', width === 'boxed' && width);
+/**
+ * The page container's width (css/core.css ac-container, .panel-container) on <html>: data-content-width="wide"
+ * for a name, data-content-width="custom" with --ac-container-width for a length, nothing for full.
+ */
+export function applyContentWidth(width) {
+    const value = contentWidthOf(width) ?? 'full';
+    const custom = !CONTENT_WIDTHS.includes(value);
+
+    setRoot('contentWidth', value !== 'full' && (custom ? 'custom' : value));
+    document.documentElement.style[custom ? 'setProperty' : 'removeProperty']('--ac-container-width', value);
+}
 
 /** The menu width on the first frame, before Alpine (see panel.css). */
 export const applySidebar = (collapsed) => setRoot('sidebarCollapsed', collapsed ? 'true' : 'false');
@@ -313,7 +350,8 @@ export function applyInitialAppearance(config) {
     applyMode(preferences.mode, themeOf(config));
     applyColor(preferences.brandColor, config);
     applySkin(preferences.skin);
-    applyContentWidth(preferences.contentWidth);
+    // Only a width someone gave: a page that names none keeps what its <html> says.
+    if (chosenContentWidth(config) !== null) applyContentWidth(preferences.contentWidth);
     applySidebar(preferences.sidebarCollapsed);
 
     return preferences;

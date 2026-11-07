@@ -30,7 +30,7 @@ import { scrollShadowsPlugin } from './plugins/scroll-shadows.js';
 import { downloadTextPlugin } from './plugins/download-text.js';
 import { tableScrollPlugin } from './plugins/table-scroll.js';
 import { paginationPlugin } from './plugins/pagination.js';
-import { carouselPlugin } from './plugins/carousel.js';
+import { carouselControlsPlugin, carouselPlugin } from './plugins/carousel.js';
 import { scope } from './adapters/alpine.js';
 import { drawer } from './components/drawer.js';
 import { modal } from './components/modal.js';
@@ -189,4 +189,4 @@ declare const liveAppearance: {
     reset(): void;
     apply: () => void;
 };
-export { VERSION, EVENTS, liveComponents as components, liveScrollLock as scrollLock, liveOverlays as overlays, liveFocusFirst as focusFirst, liveTrapTab as trapTab, liveRememberFocus as rememberFocus, liveFocusable as focusable, livePlugins as plugins, liveInit as init, liveDestroy as destroy, liveObserve as observe, liveAppearance as appearance, modalPlugin, drawerPlugin, dropdownPlugin, popoverPlugin, tooltipPlugin, tabsPlugin, accordionPlugin, collapsePlugin, toastsPlugin, copyPlugin, inlineConfirmPlugin, dismissiblePlugin, cardPlugin, revealPlugin, colorInputPlugin, searchPlugin, commandPalettePlugin, themeSwitcherPlugin, passkeyPlugin, scrollShadowsPlugin, downloadTextPlugin, tableScrollPlugin, paginationPlugin, carouselPlugin, drawer, modal, syncSelectValues, skipDetachedMorphs, isDark, tokenColor, };
+export { VERSION, EVENTS, liveComponents as components, liveScrollLock as scrollLock, liveOverlays as overlays, liveFocusFirst as focusFirst, liveTrapTab as trapTab, liveRememberFocus as rememberFocus, liveFocusable as focusable, livePlugins as plugins, liveInit as init, liveDestroy as destroy, liveObserve as observe, liveAppearance as appearance, modalPlugin, drawerPlugin, dropdownPlugin, popoverPlugin, tooltipPlugin, tabsPlugin, accordionPlugin, collapsePlugin, toastsPlugin, copyPlugin, inlineConfirmPlugin, dismissiblePlugin, cardPlugin, revealPlugin, colorInputPlugin, searchPlugin, commandPalettePlugin, themeSwitcherPlugin, passkeyPlugin, scrollShadowsPlugin, downloadTextPlugin, tableScrollPlugin, paginationPlugin, carouselPlugin, carouselControlsPlugin, drawer, modal, syncSelectValues, skipDetachedMorphs, isDark, tokenColor, };

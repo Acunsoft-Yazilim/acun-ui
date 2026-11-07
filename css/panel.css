@@ -26,8 +26,6 @@
  *
  *     @import 'tailwindcss';
  *     @import '@acunsoft/acun-ui/css/core.css';
- *
- * Without Tailwind, link the compiled stylesheet instead: dist/acun-ui.css (npm run build:css).
  */
 @import './core.css';
 @import './base.css';

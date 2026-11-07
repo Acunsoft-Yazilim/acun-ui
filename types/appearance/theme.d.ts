@@ -49,12 +49,24 @@ export declare function writeStored(scope: any, values: any): void;
 export declare function clearStored(scope: any): void;
 /** The island's theme pair (the built-in one when it names none). */
 export declare const themeOf: (config: any) => any;
+/** The named widths of the page container (css/core.css; Acun\Ui\Support\ContentWidth). */
+export declare const CONTENT_WIDTHS: string[];
+/**
+ * A content width as the container takes it: a name (boxed, the 2.x name, is wide) or a CSS length
+ * (1520px, 90rem); null for nothing, and default for anything else (as ContentWidth::normalize()).
+ *
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+export declare function contentWidthOf(value: unknown): string | null;
+/** The width the page, the browser or the defaults give (in that order), or null when none does. */
+export declare function chosenContentWidth(config: any): string | null;
 /** The starting value of every setting. */
 export declare function initialPreferences(config: any): {
     mode: any;
     brandColor: any;
     skin: any;
-    contentWidth: any;
+    contentWidth: string;
     navbarMode: any;
     sidebarCollapsed: boolean;
     semiDark: boolean;
@@ -101,8 +113,11 @@ export declare function colorOf(choice: any, colors: any): {
 export declare function applyColor(choice: any, config: any): void;
 /** Skin (bordered): <html data-skin>. */
 export declare const applySkin: (skin: any) => void;
-/** Content width (boxed: at most 1440px, centred; see panel.css .panel-container): <html data-content-width>. */
-export declare const applyContentWidth: (width: any) => void;
+/**
+ * The page container's width (css/core.css ac-container, .panel-container) on <html>: data-content-width="wide"
+ * for a name, data-content-width="custom" with --ac-container-width for a length, nothing for full.
+ */
+export declare function applyContentWidth(width: any): void;
 /** The menu width on the first frame, before Alpine (see panel.css). */
 export declare const applySidebar: (collapsed: any) => void;
 /**
@@ -128,7 +143,7 @@ export declare function applyInitialAppearance(config: any): {
     mode: any;
     brandColor: any;
     skin: any;
-    contentWidth: any;
+    contentWidth: string;
     navbarMode: any;
     sidebarCollapsed: boolean;
     semiDark: boolean;

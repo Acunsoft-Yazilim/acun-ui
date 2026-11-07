@@ -5,8 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // ARCHITECTURE.md, section 2: each layer depends only on the ones below it. The behaviour core (core/, behavior/,
-// plugins/) imports no framework adapter (adapters/: Alpine, Livewire), so React and Vue adapters can use it
-// without pulling in Livewire or Alpine code.
+// plugins/) imports no framework adapter (adapters/: Alpine, Livewire), so a page without Livewire or Alpine
+// (@acunUiScripts on a plain Blade page) runs it without pulling in their code.
 
 const js = fileURLToPath(new URL('../../js/', import.meta.url));
 const CORE = ['core', 'behavior', 'plugins'];
