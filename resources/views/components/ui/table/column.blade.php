@@ -32,7 +32,7 @@
         throw new InvalidArgumentException('acun:table.column sortable needs a field: the name passed to the sort method.');
     }
 
-    if ($alignClass = ['start' => 'text-start', 'center' => 'text-center', 'end' => 'text-end'][$align] ?? null) {
+    if ($alignClass = ['start' => 'text-start', 'center' => 'text-center', 'end' => 'text-end'][$align ?? ''] ?? null) {
         $attributes = $attributes->class($alignClass);
     }
 @endphp

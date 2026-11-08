@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.2 (2026-11-08)
+
+- PHP 8.5: `acun:table.cell` and `acun:table.column` without `align`, and `acun:avatar` without `status`, no longer raise "Using null as an array offset is deprecated" (one per cell).
+
 ## 2.5.1 (2026-11-08)
 
 - No changes in Acun UI; released together with Acun Pro 2.5.1 (the storefront's filters, picture shapes and heading sizes).

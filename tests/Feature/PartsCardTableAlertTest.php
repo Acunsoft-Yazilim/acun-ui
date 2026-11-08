@@ -17,6 +17,32 @@ final class PartsCardTableAlertTest extends TestCase
 {
     // ── card ─────────────────────────────────────────────────────────────
 
+    /** A part without its optional align or status (null) prints no PHP 8.5 "null as an array offset" deprecation. */
+    public function test_parts_without_an_align_or_a_status_raise_no_deprecation(): void
+    {
+        $deprecations = [];
+        set_error_handler(function (int $level, string $message) use (&$deprecations): bool {
+            $deprecations[] = $message;
+
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
+        try {
+            $html = Blade::render(<<<'BLADE'
+                <acun:table>
+                    <acun:slot:head><acun:table.column>Ürün</acun:table.column><acun:table.column align="end">Fiyat</acun:table.column></acun:slot:head>
+                    <acun:table.row><acun:table.cell>Kupa</acun:table.cell><acun:table.cell align="end">₺120</acun:table.cell></acun:table.row>
+                </acun:table>
+                <acun:avatar name="Ada Yılmaz" />
+                BLADE);
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame([], $deprecations);
+        self::assertStringContainsString('text-end', $html, 'A given align still applies.');
+    }
+
     public function test_a_card_written_in_parts_draws_only_its_box_around_them(): void
     {
         $html = Blade::render(<<<'BLADE'

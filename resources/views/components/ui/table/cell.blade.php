@@ -9,7 +9,7 @@
     A data cell (<td>) inside acun:table.row. Attributes (class, colspan…) go on the <td>.
 --}}
 @php
-    if ($alignClass = ['start' => 'text-start', 'center' => 'text-center', 'end' => 'text-end'][$align] ?? null) {
+    if ($alignClass = ['start' => 'text-start', 'center' => 'text-center', 'end' => 'text-end'][$align ?? ''] ?? null) {
         $attributes = $attributes->class($alignClass);
     }
 @endphp

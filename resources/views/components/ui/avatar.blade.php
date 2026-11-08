@@ -22,9 +22,9 @@
         'info' => 'bg-info-soft text-info-tint-ink',
         'dark' => 'bg-dark text-on-dark',
     ][\Acun\Ui\Support\Tone::name($color)];
-    $statusClass = ['online' => 'bg-success-line', 'offline' => 'bg-faint', 'away' => 'bg-warning-line', 'busy' => 'bg-danger-line'][$status] ?? null;
+    $statusClass = ['online' => 'bg-success-line', 'offline' => 'bg-faint', 'away' => 'bg-warning-line', 'busy' => 'bg-danger-line'][$status ?? ''] ?? null;
     // The status as words in the page's language (it was the raw key: "online").
-    $statusLabel = ['online' => __('Online'), 'offline' => __('Offline'), 'away' => __('Away'), 'busy' => __('Busy')][$status] ?? null;
+    $statusLabel = ['online' => __('Online'), 'offline' => __('Offline'), 'away' => __('Away'), 'busy' => __('Busy')][$status ?? ''] ?? null;
     $initials = $name ? \Illuminate\Support\Str::of($name)->explode(' ')->filter()->take(2)->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->implode('') : null;
 @endphp
 
