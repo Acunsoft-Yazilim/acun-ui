@@ -35,6 +35,11 @@ const markup = renderBlade({
         ${Array.from({ length: 3 }, (_, i) => `<acun:carousel.item><img class="swiper-zoom-target" style="display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover" alt="Ceket ${i + 1}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800'%3E%3Crect width='600' height='800' fill='%23${['c44', '4c4', '44c'][i]}'/%3E%3C/svg%3E"></acun:carousel.item>`).join('')}
         <acun:slot:thumbnails>${Array.from({ length: 3 }, (_, i) => `<acun:carousel.thumb label="Ceket ${i + 1}"><div style="aspect-ratio: 3 / 4; background: #999"></div></acun:carousel.thumb>`).join('')}</acun:slot:thumbnails>
     </acun:carousel>`,
+    // The thumbnails beside the slides on a wide screen, under them below.
+    side: `<acun:carousel id="yan" thumbs="vertical-wide" thumb-width="4rem" :pagination="false" :arrows="false" label="Ürün" style="width: 480px; margin-top: 2rem">
+        ${Array.from({ length: 6 }, (_, i) => `<acun:carousel.item><div role="img" aria-label="Görsel ${i + 1}" style="height: 320px; background: #888"></div></acun:carousel.item>`).join('')}
+        <acun:slot:thumbnails>${Array.from({ length: 6 }, (_, i) => `<acun:carousel.thumb label="Görsel ${i + 1}"><div style="aspect-ratio: 1; background: #999"></div></acun:carousel.thumb>`).join('')}</acun:slot:thumbnails>
+    </acun:carousel>`,
     controls: `<div style="width: 480px; margin-top: 2rem; display: flex; align-items: end; justify-content: space-between"><h2 style="margin: 0">Çok satanlar</h2><acun:carousel.controls for="uzak" counter /></div>
     <acun:carousel id="uzak" :arrows="false" :per-view="2" :loop="false" :pagination="false" label="Çok satanlar" style="width: 480px">
         ${Array.from({ length: 4 }, (_, i) => `<acun:carousel.item label="Ürün ${i + 1}"><a href="#k${i}" style="display: block; height: 6rem">Ürün ${i + 1}</a></acun:carousel.item>`).join('')}
@@ -195,6 +200,38 @@ test('a gallery magnifies the photo under a mouse, its thumbnails keep one width
         await browser.close();
         remove();
     }
+});
+
+test('thumbs="vertical-wide": a strip on the left on a wide screen (it slides up and down), under the slides on a narrow one', { skip }, async () => {
+    const { url, remove } = page(markup.side);
+    const strip = `(() => {
+        const root = document.getElementById('yan');
+        const view = root.querySelector('[data-slot="carousel-viewport"]').getBoundingClientRect();
+        const thumbs = [...root.querySelectorAll(':scope > [data-slot="carousel-thumbs"] [data-slot="carousel-thumb"]')].map((thumb) => thumb.getBoundingClientRect());
+        return { view: [view.left, view.top, view.width, view.height].map(Math.round), thumbs: thumbs.slice(0, 3).map((r) => [r.left, r.top, r.width].map(Math.round)), direction: window.AcunUI.plugins.get(root, 'carousel').thumbs?.params.direction };
+    })()`;
+    for (const [width, side] of [[1280, true], [900, false]]) {
+        const browser = await openPage(url, { width, height: 900 });
+        try {
+            await browser.waitFor(`document.getElementById('yan').hasAttribute('data-ready')`, { message: 'Swiper to start' });
+            const { view, thumbs, direction } = await browser.evaluate(strip);
+            if (side) {
+                assert.equal(direction, 'vertical', 'Wide: a vertical strip…');
+                assert.ok(thumbs.every(([left, , w]) => left < view[0] && w === 64), '… on the left of the slides, 64px wide…');
+                assert.ok(thumbs[1][1] - thumbs[0][1] === 76 && thumbs[0][0] === thumbs[1][0], '… one under another, 12px apart.');
+                assert.equal(view[3], 320);
+            } else {
+                assert.equal(direction, 'horizontal', 'Narrow: a row…');
+                assert.ok(thumbs.every(([, top]) => top > view[1] + view[3]), '… under the slides…');
+                assert.equal(thumbs[1][0] - thumbs[0][0], 76, '… side by side, 12px apart.');
+                assert.equal(view[2], 480, 'The slides keep the whole width.');
+            }
+            assert.deepEqual(browser.problems, []);
+        } finally {
+            await browser.close();
+        }
+    }
+    remove();
 });
 
 test('under reduced motion the carousel does not advance by itself', { skip }, async () => {

@@ -31,7 +31,8 @@
     'pagination' => true,
     'counter' => false,
     // Where the thumbnails go (<acun:slot:thumbnails> with acun:carousel.thumb): 'horizontal' (default) under the
-    // slides, 'vertical' beside them.
+    // slides, 'vertical' beside them, 'vertical-wide' beside them from 1024px and under them below (a product gallery:
+    // a side strip would squeeze the pictures on a phone).
     'thumbs' => null,
     // The width of each horizontal thumbnail (a CSS length: '4rem', '64px'): as many as fit stand in a row, the rest
     // slide. null: four to a row, as wide as the strip allows.
@@ -104,7 +105,13 @@
     if ($thumbWidth !== null && ! preg_match('/^\d+(\.\d+)?(px|rem|em)$/', (string) $thumbWidth)) {
         throw new \InvalidArgumentException('acun:carousel thumb-width "'.$thumbWidth.'" is not a length such as 4rem or 64px.');
     }
-    $thumbsMode = isset($thumbnails) && trim((string) $thumbnails) !== '' ? ($thumbs === 'vertical' ? 'vertical' : 'horizontal') : null;
+    $thumbsMode = isset($thumbnails) && trim((string) $thumbnails) !== '' ? (in_array($thumbs, ['vertical', 'vertical-wide'], true) ? $thumbs : 'horizontal') : null;
+    $wideThumbs = $thumbsMode === 'vertical-wide';
+    // The side strip's column is as wide as a thumbnail (thumb-width, else 4.5rem) and its padding.
+    if ($wideThumbs && $thumbWidth !== null) {
+        // Merged with the page's own style (one style attribute on the root).
+        $attributes = $attributes->merge(['style' => '--carousel-thumb-width: '.$thumbWidth]);
+    }
     // A slider on its own sits on a dark frame; a strip and a gallery with thumbnails sit on the page.
     $framed = ! $strip && ! $thumbsMode;
     $overlay = 'absolute z-10 hidden size-9 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-ink shadow group-data-controls/carousel:flex hover:bg-surface focus-visible:outline-2 focus-visible:outline-surface aria-disabled:cursor-default aria-disabled:opacity-40';
@@ -149,13 +156,14 @@
         $gapClass,
         'overflow-hidden rounded-sm bg-inverse' => $framed && ! $frameSlides,
         'grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 sm:grid-cols-[5.5rem_minmax(0,1fr)]' => $thumbsMode === 'vertical',
+        'lg:grid lg:grid-cols-[calc(var(--carousel-thumb-width,4.5rem)_+_0.5rem)_minmax(0,1fr)] lg:gap-3' => $wideThumbs,
         '[--carousel-per-view:var(--carousel-per-view-base)] sm:[--carousel-per-view:var(--carousel-per-view-sm)] md:[--carousel-per-view:var(--carousel-per-view-md)] lg:[--carousel-per-view:var(--carousel-per-view-lg)] xl:[--carousel-per-view:var(--carousel-per-view-xl)] 2xl:[--carousel-per-view:var(--carousel-per-view-2xl)]' => $strip && ! $byContainer,
         // By the carousel's own width: the root is the query container, the track (inside it) takes the count.
         '@container/carousel' => $byContainer,
     ]) }}
 >
     @if ($arrowsAt === 'top-end')
-        <div @class(['mb-3 hidden justify-end gap-2 group-data-controls/carousel:flex', 'col-span-2' => $thumbsMode === 'vertical'])>
+        <div @class(['mb-3 hidden justify-end gap-2 group-data-controls/carousel:flex', 'col-span-2' => $thumbsMode === 'vertical', 'lg:col-span-2' => $wideThumbs])>
             <button type="button" data-slot="carousel-prev" aria-label="{{ __('Previous') }}" aria-controls="{{ $viewportId }}" class="{{ $outside }}">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>
@@ -170,6 +178,7 @@
         'rounded-sm bg-inverse' => $frameSlides,
         'rounded-sm' => $thumbsMode,
         'col-start-2 row-start-1' => $thumbsMode === 'vertical',
+        'lg:col-start-2 lg:row-start-1' => $wideThumbs,
     ])>
         @if ($hoverZoom)
             {{-- The magnifier's lens: where the pointer is on the photo (the runtime places it). --}}
@@ -233,7 +242,7 @@
 
     @if ($arrowsAt === 'bottom-center')
         {{-- The arrows under the slides, a strip's dots between them. --}}
-        <div @class(['mt-4 hidden items-center justify-center gap-3 group-data-controls/carousel:flex', 'col-span-2' => $thumbsMode === 'vertical'])>
+        <div @class(['mt-4 hidden items-center justify-center gap-3 group-data-controls/carousel:flex', 'col-span-2' => $thumbsMode === 'vertical', 'lg:col-span-2' => $wideThumbs])>
             <button type="button" data-slot="carousel-prev" aria-label="{{ __('Previous') }}" aria-controls="{{ $viewportId }}" class="{{ $outside }}">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>
@@ -261,11 +270,14 @@
             '[--carousel-thumb-gap:--spacing(3)]',
             '-m-1 mt-2 overflow-x-auto p-1 [scrollbar-width:none] group-data-ready/carousel:overflow-hidden' => $thumbsMode === 'horizontal',
             'relative col-start-1 row-start-1 min-h-0 overflow-hidden p-1' => $thumbsMode === 'vertical',
+            '-m-1 mt-2 overflow-x-auto p-1 [scrollbar-width:none] group-data-ready/carousel:overflow-hidden lg:relative lg:col-start-1 lg:row-start-1 lg:m-0 lg:min-h-0 lg:overflow-hidden' => $wideThumbs,
         ])>
             <div @class([
                 'acun-carousel-thumbs flex gap-(--carousel-thumb-gap) group-data-ready/carousel:gap-0 [&>*]:flex-none',
                 '[&>*]:w-[calc((100%_-_3*var(--carousel-thumb-gap))/4)]' => $thumbsMode === 'horizontal' && $thumbWidth === null,
-                '[&>*]:w-(--carousel-thumb-width)' => $thumbsMode === 'horizontal' && $thumbWidth !== null,
+                '[&>*]:w-(--carousel-thumb-width)' => in_array($thumbsMode, ['horizontal', 'vertical-wide'], true) && $thumbWidth !== null,
+                'max-lg:[&>*]:w-[calc((100%_-_3*var(--carousel-thumb-gap))/4)] lg:[&>*]:w-full' => $wideThumbs && $thumbWidth === null,
+                'lg:absolute lg:inset-1 lg:flex-col lg:overflow-y-auto lg:[scrollbar-width:none] lg:group-data-ready/carousel:overflow-visible' => $wideThumbs,
                 'absolute inset-1 flex-col overflow-y-auto [scrollbar-width:none] group-data-ready/carousel:overflow-visible [&>*]:w-full' => $thumbsMode === 'vertical',
             ])>
                 {{ $thumbnails }}

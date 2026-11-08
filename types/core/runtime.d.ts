@@ -1,4 +1,4 @@
-export declare const VERSION = "2.5.3";
+export declare const VERSION = "2.5.4";
 /** @import { AcunWindow } from './types.js' */
 /**
  * Sets up window.AcunUI with the public API and runs setup() once per page.

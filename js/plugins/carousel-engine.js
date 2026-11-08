@@ -199,12 +199,15 @@ export function mount(root) {
     const thumbGap = thumbsTrack ? gapOf(thumbsTrack, '--carousel-thumb-gap') : 0;
     /** @type {Swiper | null} */
     let thumbs = null;
+    // vertical-wide: beside the slides from 1024px, under them below (the strip is made again when the width crosses).
+    const wideThumbs = data.thumbs === 'vertical-wide' ? window.matchMedia?.('(min-width: 1024px)') ?? null : null;
+    const thumbsVertical = () => data.thumbs === 'vertical' || wideThumbs?.matches === true;
     const makeThumbs = () => {
         const several = thumbButtons().length > 1;
         if (thumbsRoot && thumbsRoot.hidden === several) thumbsRoot.hidden = !several;
         if (thumbs || !several || !thumbsRoot || !thumbsTrack) return thumbs;
         thumbs = new Swiper(thumbsRoot, {
-            direction: data.thumbs === 'vertical' ? 'vertical' : 'horizontal',
+            direction: thumbsVertical() ? 'vertical' : 'horizontal',
             wrapperClass: 'acun-carousel-thumbs',
             slideClass: 'acun-carousel-thumb',
             slidesPerView: 'auto',
@@ -611,7 +614,21 @@ export function mount(root) {
         if (button.dataset.slot === 'carousel-prev') goPrevious();
         else if (button.dataset.slot === 'carousel-next') goNext();
     };
-    const inThumbs = (/** @type {EventTarget | null} */ target) => data.thumbs === 'vertical' && !!thumbsRoot?.contains(/** @type {Node} */ (target));
+    const inThumbs = (/** @type {EventTarget | null} */ target) => thumbsVertical() && !!thumbsRoot?.contains(/** @type {Node} */ (target));
+    // The strip turns (vertical-wide crossing 1024px): the thumbnails' Swiper is made again in the new direction and
+    // Swiper Thumbs follows it.
+    function onThumbsTurn() {
+        if (!thumbs) return;
+        thumbs.destroy(true, true);
+        thumbs = null;
+        makeThumbs();
+        if (thumbs && swiper.thumbs) {
+            /** @type {any} */ (swiper.params.thumbs).swiper = thumbs;
+            swiper.thumbs.init();
+            swiper.thumbs.update(true);
+        }
+    }
+
     // The magnifier (data-hover-zoom; a wide screen with a mouse): over the shown slide's photo a lens (the part of the
     // photo the pane shows, MAGNIFY times smaller than the pane) follows the pointer; the pane beside the carousel is
     // as big as the slides and shows that part. The photo's drawn box is worked out from object-fit (cover or contain)
@@ -724,6 +741,7 @@ export function mount(root) {
     root.addEventListener('pointerdown', onPointerDown);
     root.addEventListener('focusin', onFocusIn);
     root.addEventListener('focusout', onFocusOut);
+    wideThumbs?.addEventListener('change', onThumbsTurn);
     view.addEventListener('pointermove', onMagnify);
     view.addEventListener('pointerleave', hideMagnifier);
     view.addEventListener('pointerdown', hideMagnifier);
@@ -813,6 +831,7 @@ export function mount(root) {
             document.documentElement.removeEventListener('mouseleave', onPageLeave);
             window.removeEventListener('blur', onPageLeave);
             document.removeEventListener('visibilitychange', onVisibility);
+            wideThumbs?.removeEventListener('change', onThumbsTurn);
             view.removeEventListener('pointermove', onMagnify);
             view.removeEventListener('pointerleave', hideMagnifier);
             view.removeEventListener('pointerdown', hideMagnifier);

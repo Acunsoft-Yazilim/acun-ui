@@ -5,7 +5,7 @@
 // stays idle, so no listener and no Alpine component is registered twice.
 
 // Follows the release version (packages/acun-ui/package.json); tests/js/runtime.test.mjs checks it.
-export const VERSION = '2.5.3';
+export const VERSION = '2.5.4';
 
 /** @import { AcunWindow } from './types.js' */
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.4 (2026-11-08)
+
+- `acun:carousel thumbs="vertical-wide"`: the thumbnails stand in a strip beside the slides from 1024px (sliding up and down; the column as wide as `thumb-width`, else 4.5rem) and in a row under them below, so a phone keeps the pictures' whole width; the strip is made again in the other direction when the window crosses 1024px.
+
 ## 2.5.3 (2026-11-08)
 
 - `acun:carousel` has `hover-zoom`: on a wide screen with a mouse, over the shown slide's photo a lens follows the pointer and a pane beside the carousel (to its right, over what is there, as big as the slides) shows that part 2.5 times larger; the lens stays on the drawn photo (object-fit cover or contain, padding). Hidden while zoomed, dragging, over a button and on a touch screen.

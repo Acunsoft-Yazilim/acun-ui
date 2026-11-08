@@ -235,6 +235,28 @@ final class PartsListsTest extends TestCase
         $gallery('thumb-width="25%"');
     }
 
+    public function test_carousel_thumbnails_may_stand_beside_the_slides_on_a_wide_screen_only(): void
+    {
+        $html = Blade::render(<<<'BLADE'
+            <acun:carousel label="Ürün" thumbs="vertical-wide" thumb-width="4rem">
+                <acun:carousel.item><img src="/a.jpg" alt="Ön"></acun:carousel.item>
+                <acun:carousel.item><img src="/b.jpg" alt="Yan"></acun:carousel.item>
+                <acun:slot:thumbnails>
+                    <acun:carousel.thumb label="Ön"><img src="/a.jpg" alt=""></acun:carousel.thumb>
+                    <acun:carousel.thumb label="Yan"><img src="/b.jpg" alt=""></acun:carousel.thumb>
+                </acun:slot:thumbnails>
+            </acun:carousel>
+            BLADE);
+
+        self::assertStringContainsString('data-thumbs="vertical-wide"', $html);
+        self::assertMatchesRegularExpression('~data-acun-carousel[^>]*style="--carousel-thumb-width: 4rem;"~', $html, 'The side column takes the thumbnail\'s width…');
+        self::assertStringContainsString('lg:grid lg:grid-cols-[calc(var(--carousel-thumb-width,4.5rem)_+_0.5rem)_minmax(0,1fr)] lg:gap-3', $html, '… a grid from 1024px only…');
+        self::assertStringContainsString('lg:col-start-2 lg:row-start-1', $html, '… the slides on the right…');
+        self::assertStringContainsString('-m-1 mt-2 overflow-x-auto p-1 [scrollbar-width:none] group-data-ready/carousel:overflow-hidden lg:relative lg:col-start-1 lg:row-start-1 lg:m-0', $html, '… the strip under them on a phone, on the left from 1024px…');
+        self::assertStringContainsString('lg:absolute lg:inset-1 lg:flex-col lg:overflow-y-auto', $html, '… where it slides up and down.');
+        self::assertStringNotContainsString('grid grid-cols-[4.5rem_minmax(0,1fr)]', $html, 'Not the always-vertical grid.');
+    }
+
     public function test_carousel_item_is_a_named_slide(): void
     {
         $html = Blade::render(<<<'BLADE'
