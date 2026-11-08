@@ -74,11 +74,23 @@ const own = (element, ...names) => {
     if (element) /** @type {any} */ (window).AcunUI?.plugins?.own(element, ...names);
 };
 
-/** The CSS gap of a flex row or column (the no-JS layout), in px: Swiper's space between slides. @param {Element} element */
-const gapOf = (element) => {
+/**
+ * The CSS gap of a flex row or column (the no-JS layout), in px: Swiper's space between slides. A carousel inside a
+ * ready one (the full-screen view of a gallery) finds its gap already off (the outer one's data-ready reaches it):
+ * then its variable (--carousel-gap, --carousel-thumb-gap) is measured.
+ * @param {HTMLElement} element @param {string} [variable]
+ */
+const gapOf = (element, variable) => {
     const style = getComputedStyle(element);
+    const gap = Number.parseFloat(style.columnGap) || Number.parseFloat(style.rowGap) || 0;
+    if (gap || !variable || !style.getPropertyValue(variable).trim()) return gap;
+    const probe = document.createElement('div');
+    probe.style.cssText = `position:absolute;visibility:hidden;width:var(${variable})`;
+    element.append(probe);
+    const width = probe.getBoundingClientRect().width;
+    probe.remove();
 
-    return Number.parseFloat(style.columnGap) || Number.parseFloat(style.rowGap) || 0;
+    return width;
 };
 
 /** Adds a class without writing the attribute when it is there (classList.add() writes it: a mutation of its own). */
@@ -132,6 +144,8 @@ export function mount(root) {
     const lightbox = part('carousel-lightbox');
     const lightboxCarousel = /** @type {HTMLElement | null} */ (lightbox?.querySelector('[data-carousel-lightbox]') ?? null);
     const fullscreenButton = part('carousel-fullscreen');
+    const lens = part('carousel-lens');
+    const magnifier = part('carousel-magnifier');
     /** acun:carousel.controls elsewhere on the page, linked by the carousel's id. */
     const remoteControls = () => (root.id ? /** @type {HTMLElement[]} */ ([...document.querySelectorAll('[data-acun-carousel-controls]')]).filter((controls) => controls.getAttribute('data-acun-carousel-controls') === root.id && !root.contains(controls)) : []);
     /** @type {WeakSet<HTMLElement>} */
@@ -155,6 +169,8 @@ export function mount(root) {
     own(zoomButton, 'aria-label');
     own(thumbsRoot, 'style', 'class');
     own(thumbsTrack, 'style');
+    own(lens, 'hidden', 'style');
+    own(magnifier, 'hidden', 'style');
 
     /** The slides: the track's element children. */
     const slides = () => /** @type {HTMLElement[]} */ ([...track.children].filter((child) => child instanceof HTMLElement && child.tagName !== 'TEMPLATE' && child.tagName !== 'SCRIPT'));
@@ -164,7 +180,7 @@ export function mount(root) {
     const roled = new WeakSet();
 
     // The CSS gaps (the no-JS layout) become Swiper's space between slides; data-ready turns the CSS gaps off.
-    const gap = gapOf(track);
+    const gap = gapOf(track, '--carousel-gap');
     slides().forEach((slide) => mark(slide, SLIDE));
     thumbButtons().forEach((thumb) => mark(thumb, 'acun-carousel-thumb'));
 
@@ -180,7 +196,7 @@ export function mount(root) {
     // The thumbnails' strip: hidden with one thumbnail or none (a set may have fewer pictures than another), made a
     // Swiper the first time it has several.
     own(thumbsRoot, 'hidden');
-    const thumbGap = thumbsTrack ? gapOf(thumbsTrack) : 0;
+    const thumbGap = thumbsTrack ? gapOf(thumbsTrack, '--carousel-thumb-gap') : 0;
     /** @type {Swiper | null} */
     let thumbs = null;
     const makeThumbs = () => {
@@ -192,10 +208,22 @@ export function mount(root) {
             wrapperClass: 'acun-carousel-thumbs',
             slideClass: 'acun-carousel-thumb',
             slidesPerView: 'auto',
-            spaceBetween: thumbGap,
+            // Measured now that the strip shows (a carousel inside a ready one reads the variable, which needs a box).
+            spaceBetween: thumbGap || gapOf(thumbsTrack, '--carousel-thumb-gap'),
             watchSlidesProgress: true,
             speed,
             threshold: 6,
+            on: {
+                // Started before it showed (the full-screen view opens in the top layer a moment later): the gap is
+                // measured again once the strip has a size.
+                resize(instance) {
+                    const gap = gapOf(/** @type {HTMLElement} */ (thumbsTrack), '--carousel-thumb-gap');
+                    if (gap !== instance.params.spaceBetween) {
+                        instance.params.spaceBetween = gap;
+                        instance.update();
+                    }
+                },
+            },
         });
 
         return thumbs;
@@ -233,7 +261,10 @@ export function mount(root) {
         zoom: zoom ? { maxRatio: 2.5, toggle: !lightbox, panOnMouseMove: true, containerClass: 'acun-carousel-zoom' } : false,
         initialSlide: Math.max(0, Number(data.start) || 0),
         on: {
-            slideChange: changed,
+            slideChange: () => {
+                hideMagnifier();
+                changed();
+            },
             snapGridLengthChange: changed,
             lock: changed,
             unlock: changed,
@@ -581,6 +612,56 @@ export function mount(root) {
         else if (button.dataset.slot === 'carousel-next') goNext();
     };
     const inThumbs = (/** @type {EventTarget | null} */ target) => data.thumbs === 'vertical' && !!thumbsRoot?.contains(/** @type {Node} */ (target));
+    // The magnifier (data-hover-zoom; a wide screen with a mouse): over the shown slide's photo a lens (the part of the
+    // photo the pane shows, MAGNIFY times smaller than the pane) follows the pointer; the pane beside the carousel is
+    // as big as the slides and shows that part. The photo's drawn box is worked out from object-fit (cover or contain)
+    // and its padding, so the lens stays on the picture. Off while zoomed, dragging or on a touch.
+    const MAGNIFY = 2.5;
+    const canMagnify = window.matchMedia?.('(hover: hover) and (pointer: fine) and (min-width: 1024px)');
+    function hideMagnifier() {
+        if (lens && !lens.hidden) lens.hidden = true;
+        if (magnifier && !magnifier.hidden) magnifier.hidden = true;
+    }
+    function onMagnify(/** @type {PointerEvent} */ event) {
+        const slide = swiper?.slides?.[swiper.activeIndex];
+        const img = /** @type {HTMLImageElement | null} */ (slide?.querySelector('img') ?? null);
+        const onButton = event.target instanceof Element && !!event.target.closest('button, a');
+        if (!lens || !magnifier || !img?.naturalWidth || onButton || event.pointerType !== 'mouse' || event.buttons || !canMagnify?.matches || root.hasAttribute('data-zoomed')) {
+            hideMagnifier();
+            return;
+        }
+        const style = getComputedStyle(img);
+        const box = img.getBoundingClientRect();
+        const left = box.left + Number.parseFloat(style.paddingLeft);
+        const top = box.top + Number.parseFloat(style.paddingTop);
+        const width = box.width - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight);
+        const height = box.height - Number.parseFloat(style.paddingTop) - Number.parseFloat(style.paddingBottom);
+        const scale = (style.objectFit === 'contain' ? Math.min : Math.max)(width / img.naturalWidth, height / img.naturalHeight);
+        const drawnWidth = img.naturalWidth * scale;
+        const drawnHeight = img.naturalHeight * scale;
+        const drawnLeft = left + (width - drawnWidth) / 2;
+        const drawnTop = top + (height - drawnHeight) / 2;
+        // The visible picture: the drawn photo inside its box (cover crops it).
+        const x1 = Math.max(drawnLeft, left);
+        const y1 = Math.max(drawnTop, top);
+        const x2 = Math.min(drawnLeft + drawnWidth, left + width);
+        const y2 = Math.min(drawnTop + drawnHeight, top + height);
+        if (event.clientX < x1 || event.clientX > x2 || event.clientY < y1 || event.clientY > y2) {
+            hideMagnifier();
+            return;
+        }
+        const frame = view.getBoundingClientRect();
+        const lensWidth = Math.min(frame.width / MAGNIFY, x2 - x1);
+        const lensHeight = Math.min(frame.height / MAGNIFY, y2 - y1);
+        const lensLeft = Math.min(Math.max(event.clientX - lensWidth / 2, x1), x2 - lensWidth);
+        const lensTop = Math.min(Math.max(event.clientY - lensHeight / 2, y1), y2 - lensHeight);
+        lens.style.cssText = `transform:translate(${lensLeft - frame.left}px,${lensTop - frame.top}px);width:${lensWidth}px;height:${lensHeight}px`;
+        const source = img.currentSrc || img.src;
+        magnifier.style.cssText = `top:${view.offsetTop}px;width:${frame.width}px;height:${frame.height}px;background-image:url(${JSON.stringify(source)});background-size:${drawnWidth * MAGNIFY}px ${drawnHeight * MAGNIFY}px;background-position:${-(lensLeft - drawnLeft) * MAGNIFY}px ${-(lensTop - drawnTop) * MAGNIFY}px`;
+        lens.hidden = false;
+        magnifier.hidden = false;
+    }
+
     const onKeydown = (/** @type {KeyboardEvent} */ event) => {
         if (lightbox?.contains(/** @type {Node} */ (event.target))) {
             onLightboxKey(event);
@@ -642,6 +723,9 @@ export function mount(root) {
     root.addEventListener('pointerdown', onPointerDown);
     root.addEventListener('focusin', onFocusIn);
     root.addEventListener('focusout', onFocusOut);
+    view.addEventListener('pointermove', onMagnify);
+    view.addEventListener('pointerleave', hideMagnifier);
+    view.addEventListener('pointerdown', hideMagnifier);
     lightbox?.addEventListener('acun:modal:closed', onLightboxClosed);
     document.documentElement.addEventListener('mouseleave', onPageLeave);
     window.addEventListener('blur', onPageLeave);
@@ -728,6 +812,10 @@ export function mount(root) {
             document.documentElement.removeEventListener('mouseleave', onPageLeave);
             window.removeEventListener('blur', onPageLeave);
             document.removeEventListener('visibilitychange', onVisibility);
+            view.removeEventListener('pointermove', onMagnify);
+            view.removeEventListener('pointerleave', hideMagnifier);
+            view.removeEventListener('pointerdown', hideMagnifier);
+            hideMagnifier();
             swiper.destroy(true, true);
             thumbs?.destroy(true, true);
             dots?.querySelectorAll('[data-slot="carousel-dot-button"]').forEach((button) => button.remove());

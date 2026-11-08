@@ -30,6 +30,11 @@ const markup = renderBlade({
         ${Array.from({ length: 3 }, (_, i) => `<acun:carousel.item><div class="swiper-zoom-target" role="img" aria-label="Görsel ${i + 1}" style="height: 240px; background: linear-gradient(135deg, #888, #222)"></div></acun:carousel.item>`).join('')}
         <acun:slot:thumbnails>${Array.from({ length: 3 }, (_, i) => `<acun:carousel.thumb label="Görsel ${i + 1}"><div style="height: 60px; background: #999"></div></acun:carousel.thumb>`).join('')}</acun:slot:thumbnails>
     </acun:carousel>`,
+    // A product gallery with photos: the magnifier, small thumbnails of one width and the full-screen view.
+    magnify: `<acun:carousel id="buyutec" zoom fullscreen hover-zoom thumb-width="3rem" :pagination="false" :arrows="false" label="Ceket" style="width: 360px; margin-top: 2rem">
+        ${Array.from({ length: 3 }, (_, i) => `<acun:carousel.item><img class="swiper-zoom-target" style="display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover" alt="Ceket ${i + 1}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800'%3E%3Crect width='600' height='800' fill='%23${['c44', '4c4', '44c'][i]}'/%3E%3C/svg%3E"></acun:carousel.item>`).join('')}
+        <acun:slot:thumbnails>${Array.from({ length: 3 }, (_, i) => `<acun:carousel.thumb label="Ceket ${i + 1}"><div style="aspect-ratio: 3 / 4; background: #999"></div></acun:carousel.thumb>`).join('')}</acun:slot:thumbnails>
+    </acun:carousel>`,
     controls: `<div style="width: 480px; margin-top: 2rem; display: flex; align-items: end; justify-content: space-between"><h2 style="margin: 0">Çok satanlar</h2><acun:carousel.controls for="uzak" counter /></div>
     <acun:carousel id="uzak" :arrows="false" :per-view="2" :loop="false" :pagination="false" label="Çok satanlar" style="width: 480px">
         ${Array.from({ length: 4 }, (_, i) => `<acun:carousel.item label="Ürün ${i + 1}"><a href="#k${i}" style="display: block; height: 6rem">Ürün ${i + 1}</a></acun:carousel.item>`).join('')}
@@ -138,6 +143,53 @@ test('the browser build loads the carousel file beside itself; drag, arrows, key
         await browser.waitFor(`${lightbox}.hidden`, { message: 'Escape closes the full-screen view' });
         assert.equal((await browser.evaluate(state('galeri'))).index, 1, 'The page shows the slide looked at last.');
         assert.equal(await browser.evaluate(`document.activeElement.dataset.slot`), 'carousel-fullscreen', 'The focus is back on the button.');
+        assert.deepEqual(browser.problems, []);
+    } finally {
+        await browser.close();
+        remove();
+    }
+});
+
+test('a gallery magnifies the photo under a mouse, its thumbnails keep one width, the full-screen view takes the focus itself', { skip }, async () => {
+    const { url, remove } = page(markup.magnify);
+    const browser = await openPage(url, { width: 1280, height: 900 });
+    try {
+        await browser.waitFor(`document.getElementById('buyutec').hasAttribute('data-ready') && document.querySelector('#buyutec img').naturalWidth > 0`, { message: 'Swiper to start' });
+        const look = (x, y) => browser.evaluate(`(() => {
+            const root = document.getElementById('buyutec');
+            const view = root.querySelector('[data-slot="carousel-viewport"]');
+            const box = view.getBoundingClientRect();
+            view.dispatchEvent(new PointerEvent('pointermove', { clientX: box.left + box.width * ${x}, clientY: box.top + box.height * ${y}, pointerType: 'mouse', bubbles: true }));
+            const lens = root.querySelector('[data-slot="carousel-lens"]');
+            const pane = root.querySelector('[data-slot="carousel-magnifier"]');
+            const at = (element) => { const r = element.getBoundingClientRect(); return [r.left - box.left, r.top - box.top, r.width, r.height].map(Math.round); };
+            return { lens: lens.hidden ? null : at(lens), pane: pane.hidden ? null : at(pane), size: pane.style.backgroundSize, root: Math.round(root.getBoundingClientRect().width), view: [box.width, box.height].map(Math.round) };
+        })()`);
+
+        const middle = await look(0.5, 0.5);
+        assert.deepEqual(middle.view, [360, 480]);
+        assert.deepEqual(middle.lens, [108, 144, 144, 192], 'The lens (2.5 times smaller than the pane) is centred on the pointer…');
+        assert.deepEqual(middle.pane, [middle.root + 24, 0, 360, 480], '… the pane beside the gallery is as big as its pictures…');
+        assert.equal(middle.size, '900px 1200px', '… and shows the photo 2.5 times larger.');
+        assert.deepEqual((await look(0.02, 0.98)).lens, [0, 288, 144, 192], 'At a corner the lens stays on the photo.');
+        await browser.evaluate(`document.querySelector('#buyutec [data-slot="carousel-viewport"]').dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }))`);
+        assert.deepEqual(await browser.evaluate(`[...document.querySelectorAll('#buyutec [data-slot="carousel-lens"], #buyutec [data-slot="carousel-magnifier"]')].map((element) => element.hidden)`), [true, true], 'Leaving hides them.');
+
+        const thumbs = (scope) => browser.evaluate(`[...document.querySelectorAll('${scope} [data-slot="carousel-thumb"]')].filter((thumb) => thumb.getClientRects().length).map((thumb) => [Math.round(thumb.getBoundingClientRect().left), Math.round(thumb.getBoundingClientRect().width)])`);
+        const strip = await thumbs('#buyutec > [data-slot="carousel-thumbs"]');
+        assert.deepEqual(strip.map(([, width]) => width), [48, 48, 48], 'thumb-width: one width (3rem)…');
+        assert.equal(strip[1][0] - strip[0][0], 60, '… 12px apart.');
+
+        await browser.click('#buyutec [data-slot="carousel-fullscreen"]');
+        const inner = `document.querySelector('#buyutec [data-carousel-lightbox]')`;
+        await browser.waitFor(`${inner}.hasAttribute('data-ready')`, { message: 'the full-screen view' });
+        await wait(300);
+        const big = await thumbs('#buyutec [data-carousel-lightbox]');
+        assert.deepEqual(big.map(([, width]) => width), [56, 56, 56], 'The full-screen view\'s thumbnails are small too…');
+        assert.equal(big[1][0] - big[0][0], 68, '… with their gap (the page\'s ready carousel had turned the CSS gap off).');
+        assert.equal(await browser.evaluate(`document.activeElement.getAttribute('role')`), 'dialog', 'The dialog takes the focus itself: no ring on the close button.');
+        await browser.press('ArrowRight');
+        await browser.waitFor(`window.AcunUI.plugins.get(${inner}, 'carousel').index === 1`, { message: 'Right from the dialog' });
         assert.deepEqual(browser.problems, []);
     } finally {
         await browser.close();

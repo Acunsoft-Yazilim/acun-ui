@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.5.3 (2026-11-08)
+
+- `acun:carousel` has `hover-zoom`: on a wide screen with a mouse, over the shown slide's photo a lens follows the pointer and a pane beside the carousel (to its right, over what is there, as big as the slides) shows that part 2.5 times larger; the lens stays on the drawn photo (object-fit cover or contain, padding). Hidden while zoomed, dragging, over a button and on a touch screen.
+- The full-screen view is redone: a darker, blurred backdrop, a round close button in the corner, the pictures with room round them and small centred thumbnails (56px, `thumb-width`); the dialog itself takes the focus when it opens (no focus ring on the close button), Tab reaches the buttons, Left / Right move the pictures.
+- Fixed: the full-screen view's thumbnails had no gap between them (the page's ready gallery had turned the CSS gap off before they were measured); a carousel's gap is now read from its variable when its CSS gap is off, once the strip shows.
+- A modal panel with `autofocus` and `tabindex="-1"` takes the focus itself when it opens (focus-trap).
+- `acun:carousel` has `thumb-width` (a CSS length: `4rem`, `64px`): the horizontal thumbnails take that one width, as many as fit stand in a row and the rest slide (they used to be a quarter of the strip each). Left out, nothing changes; a width that is not a length throws.
+
 ## 2.5.2 (2026-11-08)
 
 - PHP 8.5: `acun:table.cell` and `acun:table.column` without `align`, and `acun:avatar` without `status`, no longer raise "Using null as an array offset is deprecated" (one per cell).

@@ -1,5 +1,6 @@
 /**
- * Focuses a shown [autofocus], else the first focusable element, else the container itself.
+ * Focuses a shown [autofocus], else the first focusable element, else the container itself. A container with
+ * autofocus (and tabindex="-1") takes it itself: a picture viewer, whose first button would show a ring.
  *
  * @param {HTMLElement} container
  * @returns {HTMLElement}

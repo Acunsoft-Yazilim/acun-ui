@@ -33,9 +33,15 @@
     // Where the thumbnails go (<acun:slot:thumbnails> with acun:carousel.thumb): 'horizontal' (default) under the
     // slides, 'vertical' beside them.
     'thumbs' => null,
+    // The width of each horizontal thumbnail (a CSS length: '4rem', '64px'): as many as fit stand in a row, the rest
+    // slide. null: four to a row, as wide as the strip allows.
+    'thumbWidth' => null,
     // The slides' pictures zoom: a double tap or a pinch, a double click or the zoom button (slides written with
     // acun:carousel.item).
     'zoom' => false,
+    // A magnifier on a wide screen with a mouse: over a slide's photo a lens follows the pointer and a pane beside the
+    // carousel (to the right, over what is there) shows that part of the photo larger. A product gallery's.
+    'hoverZoom' => false,
     // A button (and a click or tap on a slide's picture) opens the slides in a full-screen dialog with zoom, the
     // arrows, the counter and, on wide screens, the thumbnails; it starts at the shown slide and, closed, leaves the
     // carousel at the one it showed last. With fullscreen, a double tap on the page's own carousel no longer zooms
@@ -95,6 +101,9 @@
     $gapClass = $gaps[(int) ($gap ?? ($strip ? 4 : 0))] ?? $gaps[4];
     $style = $strip ? implode('; ', array_map(fn (string $breakpoint): string => "--carousel-per-view-{$breakpoint}: {$views[$breakpoint]}", $breakpoints)) : null;
     $loopMode = $loop === 'infinite' ? 'infinite' : ($loop ? 'rewind' : 'off');
+    if ($thumbWidth !== null && ! preg_match('/^\d+(\.\d+)?(px|rem|em)$/', (string) $thumbWidth)) {
+        throw new \InvalidArgumentException('acun:carousel thumb-width "'.$thumbWidth.'" is not a length such as 4rem or 64px.');
+    }
     $thumbsMode = isset($thumbnails) && trim((string) $thumbnails) !== '' ? ($thumbs === 'vertical' ? 'vertical' : 'horizontal') : null;
     // A slider on its own sits on a dark frame; a strip and a gallery with thumbnails sit on the page.
     $framed = ! $strip && ! $thumbsMode;
@@ -128,6 +137,7 @@
     @if ($thumbsMode) data-thumbs="{{ $thumbsMode }}" @endif
     @if ($fullscreen) data-fullscreen="{{ $carouselId }}-fullscreen" @endif
     @if ($set !== null) data-set="{{ $set }}" @endif
+    @if ($hoverZoom) data-hover-zoom @endif
     data-slide-label="{{ __(':number of :count') }}"
     data-slide-role="{{ __('slide') }}"
     role="region"
@@ -161,6 +171,10 @@
         'rounded-sm' => $thumbsMode,
         'col-start-2 row-start-1' => $thumbsMode === 'vertical',
     ])>
+        @if ($hoverZoom)
+            {{-- The magnifier's lens: where the pointer is on the photo (the runtime places it). --}}
+            <div data-slot="carousel-lens" hidden aria-hidden="true" class="pointer-events-none absolute top-0 left-0 z-10 rounded-sm border border-ink/25 bg-surface/35 shadow-sm"></div>
+        @endif
         {{-- Announced when the user changes the slide, not on every automatic turn. --}}
         <div data-slot="carousel-track" aria-live="{{ $interval ? 'off' : 'polite' }}" @class([
             'acun-carousel-track flex gap-(--carousel-gap) overflow-x-auto [scrollbar-width:none] ease-out motion-reduce:transition-none group-data-ready/carousel:gap-0 group-data-ready/carousel:overflow-visible',
@@ -238,15 +252,20 @@
         </div>
     @endif
 
+    @if ($hoverZoom)
+        {{-- The magnifier's pane, beside the carousel and as big as its pictures: the lens's part, larger. --}}
+        <div data-slot="carousel-magnifier" hidden aria-hidden="true" class="pointer-events-none absolute top-0 left-[calc(100%+1.5rem)] z-30 overflow-hidden rounded-md border border-line bg-surface bg-no-repeat shadow-2xl"></div>
+    @endif
     @if ($thumbsMode)
-        <div data-slot="carousel-thumbs" role="group" aria-label="{{ __('Thumbnails') }}" @class([
+        <div data-slot="carousel-thumbs" role="group" aria-label="{{ __('Thumbnails') }}" @if ($thumbWidth !== null) style="--carousel-thumb-width: {{ $thumbWidth }}" @endif @class([
             '[--carousel-thumb-gap:--spacing(3)]',
             '-m-1 mt-2 overflow-x-auto p-1 [scrollbar-width:none] group-data-ready/carousel:overflow-hidden' => $thumbsMode === 'horizontal',
             'relative col-start-1 row-start-1 min-h-0 overflow-hidden p-1' => $thumbsMode === 'vertical',
         ])>
             <div @class([
                 'acun-carousel-thumbs flex gap-(--carousel-thumb-gap) group-data-ready/carousel:gap-0 [&>*]:flex-none',
-                '[&>*]:w-[calc((100%_-_3*var(--carousel-thumb-gap))/4)]' => $thumbsMode === 'horizontal',
+                '[&>*]:w-[calc((100%_-_3*var(--carousel-thumb-gap))/4)]' => $thumbsMode === 'horizontal' && $thumbWidth === null,
+                '[&>*]:w-(--carousel-thumb-width)' => $thumbsMode === 'horizontal' && $thumbWidth !== null,
                 'absolute inset-1 flex-col overflow-y-auto [scrollbar-width:none] group-data-ready/carousel:overflow-visible [&>*]:w-full' => $thumbsMode === 'vertical',
             ])>
                 {{ $thumbnails }}
@@ -265,14 +284,14 @@
             in when it opens, so it shows what the page shows (another set too).
         --}}
         <div data-acun-modal="{{ $carouselId }}-fullscreen" data-slot="carousel-lightbox" data-theme="dark" hidden wire:ignore class="pointer-events-none fixed inset-0 z-50 flex data-open:pointer-events-auto">
-            <div data-slot="modal-backdrop" class="fixed inset-0 bg-page opacity-0 transition-opacity duration-150 data-open:opacity-100 motion-reduce:transition-none" aria-hidden="true"></div>
-            <div data-slot="modal-panel" role="dialog" aria-modal="true" aria-label="{{ $label ?? __('Images') }}" tabindex="-1" class="relative z-10 flex h-dvh w-full flex-col gap-3 p-3 opacity-0 transition-opacity duration-150 data-open:opacity-100 sm:p-6 motion-reduce:transition-none">
-                <div class="flex flex-none justify-end">
-                    <button type="button" data-acun-close aria-label="{{ __('Close') }}" class="flex size-10 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
-                        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                <acun:carousel :label="$label ?? __('Images')" zoom counter :pagination="false" :loop="$loop" :thumbs="$thumbsMode ? 'horizontal' : null" data-carousel-lightbox class="flex min-h-0 flex-1 flex-col bg-transparent! [&>[data-slot=carousel-viewport]]:min-h-0 [&>[data-slot=carousel-viewport]]:flex-1 [&_[data-slot=carousel-track]]:h-full [&_[data-slot=carousel-track]>*]:h-full [&_.swiper-zoom-target]:h-full [&_.swiper-zoom-target]:w-auto [&_.swiper-zoom-target]:max-w-full [&_img]:object-contain [&>[data-slot=carousel-thumbs]]:mx-auto [&>[data-slot=carousel-thumbs]]:w-full [&>[data-slot=carousel-thumbs]]:max-w-md max-md:[&>[data-slot=carousel-thumbs]]:hidden">
+            <div data-slot="modal-backdrop" class="fixed inset-0 bg-page/95 opacity-0 backdrop-blur-md transition-opacity duration-200 data-open:opacity-100 motion-reduce:transition-none" aria-hidden="true"></div>
+            {{-- The dialog itself takes the focus when it opens (no ring on a button the user did not reach with Tab);
+                 Tab reaches the close button, the arrows and the thumbnails, Left / Right move the pictures. --}}
+            <div data-slot="modal-panel" role="dialog" aria-modal="true" aria-label="{{ $label ?? __('Images') }}" tabindex="-1" autofocus class="relative z-10 flex h-dvh w-full flex-col opacity-0 outline-none transition-opacity duration-200 data-open:opacity-100 motion-reduce:transition-none">
+                <button type="button" data-acun-close aria-label="{{ __('Close') }}" class="absolute top-3 right-3 z-20 flex size-10 cursor-pointer items-center justify-center rounded-full bg-ink/10 text-ink ring-1 ring-ink/15 backdrop-blur transition-colors hover:bg-ink/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:top-5 sm:right-5 motion-reduce:transition-none">
+                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                <acun:carousel :label="$label ?? __('Images')" zoom counter :pagination="false" :loop="$loop" :thumbs="$thumbsMode ? 'horizontal' : null" thumb-width="3.5rem" data-carousel-lightbox class="flex min-h-0 flex-1 flex-col bg-transparent! px-3 pt-16 pb-4 sm:px-20 sm:pt-8 sm:pb-6 [&>[data-slot=carousel-viewport]]:min-h-0 [&>[data-slot=carousel-viewport]]:flex-1 [&_[data-slot=carousel-track]]:h-full [&_[data-slot=carousel-track]>*]:h-full [&_.swiper-zoom-target]:h-full [&_.swiper-zoom-target]:w-auto [&_.swiper-zoom-target]:max-w-full [&_.swiper-zoom-target]:rounded-sm [&_img]:object-contain [&>[data-slot=carousel-thumbs]]:mx-auto [&>[data-slot=carousel-thumbs]]:mt-4 [&>[data-slot=carousel-thumbs]]:w-fit [&>[data-slot=carousel-thumbs]]:max-w-full max-md:[&>[data-slot=carousel-thumbs]]:hidden">
                     @if ($thumbsMode)
                         <acun:slot:thumbnails><!-- the thumbnails are copied in when it opens --></acun:slot:thumbnails>
                     @endif

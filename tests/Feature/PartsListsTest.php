@@ -212,6 +212,29 @@ final class PartsListsTest extends TestCase
     }
 
     /** A slide part: a named group for screen readers (the plugin makes it inert while another slide is shown). */
+    public function test_carousel_thumbnails_may_take_a_fixed_width(): void
+    {
+        $gallery = fn (string $width = ''): string => Blade::render(<<<BLADE
+            <acun:carousel label="Ürün" {$width}>
+                <acun:carousel.item><img src="/a.jpg" alt="Ön"></acun:carousel.item>
+                <acun:carousel.item><img src="/b.jpg" alt="Yan"></acun:carousel.item>
+                <acun:slot:thumbnails>
+                    <acun:carousel.thumb label="Ön"><img src="/a.jpg" alt=""></acun:carousel.thumb>
+                    <acun:carousel.thumb label="Yan"><img src="/b.jpg" alt=""></acun:carousel.thumb>
+                </acun:slot:thumbnails>
+            </acun:carousel>
+            BLADE);
+
+        self::assertStringNotContainsString('style="--carousel-thumb-width', $gallery(), 'Without it: four to a row, as before…');
+        self::assertStringContainsString('[&>*]:w-[calc((100%_-_3*var(--carousel-thumb-gap))/4)]', $gallery());
+        self::assertStringContainsString('[&>*]:w-(--carousel-thumb-width)', $gallery('thumb-width="4rem"'));
+        self::assertMatchesRegularExpression('~data-slot="carousel-thumbs"[^>]*\sstyle="--carousel-thumb-width: 4rem"~', $gallery('thumb-width="4rem"'), '… with it: one width, as many as fit.');
+
+        $this->expectException(ViewException::class);
+        $this->expectExceptionMessage('thumb-width "25%" is not a length');
+        $gallery('thumb-width="25%"');
+    }
+
     public function test_carousel_item_is_a_named_slide(): void
     {
         $html = Blade::render(<<<'BLADE'

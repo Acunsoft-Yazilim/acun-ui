@@ -3,12 +3,18 @@
 import { focusAndReveal, focusable, inOwnFocusLayer, isVisible } from '../core/dom.js';
 
 /**
- * Focuses a shown [autofocus], else the first focusable element, else the container itself.
+ * Focuses a shown [autofocus], else the first focusable element, else the container itself. A container with
+ * autofocus (and tabindex="-1") takes it itself: a picture viewer, whose first button would show a ring.
  *
  * @param {HTMLElement} container
  * @returns {HTMLElement}
  */
 export function focusFirst(container) {
+    if (container.hasAttribute('autofocus') && container.hasAttribute('tabindex')) {
+        focusAndReveal(container);
+
+        return container;
+    }
     // An autofocus inside a hidden part (a closed tab, x-show) cannot take the focus.
     const autofocus = focusable(container).find((element) => element.hasAttribute('autofocus'))
         ?? [.../** @type {NodeListOf<HTMLElement>} */ (container.querySelectorAll('[autofocus]'))].find((element) => isVisible(element) && !element.closest('[inert]'));
