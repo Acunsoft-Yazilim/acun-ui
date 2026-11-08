@@ -617,7 +617,8 @@ export function mount(root) {
     // as big as the slides and shows that part. The photo's drawn box is worked out from object-fit (cover or contain)
     // and its padding, so the lens stays on the picture. Off while zoomed, dragging or on a touch.
     const MAGNIFY = 2.5;
-    const canMagnify = window.matchMedia?.('(hover: hover) and (pointer: fine) and (min-width: 1024px)');
+    // A wide screen; the pointer event itself says it is a mouse (a hover-capable media query is not needed).
+    const canMagnify = window.matchMedia?.('(min-width: 1024px)');
     function hideMagnifier() {
         if (lens && !lens.hidden) lens.hidden = true;
         if (magnifier && !magnifier.hidden) magnifier.hidden = true;
