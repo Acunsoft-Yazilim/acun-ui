@@ -136,6 +136,10 @@ declare const api: {
         scope: typeof scope;
     };
     confirm: (/** @type {import('./behavior/confirm.js').ConfirmRequest} */ request: import('./behavior/confirm.js').ConfirmRequest) => Promise<boolean>;
+    flyToCart: (
+    /** @type {Element | string | null | undefined} */ source: Element | string | null | undefined, 
+    /** @type {Element | string | null | undefined} */ target: Element | string | null | undefined, 
+    /** @type {import('./behavior/fly-to-cart.js').FlyToCartOptions} */ options?: import('./behavior/fly-to-cart.js').FlyToCartOptions) => Promise<boolean>;
 };
 export type AcunUIRuntime = typeof api & {
     version: string;

@@ -41,7 +41,7 @@
     $errorRing = 'ring-danger-line focus:ring-2 focus:ring-danger-line focus:shadow-(--ac-focus-shadow-danger)';
 @endphp
 
-<div {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex flex-col gap-1.5') }}>
+<div {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex flex-col gap-1.5 min-w-0') }}>
     @if (! $floating && $label)
         <label for="{{ $selectId }}" class="text-sm font-medium text-body">
             {{ $label }}

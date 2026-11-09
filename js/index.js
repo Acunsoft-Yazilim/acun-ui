@@ -127,6 +127,14 @@ const api = {
     // The kit's confirmation dialog from JavaScript: AcunUI.confirm({ title, text, confirmLabel, cancelLabel, tone }) → Promise<boolean>.
     // Its code is a chunk of its own in a bundler build (loaded on the first question).
     confirm: (/** @type {import('./behavior/confirm.js').ConfirmRequest} */ request) => import('./behavior/confirm.js').then((module) => module.confirm(request)),
+    // "Fly to cart": a copy of a picture flies to a cart button, which bounces; only the look (no cart logic), not under
+    // reduced motion. AcunUI.flyToCart(source, target, { duration, size, bounce }) → Promise<boolean> (true: it flew).
+    // A chunk of its own in a bundler build (loaded on the first flight).
+    flyToCart: (
+        /** @type {Element | string | null | undefined} */ source,
+        /** @type {Element | string | null | undefined} */ target,
+        /** @type {import('./behavior/fly-to-cart.js').FlyToCartOptions} */ options = {},
+    ) => import('./behavior/fly-to-cart.js').then((module) => module.flyToCart(source, target, options)),
 };
 
 /**

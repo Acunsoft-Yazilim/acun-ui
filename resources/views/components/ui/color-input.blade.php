@@ -31,7 +31,7 @@
     $controlAttributes = \Acun\Ui\Support\Field::controlAttributes($attributes);
 @endphp
 
-<div {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex flex-col gap-1.5') }}>
+<div {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex flex-col gap-1.5 min-w-0') }}>
     @if ($label)
         <label for="{{ $inputId }}" class="text-sm font-medium text-body">
             {{ $label }}

@@ -20,7 +20,7 @@ final class ColorInputComponentTest extends TestCase
     {
         $html = Blade::render('<acun:color-input name="renk" label="Ürün rengi" value="#C2410C" hint="Örneğin #c2410c" required class="max-w-xs" />');
 
-        self::assertMatchesRegularExpression('~<div class="flex flex-col gap-1.5 max-w-xs">~', $html, 'Layout attributes place the whole field.');
+        self::assertMatchesRegularExpression('~<div class="flex flex-col gap-1.5 min-w-0 max-w-xs">~', $html, 'Layout attributes place the whole field.');
         self::assertMatchesRegularExpression('~<label for="([^"]+)"[^>]*>\s*Ürün rengi\s*<span[^>]*>\*</span>~', $html);
         preg_match('~<label for="([^"]+)"~', $html, $label);
         self::assertMatchesRegularExpression('~<div class="flex items-center gap-2" data-acun-color-input>~', $html);
