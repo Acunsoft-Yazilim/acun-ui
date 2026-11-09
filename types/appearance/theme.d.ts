@@ -65,9 +65,9 @@ export declare function chosenContentWidth(config: any): string | null;
 export declare function initialPreferences(config: any): {
     mode: any;
     brandColor: any;
-    skin: any;
+    skin: string;
     contentWidth: string;
-    navbarMode: any;
+    navbarMode: string;
     sidebarCollapsed: boolean;
     semiDark: boolean;
 };
@@ -142,9 +142,9 @@ export declare function watchSections(preferences: any, config: any): MutationOb
 export declare function applyInitialAppearance(config: any): {
     mode: any;
     brandColor: any;
-    skin: any;
+    skin: string;
     contentWidth: string;
-    navbarMode: any;
+    navbarMode: string;
     sidebarCollapsed: boolean;
     semiDark: boolean;
 };

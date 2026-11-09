@@ -8,6 +8,7 @@ use Acun\Ui\Support\Appearance;
 use Acun\Ui\Support\Assets;
 use Acun\Ui\Support\BladeComments;
 use Acun\Ui\Support\ComponentPaths;
+use Acun\Ui\Support\FontLibrary;
 use Acun\Ui\Support\Fonts;
 use Acun\Ui\Support\Layout;
 use Acun\Ui\Support\PaidComponents;
@@ -83,6 +84,10 @@ final class AcunUiServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../dist' => public_path(Assets::PUBLISHED_DIRECTORY),
         ], Assets::PUBLISH_TAG);
+        // The font library's files and licences (FontLibrary), served by the web server from public/ once published.
+        $this->publishes([
+            __DIR__.'/../fonts' => public_path(FontLibrary::PUBLISHED_DIRECTORY),
+        ], FontLibrary::PUBLISH_TAG);
 
         // No preload tags on pages reached via wire:navigate: Livewire's <head> merge does not
         // count <link rel="preload"> as an asset, so it removed and re-added them on every visit

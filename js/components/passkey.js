@@ -175,7 +175,8 @@ export async function pressPasskey(config, element, wire = null) {
     try {
         const result = await runPasskey(config, wire);
         dispatch('acun:passkey:done', { mode, result: result ?? null }, element);
-        const redirect = config.actionUrl ? safeUrl(result?.redirect) : null;
+        // Only to this site: the server's answer may not send the visitor elsewhere.
+        const redirect = config.actionUrl && isSameOrigin(result?.redirect) ? safeUrl(result?.redirect) : null;
         if (redirect) window.location.assign(redirect);
 
         return '';

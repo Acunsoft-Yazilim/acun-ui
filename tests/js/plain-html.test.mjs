@@ -1134,3 +1134,23 @@ test('AcunUI.confirm: the kit\'s confirmation dialog as a promise; Confirm is tr
     assert.equal(dialogs().length, 0, 'The dialogs are removed after the answer.');
     assert.equal(document.activeElement, opener, 'The focus goes back.');
 });
+
+test('AcunUI.confirm: a dialog taken out of the page while open (wire:navigate) answers no and does not block the next one', async () => {
+    await mount('<p>Sayfa</p>');
+    const open = () => [...document.querySelectorAll('body > [data-acun-modal^="acun-confirm-"][data-open]')];
+
+    const first = AcunUI.confirm({ title: 'Silinsin mi?' });
+    await settle();
+    assert.equal(open().length, 1);
+    open()[0].remove();
+    await settle();
+    assert.equal(await first, false, 'Removed while open: no.');
+
+    const second = AcunUI.confirm({ title: 'Sonraki' });
+    await settle();
+    assert.equal(open().length, 1, 'The next confirm() opens: the queue is not stuck.');
+    document.dispatchEvent(new window.Event('livewire:navigating'));
+    assert.equal(await second, false, 'Leaving the page with wire:navigate: no.');
+    await sleep(50);
+    assert.equal(open().length, 0, 'No dialog is left open for the snapshot of the page left.');
+});

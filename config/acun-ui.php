@@ -22,6 +22,11 @@ return [
         'navbar_mode' => null,    // fixed | static | hidden (fixed)
         'customizer' => null,     // true: the appearance customizer on the right edge (false)
         'theme_toggle' => null,   // false: no theme button in the top bar (true)
+        // The text and heading fonts from the kit's font library (20 Google Fonts families served by the package, no
+        // request to Google): inter, lora, playfair-display… (Acun\Ui\Support\FontLibrary::all()); null: the theme's own.
+        // An administrator's setting in the database: FontLibrary::using(fn () => …) in a service provider.
+        'font' => null,
+        'heading_font' => null,
     ],
 
     // Livewire select fix: after an update, <select wire:model> boxes of the component that sent the

@@ -81,6 +81,7 @@ final class FreeAloneTest extends TestCase
             'recovery-codes' => ["<acun:recovery-codes :codes=\"['a1b2-c3d4']\" />"],
             'scroll-area' => ['<acun:scroll-area>İçerik</acun:scroll-area>'],
             'segmented' => ["<acun:segmented name=\"donem\" :options=\"['gun' => 'Gün', 'hafta' => 'Hafta']\" />"],
+            'font-select' => ['<acun:font-select name="font" label="Metin yazı tipi" value="inter" />'],
             'select' => ["<acun:select name=\"durum\" :options=\"['1' => 'Aktif']\" />"],
             'selection-bar' => ['<acun:selection-bar :count="3"><acun:button>Sil</acun:button></acun:selection-bar>'],
             'skeleton' => ['<acun:skeleton variant="text" />'],

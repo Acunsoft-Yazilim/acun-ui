@@ -17,12 +17,12 @@ use InvalidArgumentException;
  *   Layout::page(['sidebar_mode' => 'collapsed', 'navbar_mode' => 'static']);
  *
  * The page values live in a scoped (per-request) container binding. 'mode' is light, dark or
- * system; 'theme' is a theme's key (Appearance). A 1.x 'theme' of light, dark or system is
+ * system; 'theme' is a theme's key (Appearance); 'font' and 'heading_font' are font library ids (FontLibrary). A 1.x 'theme' of light, dark or system is
  * read as the mode until 3.0.
  */
 final class Layout
 {
-    public const KEYS = ['mode', 'theme', 'brand_color', 'skin', 'content_width', 'semi_dark', 'sidebar_mode', 'navbar_mode', 'customizer', 'theme_toggle'];
+    public const KEYS = ['mode', 'theme', 'brand_color', 'skin', 'content_width', 'semi_dark', 'sidebar_mode', 'navbar_mode', 'customizer', 'theme_toggle', 'font', 'heading_font'];
 
     /** @deprecated The preset colours are Appearance::COLORS (kept until 3.0). */
     public const BRAND_COLORS = Appearance::COLORS;

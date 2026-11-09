@@ -98,18 +98,38 @@ export function confirm(request = {}) {
             resolve(false);
             return;
         }
-        button.addEventListener('click', () => {
-            answer = true;
-            modal.close();
-        });
-        root.addEventListener('acun:modal:closed', () => {
+        const id = root.getAttribute('data-acun-modal');
+        let done = false;
+        const finish = (/** @type {boolean} */ value, /** @type {number} */ after) => {
+            if (done) return;
+            done = true;
+            window.removeEventListener('acun:modal:closed', onRemoved);
+            document.removeEventListener('livewire:navigating', onLeave);
             // After the closing fade (the modal hides its root when it ends).
             setTimeout(() => {
                 plugins.unmount(root);
                 root.remove();
-            }, 300);
-            resolve(answer);
-        }, { once: true });
+            }, after);
+            resolve(value);
+        };
+        // Taken out of the page while open (wire:navigate swapped the body, a back step): the modal tells the window;
+        // the answer is no, and the next confirm() is not kept waiting.
+        const onRemoved = (/** @type {Event} */ event) => {
+            const detail = /** @type {CustomEvent} */ (event).detail;
+            if (detail?.name === id && detail?.reason === 'removed') finish(false, 0);
+        };
+        // Leaving the page with wire:navigate: no answer, and no dialog kept in the snapshot of the page left.
+        const onLeave = () => {
+            modal.close();
+            finish(false, 0);
+        };
+        button.addEventListener('click', () => {
+            answer = true;
+            modal.close();
+        });
+        root.addEventListener('acun:modal:closed', () => finish(answer, 300), { once: true });
+        window.addEventListener('acun:modal:closed', onRemoved);
+        document.addEventListener('livewire:navigating', onLeave);
         modal.open();
     });
 

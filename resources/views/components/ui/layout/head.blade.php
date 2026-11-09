@@ -104,6 +104,8 @@
 {{-- An id per response: wire:navigate then always adds this page's island (js/core/config.js). --}}
 <script type="application/json" data-acun-ui-config="{{ \Illuminate\Support\Str::random(8) }}">@json($config)</script>
 {!! app(\Acun\Ui\Support\Assets::class)->bootTag(['nonce' => $nonce]) !!}
+{{-- The chosen text and heading fonts of the font library (font, heading_font): their files, preloaded for the first paint, and the tokens. --}}
+{!! \Acun\Ui\Support\FontLibrary::tags($nonce) !!}
 
 {{ $slot }}
 

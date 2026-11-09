@@ -27,6 +27,12 @@ final class Fonts
     /** @param  list<string>|string|null  $aliases */
     public static function tags(array|string|null $aliases = null): HtmlString
     {
+        // A text or heading font chosen from the font library (FontLibrary, acun:layout.head) replaces the theme's own:
+        // that one is not preloaded, so it is never downloaded.
+        if (is_array($aliases)) {
+            $aliases = FontLibrary::withoutReplaced(array_values(array_filter($aliases, 'is_string')));
+        }
+
         $vite = app(Vite::class);
 
         if (! method_exists($vite, 'fonts')) {
@@ -55,9 +61,9 @@ final class Fonts
     }
 
     /**
-     * Before Laravel 13: the families (default: the kit's Public Sans and DM Mono) from Bunny Fonts,
-     * by their aliases (public-sans, dm-mono, fraunces…: Bunny's names too). Empty when
-     * acun-ui.fonts_fallback is false.
+     * Before Laravel 13: the families (default: the kit's Public Sans and DM Mono) by their aliases
+     * (public-sans, dm-mono, fraunces…): those of the font library (FontLibrary) from the package, the
+     * others from Bunny Fonts (Bunny's names too). Empty when acun-ui.fonts_fallback is false.
      *
      * @param  list<string>|string|null  $aliases
      */
@@ -67,20 +73,29 @@ final class Fonts
             return new HtmlString('');
         }
 
-        $families = collect($aliases === null ? ['public-sans', 'dm-mono'] : (array) $aliases)
-            ->filter(fn ($alias): bool => is_string($alias) && preg_match('~^[a-z0-9]+(?:-[a-z0-9]+)*$~', $alias) === 1)
+        $aliases = collect($aliases === null ? ['public-sans', 'dm-mono'] : (array) $aliases)
+            ->filter(fn ($alias): bool => is_string($alias) && preg_match('~^[a-z0-9]+(?:-[a-z0-9]+)*$~', $alias) === 1);
+
+        // The font library's families come from the package itself; only the others (DM Mono) from Bunny Fonts.
+        $local = $aliases->filter(fn (string $alias): bool => FontLibrary::has($alias))->unique()
+            ->map(fn (string $alias): string => FontLibrary::faces($alias))
+            ->implode("\n");
+        $nonce = FontLibrary::nonce();
+        $html = $local === '' ? '' : '<style data-acun-fonts'.($nonce ? ' nonce="'.e($nonce).'"' : '').'>'.$local.'</style>';
+
+        $families = $aliases->reject(fn (string $alias): bool => FontLibrary::has($alias))
             // DM Mono has 400 and 500 (the kit's code and numeric labels); a text family the weights the kit uses.
             ->map(fn (string $alias): string => $alias.':'.($alias === 'dm-mono' ? '400,500' : '400,500,600,700'))
             ->unique()
             ->implode('|');
 
         if ($families === '') {
-            return new HtmlString('');
+            return new HtmlString($html);
         }
 
         $url = 'https://fonts.bunny.net/css?family='.$families.'&display=swap';
 
-        return new HtmlString('<link rel="preconnect" href="https://fonts.bunny.net" crossorigin /><link rel="stylesheet" href="'.e($url).'" />');
+        return new HtmlString($html.'<link rel="preconnect" href="https://fonts.bunny.net" crossorigin /><link rel="stylesheet" href="'.e($url).'" />');
     }
 
     /** The decoded fonts manifest, read again only when the file changes. */

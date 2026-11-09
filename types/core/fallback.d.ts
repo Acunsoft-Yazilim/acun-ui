@@ -37,11 +37,11 @@ export declare function fallbackStores(config: Record<string, any> | null): {
         setCollapsed: typeof noop;
     };
     navbar: {
-        mode: any;
+        mode: string;
         set: typeof noop;
     };
     customizer: {
-        skin: any;
+        skin: string;
         contentWidth: string;
         semiDark: boolean;
         setSkin: typeof noop;

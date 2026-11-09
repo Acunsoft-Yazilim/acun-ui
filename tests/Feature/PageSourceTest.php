@@ -146,6 +146,19 @@ final class PageSourceTest extends TestCase
         self::assertStringNotContainsString('@font-face', $html);
     }
 
+    /** A text font chosen from the font library (FontLibrary) replaces the theme's: that one is no longer preloaded, so never downloaded. */
+    public function test_acun_fonts_does_not_preload_the_text_font_a_chosen_one_replaces(): void
+    {
+        $this->fontBuild(['public-sans' => 'Public Sans', 'dm-mono' => 'DM Mono']);
+        self::assertStringContainsString('public-sans-400.woff2', Blade::render("@acunFonts(['public-sans', 'dm-mono'])"));
+
+        config(['acun-ui.layout.font' => 'inter']);
+        $html = Blade::render("@acunFonts(['public-sans', 'dm-mono'])");
+
+        self::assertStringNotContainsString('public-sans-400.woff2', $html);
+        self::assertStringContainsString('fonts-abc123.css', $html, 'The built file stays linked (DM Mono, code and numbers).');
+    }
+
     public function test_a_wire_navigate_request_prints_no_preload_tags(): void
     {
         $this->fontBuild();
@@ -178,12 +191,21 @@ final class PageSourceTest extends TestCase
             }
         });
 
-        self::assertSame(
-            '<link rel="preconnect" href="https://fonts.bunny.net" crossorigin /><link rel="stylesheet" href="https://fonts.bunny.net/css?family=public-sans:400,500,600,700|dm-mono:400,500&amp;display=swap" />',
-            trim(Blade::render('@acunFonts')),
-            'The kit\'s Public Sans and DM Mono by default.',
+        $default = trim(Blade::render('@acunFonts'));
+        self::assertStringEndsWith(
+            '<link rel="preconnect" href="https://fonts.bunny.net" crossorigin /><link rel="stylesheet" href="https://fonts.bunny.net/css?family=dm-mono:400,500&amp;display=swap" />',
+            $default,
+            'The kit\'s DM Mono by default from Bunny Fonts…',
         );
-        self::assertStringContainsString('family=fraunces:400,500,600,700&amp;', Blade::render("@acunFonts(['fraunces', '../evil'])"), 'A theme\'s families by their aliases; anything else is left out.');
+        self::assertStringStartsWith('<style data-acun-fonts>@font-face{font-family:\'Public Sans\'', $default, '… and Public Sans, in the font library, from the package (no font host).');
+        self::assertStringNotContainsString('public-sans:', $default);
+
+        $theme = Blade::render("@acunFonts(['lora', '../evil'])");
+        self::assertStringContainsString("font-family:'Lora'", $theme, 'A theme\'s families by their aliases (Lora from the package); anything else is left out.');
+        self::assertStringContainsString('/acun-ui/fonts/lora/lora-latin-ext-400-normal.woff2', $theme);
+        self::assertStringNotContainsString('bunny.net', $theme, 'Nothing from a font host when every family is in the library.');
+        self::assertStringNotContainsString('evil', $theme);
+        self::assertStringContainsString('family=fraunces:400,500,600,700&amp;', Blade::render("@acunFonts(['fraunces'])"), 'A family the library does not have (Atelier\'s Fraunces) still from Bunny Fonts.');
 
         config(['acun-ui.fonts_fallback' => false]);
         self::assertSame('', trim(Blade::render('@acunFonts')), 'An application that loads the fonts itself.');

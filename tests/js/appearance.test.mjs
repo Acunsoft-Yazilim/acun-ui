@@ -41,6 +41,13 @@ test('the page or account wins, then the browser (the scope\'s key), then the ap
     window.localStorage.setItem('acun-ui:panel', JSON.stringify({ mode: 'light', sidebar: 'expanded', semiDark: false, brandColor: '#e11d48' }));
     assert.equal(initialPreferences(config).mode, 'light', 'The browser beats the default.');
     assert.equal(initialPreferences(config).sidebarCollapsed, false);
+    // Without the page's own navbar the browser's counts: what it kept is checked first.
+    const unset = { ...config, navbarMode: null, defaults: { ...config.defaults, navbar_mode: 'fixed' } };
+    window.localStorage.setItem('acun-ui:panel', JSON.stringify({ skin: 'x" onload="alert(1)', navbar: 'floating' }));
+    assert.deepEqual([initialPreferences(unset).skin, initialPreferences(unset).navbarMode], ['default', 'fixed'], 'A saved skin or navbar that is not one the kit knows is ignored.');
+    window.localStorage.setItem('acun-ui:panel', JSON.stringify({ skin: 'bordered', navbar: 'static' }));
+    assert.deepEqual([initialPreferences(unset).skin, initialPreferences(unset).navbarMode], ['bordered', 'static']);
+    window.localStorage.setItem('acun-ui:panel', JSON.stringify({ mode: 'light', sidebar: 'expanded', semiDark: false, brandColor: '#e11d48' }));
     assert.equal(initialPreferences(config).semiDark, false);
     assert.equal(initialPreferences(config).brandColor, '#e11d48');
     assert.equal(initialPreferences({ ...config, mode: 'system' }).mode, 'system', 'The page beats the browser.');

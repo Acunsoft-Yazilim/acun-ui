@@ -139,6 +139,9 @@ test('the CSRF token goes only to this site; only a safe redirect address is fol
     assert.equal(window.location.hash, '#oturum-acildi', 'A safe redirect address is followed.');
 
     window.location.hash = '';
+    const here = window.location.href;
+    await signIn(html.login, '#login', { redirect: 'https://baska-site.example/giris' });
+    assert.equal(window.location.href, here, 'An address on another site is not followed.');
     assert.deepEqual(await signIn(html.otherSite, '#other-site', { redirect: 'javascript:location.hash="#calisti"' }), [null, null]);
     assert.equal(window.location.hash, '');
 

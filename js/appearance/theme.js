@@ -153,6 +153,11 @@ const modeOf = (value) => (MODES.includes(value) ? value : null);
 
 /** The named widths of the page container (css/core.css; Acun\Ui\Support\ContentWidth). */
 export const CONTENT_WIDTHS = ['default', 'wide', 'wider', 'full'];
+
+/** A saved or given skin: a simple name (default, bordered, a theme's own: a-z, 0-9, -); else null. @param {unknown} value */
+const skinOf = (value) => (/^[a-z][a-z0-9-]{0,31}$/.test(String(value)) ? /** @type {string} */ (value) : null);
+/** The top bar's mode: fixed, static or hidden; else null. @param {unknown} value */
+const navbarOf = (value) => (/^(fixed|static|hidden)$/.test(String(value)) ? /** @type {string} */ (value) : null);
 const LENGTH = /^(\d{1,5}(\.\d{1,4})?|\.\d{1,4})(px|rem|em|vw|ch|%)$/;
 
 /**
@@ -187,9 +192,10 @@ export function initialPreferences(config) {
     return {
         mode: modeOf(page.mode) ?? modeOf(saved.mode) ?? modeOf(defaults.mode) ?? 'system',
         brandColor: page.brandColor || saved.brandColor || defaults.brand_color || 'default',
-        skin: page.skin || saved.skin || defaults.skin || 'default',
+        // What the browser kept is checked: another script on the origin may have written anything there.
+        skin: skinOf(page.skin) ?? skinOf(saved.skin) ?? skinOf(defaults.skin) ?? 'default',
         contentWidth: chosenContentWidth(config) ?? 'full',
-        navbarMode: page.navbarMode || saved.navbar || defaults.navbar_mode || 'fixed',
+        navbarMode: navbarOf(page.navbarMode) ?? navbarOf(saved.navbar) ?? navbarOf(defaults.navbar_mode) ?? 'fixed',
         sidebarCollapsed: page.sidebarMode ? page.sidebarMode === 'collapsed' : saved.sidebar ? saved.sidebar === 'collapsed' : defaults.sidebar_mode === 'collapsed',
         semiDark: flag(page.semiDark) ?? flag(saved.semiDark) ?? defaults.semi_dark === true,
     };
