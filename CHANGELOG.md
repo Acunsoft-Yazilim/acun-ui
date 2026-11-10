@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.9.0 (2026-11-10)
+
+- No change of its own; released with Acun Pro 2.9.0 (selling and quotes).
+
 ## 2.8.0 (2026-11-10)
 
 - `acun:carousel`: a photo with a large copy (`<img data-zoom-src="…">`, the slide showing a smaller one) gives the magnifier (`hover-zoom`) and the full-screen view that copy.
