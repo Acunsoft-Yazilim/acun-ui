@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.10.0 (2026-11-10)
+
+- No change of its own; released with Acun Pro 2.10.0 (the product card's icon buttons).
+
 ## 2.9.0 (2026-11-10)
 
 - No change of its own; released with Acun Pro 2.9.0 (selling and quotes).
