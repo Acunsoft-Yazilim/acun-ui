@@ -4,6 +4,9 @@
     'hint' => null,
     // The chosen id (a classic form; wire:model / x-model picks it otherwise).
     'value' => null,
+    // false: never the value a failed validation sent back (old()), only value: one of several forms on a page with
+    // fields of the same name (an address list, each with its own form) keeps its own.
+    'old' => true,
     // The empty choice: the theme's own font. null: "Theme font".
     'placeholder' => null,
     // A line under the field in the chosen font (only that family is downloaded); false: none.
@@ -30,11 +33,11 @@
 @endphp
 
 <div data-acun-font-select {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('flex flex-col gap-2') }}>
-    <acun:select :label="$label" :name="$name" :hint="$hint" :value="$value" :placeholder="$placeholder ?? __('Theme font')" nullable {{ $attributes->filter(fn ($value, $key) => ! \Acun\Ui\Support\Field::isLayout((string) $key)) }}>
+    <acun:select :label="$label" :name="$name" :hint="$hint" :value="$value" :placeholder="$placeholder ?? __('Theme font')" :old="$old" nullable {{ $attributes->filter(fn ($value, $key) => ! \Acun\Ui\Support\Field::isLayout((string) $key)) }}>
         @foreach ($options as $category => $fonts)
             <optgroup label="{{ $groups[$category] ?? $category }}">
                 @foreach ($fonts as $id => $family)
-                    <option value="{{ $id }}" @selected(! \Acun\Ui\Support\Field::bound($attributes) && (string) \Acun\Ui\Support\Field::old(\Acun\Ui\Support\Field::name($name, $attributes), $value) === $id)>{{ $family }}</option>
+                    <option value="{{ $id }}" @selected(! \Acun\Ui\Support\Field::bound($attributes) && (string) \Acun\Ui\Support\Field::old(\Acun\Ui\Support\Field::name($name, $attributes), $value, $old) === $id)>{{ $family }}</option>
                 @endforeach
             </optgroup>
         @endforeach

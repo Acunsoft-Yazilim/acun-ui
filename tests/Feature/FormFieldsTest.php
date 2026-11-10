@@ -70,6 +70,35 @@ final class FormFieldsTest extends TestCase
         self::assertStringNotContainsString(' selected>', Blade::render("<x-ui.select wire:model=\"durum\" :options=\"{$options}\" />"));
     }
 
+    /** In a button that says what is going on itself the spinner is only a picture: no name of its own, no live region. */
+    public function test_a_decorative_spinner_adds_no_name_and_no_live_region(): void
+    {
+        $plain = Blade::render('<acun:spinner />');
+        self::assertStringContainsString('role="status"', $plain);
+        self::assertStringContainsString('<span class="sr-only">Yükleniyor</span>', $plain);
+
+        $button = Blade::render('<acun:button><acun:spinner decorative color="current" size="sm" /> Ekleniyor…</acun:button>');
+        self::assertStringNotContainsString('role="status"', $button, 'No live region in the button…');
+        self::assertStringNotContainsString('Yükleniyor', $button, '… nor a name of its own: the button says "Ekleniyor…".');
+        self::assertMatchesRegularExpression('~<span\s+aria-hidden="true"\s+class="inline-flex items-center gap-2">~', $button, 'Only a picture, in the button\'s colour.');
+    }
+
+    /** Several forms with fields of the same name on a page (an address list): :old="false" keeps a form's own value. */
+    public function test_a_field_may_leave_old_input_to_another_form(): void
+    {
+        $this->withOldInput(['line' => 'Gönderilen adres', 'durum' => 'c', 'renk' => 'b']);
+        $options = "['a' => 'Taslak', 'b' => 'Yayında', 'c' => 'Arşiv']";
+
+        self::assertMatchesRegularExpression('~<textarea[^>]*>Gönderilen adres</textarea>~', Blade::render('<acun:textarea name="line" />'), 'The form that was sent gets its text back…');
+        self::assertMatchesRegularExpression('~<textarea[^>]*></textarea>~', Blade::render('<acun:textarea name="line" :old="false" />'), '… a new, empty form stays empty…');
+        self::assertMatchesRegularExpression('~<textarea[^>]*>Ev adresim</textarea>~', Blade::render('<acun:textarea name="line" value="Ev adresim" :old="false" />'), '… and another one keeps its own.');
+
+        $select = Blade::render("<acun:select name=\"durum\" :options=\"{$options}\" value=\"a\" :old=\"false\" />");
+        self::assertStringContainsString('<option value="a" selected>Taslak</option>', $select);
+        self::assertStringNotContainsString('<option value="c" selected>', $select);
+        self::assertStringNotContainsString('old=', $select, 'Not an attribute of the control.');
+    }
+
     public function test_errors_of_bracket_names_are_found_and_no_error_bag_is_no_error(): void
     {
         View::share('errors', null);
@@ -313,7 +342,7 @@ final class FormFieldsTest extends TestCase
     public function test_a_checkbox_with_a_message_keeps_its_label_as_the_root(): void
     {
         $calm = trim(Blade::render('<x-ui.checkbox name="kabul" label="Kabul ediyorum" class="mt-4" wire:key="kabul" />'));
-        self::assertStringStartsWith('<label for="kabul" class="inline-flex items-center gap-2.5 text-sm text-body select-none mt-4" wire:key="kabul">', $calm);
+        self::assertStringStartsWith('<label for="kabul" class="inline-flex items-start gap-2.5 text-sm text-body select-none mt-4" wire:key="kabul">', $calm, 'The box with the first line of the label, also when it wraps.');
 
         $this->withErrors(['kabul' => ['Koşulları kabul edin.']]);
         $html = trim(Blade::render('<x-ui.checkbox name="kabul" label="Kabul ediyorum" class="mt-4" wire:key="kabul" aria-describedby="kosullar" />'));
@@ -347,7 +376,7 @@ final class FormFieldsTest extends TestCase
             }
         });
 
-        self::assertMatchesRegularExpression('/<label for="kabul" class="inline-flex items-center [^"]* mt-4">/', $test->html());
+        self::assertMatchesRegularExpression('/<label for="kabul" class="inline-flex items-start [^"]* mt-4">/', $test->html());
 
         $test->call('save')->assertHasErrors('kabul');
         $html = $test->html();

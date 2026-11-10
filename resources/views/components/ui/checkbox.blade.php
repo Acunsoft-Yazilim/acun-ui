@@ -32,8 +32,9 @@
     label and the message): a morph that brings the error keeps the element, and the box keeps
     its place in a flex row.
 --}}
-<label for="{{ $boxId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex '.($showsMessage ? 'items-start' : 'items-center').' gap-2.5 text-sm text-body select-none') }}>
-    <span @class(['relative flex size-4.5 flex-none items-center justify-center', 'mt-px' => $showsMessage])>
+<label for="{{ $boxId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex items-start gap-2.5 text-sm text-body select-none') }}>
+    {{-- With the first line of the label (20 px) also when it wraps: the 18 px box 1 px down. --}}
+    <span class="relative mt-px flex size-4.5 flex-none items-center justify-center">
         <input
             data-acun-control
             id="{{ $boxId }}"

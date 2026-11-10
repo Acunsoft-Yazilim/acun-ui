@@ -5,6 +5,9 @@
     'name' => null,
     // The chosen value (without wire:model / x-model).
     'value' => null,
+    // false: never the value a failed validation sent back (old()), only value: one of several forms on a page with
+    // fields of the same name (an address list, each with its own form) keeps its own.
+    'old' => true,
     // The group's name for screen readers (there is no visible label).
     'label' => null,
     // sm · md
@@ -23,7 +26,7 @@
 @php
     $fieldName = \Acun\Ui\Support\Field::name($name, $attributes) ?? \Acun\Ui\Support\Field::id('segmented', $attributes, null, $options);
     $binding = $attributes->whereStartsWith(['wire:model', 'x-model']);
-    $current = \Acun\Ui\Support\Field::bound($attributes) ? null : (string) \Acun\Ui\Support\Field::old($name, $value);
+    $current = \Acun\Ui\Support\Field::bound($attributes) ? null : (string) \Acun\Ui\Support\Field::old($name, $value, $old);
     $sizeClass = $size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm';
 @endphp
 

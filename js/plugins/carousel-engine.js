@@ -39,6 +39,8 @@
 // (and a click or tap on a slide's picture) copies the slides and thumbnails into the carousel of the modal
 // data-slot="carousel-lightbox" and opens it at the shown slide; closed, the page's carousel goes to the slide the
 // dialog showed last. In the dialog Left / Right move and Escape first zooms out, then closes (the modal plugin).
+// A photo with a large copy (<img data-zoom-src="…">: the slide shows a smaller one) gives the magnifier and the
+// full-screen view that copy.
 // data-start: the slide a carousel starts at.
 //
 // Controls elsewhere on the page (acun:carousel.controls for="the carousel's id", a section heading's actions):
@@ -187,7 +189,7 @@ export function mount(root) {
     let paused = false;
     let hovered = false;
     let focused = false;
-    /** @type {ReturnType<typeof setInterval> | null} */
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let timer = null;
     let lastIndex = -1;
     let lastCount = -1;
@@ -415,21 +417,30 @@ export function mount(root) {
         else swiper.slideTo(target);
     });
 
+    // How long the shown slide stays: its own data-interval (acun:carousel.item interval: a video slide longer), else
+    // the carousel's.
+    const delayOf = () => Number(slides()[swiper.activeIndex]?.dataset.interval) || interval;
     function start() {
         stop();
         if (!interval || paused || hovered || focused || document.hidden || reducedMotion() || swiper.isLocked) return;
-        timer = setInterval(() => {
+        timer = setTimeout(() => {
+            timer = null;
             // Stopping at the ends, the auto-advance turns back at the last one.
             if (loop === 'off' && swiper.isEnd) swiper.slideTo(0);
             else swiper.slideNext();
-        }, interval);
+            start();
+        }, delayOf());
         live();
     }
     function stop() {
-        if (timer !== null) clearInterval(timer);
+        if (timer !== null) clearTimeout(timer);
         timer = null;
         live();
     }
+    // Moved by hand while it runs: the new slide's whole time from now.
+    swiper.on('slideChange', () => {
+        if (timer !== null) start();
+    });
     // Announced when the user changes the slide, not on every automatic turn.
     const live = () => {
         const value = timer ? 'off' : 'polite';
@@ -526,6 +537,12 @@ export function mount(root) {
         const ordered = slides().map((slide, index) => ({ slide, index: realIndexOf(slide, index) })).sort((a, b) => a.index - b.index);
         innerTrack.replaceChildren(...ordered.map(({ slide }) => {
             const copy = copyOf(slide);
+            // A photo's large copy (data-zoom-src) in the full-screen view.
+            copy.querySelectorAll('img[data-zoom-src]').forEach((image) => {
+                image.removeAttribute('srcset');
+                image.removeAttribute('sizes');
+                image.setAttribute('src', /** @type {HTMLImageElement} */ (image).dataset.zoomSrc ?? image.getAttribute('src') ?? '');
+            });
             // Every picture zooms in the full-screen view.
             if (!copy.querySelector('.acun-carousel-zoom')) {
                 const wrap = document.createElement('div');
@@ -674,7 +691,8 @@ export function mount(root) {
         const lensLeft = Math.min(Math.max(event.clientX - lensWidth / 2, x1), x2 - lensWidth);
         const lensTop = Math.min(Math.max(event.clientY - lensHeight / 2, y1), y2 - lensHeight);
         lens.style.cssText = `transform:translate(${lensLeft - frame.left}px,${lensTop - frame.top}px);width:${lensWidth}px;height:${lensHeight}px`;
-        const source = img.currentSrc || img.src;
+        // A photo's large copy (data-zoom-src) when it has one: the slide shows a smaller one.
+        const source = img.dataset.zoomSrc || img.currentSrc || img.src;
         magnifier.style.cssText = `top:${view.offsetTop}px;width:${frame.width}px;height:${frame.height}px;background-image:url(${JSON.stringify(source)});background-size:${drawnWidth * MAGNIFY}px ${drawnHeight * MAGNIFY}px;background-position:${-(lensLeft - drawnLeft) * MAGNIFY}px ${-(lensTop - drawnTop) * MAGNIFY}px`;
         lens.hidden = false;
         magnifier.hidden = false;

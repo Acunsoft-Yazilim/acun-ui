@@ -212,6 +212,28 @@ final class PartsListsTest extends TestCase
     }
 
     /** A slide part: a named group for screen readers (the plugin makes it inert while another slide is shown). */
+    /** With the magnifier the frame is the viewport's: the pane beside the root (a single photo, no thumbnails) is not cut. */
+    public function test_a_magnifying_carousel_keeps_its_frame_on_the_viewport(): void
+    {
+        $render = fn (string $props): string => \Illuminate\Support\Facades\Blade::render('<acun:carousel '.$props.' label="Kupa"><acun:carousel.item><img src="/kupa.jpg" alt=""></acun:carousel.item></acun:carousel>');
+
+        $magnifying = $render('hover-zoom :pagination="false" :thumbs="null"');
+        self::assertDoesNotMatchRegularExpression('~data-acun-carousel[^>]*class="[^"]*\boverflow-hidden\b~', $magnifying, 'The root does not cut the pane…');
+        self::assertMatchesRegularExpression('~data-slot="carousel-viewport"[^>]*class="[^"]*\boverflow-hidden\b[^"]*\brounded-sm bg-inverse\b~', $magnifying, '… the viewport is the frame.');
+        self::assertMatchesRegularExpression('~data-acun-carousel[^>]*class="[^"]*\boverflow-hidden rounded-sm bg-inverse\b~', $render(':pagination="false"'), 'Without the magnifier the root is the frame, as before.');
+    }
+
+    /** A slide may stay longer (its own interval); arrows="sm" shows the side arrows from 640px only. */
+    public function test_a_slides_own_time_and_arrows_from_sm(): void
+    {
+        $html = \Illuminate\Support\Facades\Blade::render('<acun:carousel :interval="7000" arrows="sm" label="Vitrin"><acun:carousel.item :interval="10000">Video</acun:carousel.item><acun:carousel.item>İki</acun:carousel.item></acun:carousel>');
+
+        self::assertMatchesRegularExpression('~data-slot="carousel-item"[^>]*data-interval="10000"~', $html, 'The video slide\'s 10 s…');
+        self::assertSame(1, substr_count($html, 'data-interval="10000"'), '… the other takes the carousel\'s.');
+        self::assertMatchesRegularExpression('~data-slot="carousel-prev"[^>]*class="[^"]*\bsm:group-data-controls/carousel:flex~', $html, 'The arrows from 640px…');
+        self::assertDoesNotMatchRegularExpression('~data-slot="carousel-prev"[^>]*class="[^"]*(?<!sm:)group-data-controls/carousel:flex~', $html, '… not on a phone.');
+    }
+
     public function test_carousel_thumbnails_may_take_a_fixed_width(): void
     {
         $gallery = fn (string $width = ''): string => Blade::render(<<<BLADE

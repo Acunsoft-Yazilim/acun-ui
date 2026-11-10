@@ -3,6 +3,9 @@
 @props([
     // Name of the slide for screen readers; default: its position, e.g. "2 of 5".
     'label' => null,
+    // How long this slide stays when the carousel changes by itself (its interval), in milliseconds: a video slide
+    // longer than the others; null: the carousel's.
+    'interval' => null,
 ])
 
 {{--
@@ -18,6 +21,7 @@
     role="group"
     aria-roledescription="{{ __('slide') }}"
     @if ($label !== null) aria-label="{{ $label }}" @endif
+    @if ($interval) data-interval="{{ (int) $interval }}" @endif
     {{ $attributes->class('acun-carousel-slide') }}
 >
     @if ($zoom)

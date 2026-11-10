@@ -216,9 +216,16 @@ final class Field
         return $key !== null && ($errors instanceof ViewErrorBag || $errors instanceof MessageBag) ? ($errors->first($key) ?: null) : null;
     }
 
-    /** The value a classic form gets back after a failed validation, else $default. */
-    public static function old(?string $name, mixed $default = null): mixed
+    /**
+     * The value a classic form gets back after a failed validation, else $default. $use false (a field's :old="false",
+     * one of several forms with fields of the same name): $default only.
+     */
+    public static function old(?string $name, mixed $default = null, bool $use = true): mixed
     {
+        if (! $use) {
+            return $default;
+        }
+
         $key = self::key($name);
 
         return $key !== null && request()->hasSession() ? request()->old($key, $default) : $default;

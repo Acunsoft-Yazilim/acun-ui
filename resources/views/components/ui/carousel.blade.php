@@ -23,7 +23,8 @@
     'snap' => true,
     // The carousel takes the height of the shown slide.
     'autoHeight' => false,
-    // The previous / next buttons: true or 'sides' (on both sides of the slides, in the middle), 'top-end' (side by
+    // The previous / next buttons: true or 'sides' (on both sides of the slides, in the middle), 'sm' (on both sides from
+    // 640px only: on a phone they would cover a slide's heading; a swipe moves it), 'top-end' (side by
     // side above the slides, at the end), 'bottom-center' (under the slides, around a strip's dots) or false (none;
     // acun:carousel.controls puts them elsewhere, e.g. in a section heading). Then the dots (one per position) and
     // the "3 / 8" counter.
@@ -116,7 +117,9 @@
     $framed = ! $strip && ! $thumbsMode;
     $overlay = 'absolute z-10 hidden size-9 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-ink shadow group-data-controls/carousel:flex hover:bg-surface focus-visible:outline-2 focus-visible:outline-surface aria-disabled:cursor-default aria-disabled:opacity-40';
     $edge = 'absolute z-10 hidden size-10 cursor-pointer items-center justify-center rounded-full bg-surface text-ink shadow sm:group-data-controls/carousel:flex hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus aria-disabled:cursor-default aria-disabled:opacity-0';
-    $button = $framed ? $overlay : $edge;
+    // arrows="sm": the framed slides' arrows from 640px only (the strip's edge buttons are from sm already).
+    $overlaySm = 'absolute z-10 hidden size-9 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-ink shadow sm:group-data-controls/carousel:flex hover:bg-surface focus-visible:outline-2 focus-visible:outline-surface aria-disabled:cursor-default aria-disabled:opacity-40';
+    $button = $framed ? ($arrows === 'sm' ? $overlaySm : $overlay) : $edge;
     $arrowsAt = match (true) {
         $arrows === false || $arrows === null || $arrows === 'false' => null,
         in_array($arrows, ['top-end', 'bottom-center'], true) => $arrows,
@@ -154,7 +157,8 @@
     {{ $attributes->class([
         'group/carousel relative',
         $gapClass,
-        'overflow-hidden rounded-sm bg-inverse' => $framed && ! $frameSlides,
+        // With the magnifier the frame is the viewport's: its pane opens beside the root, which must not cut it.
+        'overflow-hidden rounded-sm bg-inverse' => $framed && ! $frameSlides && ! $hoverZoom,
         'grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 sm:grid-cols-[5.5rem_minmax(0,1fr)]' => $thumbsMode === 'vertical',
         'lg:grid lg:grid-cols-[calc(var(--carousel-thumb-width,4.5rem)_+_0.5rem)_minmax(0,1fr)] lg:gap-3' => $wideThumbs,
         '[--carousel-per-view:var(--carousel-per-view-base)] sm:[--carousel-per-view:var(--carousel-per-view-sm)] md:[--carousel-per-view:var(--carousel-per-view-md)] lg:[--carousel-per-view:var(--carousel-per-view-lg)] xl:[--carousel-per-view:var(--carousel-per-view-xl)] 2xl:[--carousel-per-view:var(--carousel-per-view-2xl)]' => $strip && ! $byContainer,
@@ -175,7 +179,7 @@
 
     <div data-slot="carousel-viewport" id="{{ $viewportId }}" @class([
         'relative min-w-0 overflow-hidden group-data-ready/carousel:touch-pan-y',
-        'rounded-sm bg-inverse' => $frameSlides,
+        'rounded-sm bg-inverse' => $frameSlides || ($framed && $hoverZoom),
         'rounded-sm' => $thumbsMode,
         'col-start-2 row-start-1' => $thumbsMode === 'vertical',
         'lg:col-start-2 lg:row-start-1' => $wideThumbs,
@@ -294,6 +298,8 @@
             The full-screen view: the modal plugin's dialog (focus kept inside, Escape, the page's scroll locked, the
             focus back to what opened it). Its carousel is empty here: the plugin copies the slides (and thumbnails)
             in when it opens, so it shows what the page shows (another set too).
+            A photo is shown whole there (contain): its frame's background picture (a tile behind a cropped photo on the
+            page) would show round it, so it goes.
         --}}
         <div data-acun-modal="{{ $carouselId }}-fullscreen" data-slot="carousel-lightbox" data-theme="dark" hidden wire:ignore class="pointer-events-none fixed inset-0 z-50 flex data-open:pointer-events-auto">
             <div data-slot="modal-backdrop" class="fixed inset-0 bg-page/95 opacity-0 backdrop-blur-md transition-opacity duration-200 data-open:opacity-100 motion-reduce:transition-none" aria-hidden="true"></div>
@@ -303,7 +309,7 @@
                 <button type="button" data-acun-close aria-label="{{ __('Close') }}" class="absolute top-3 right-3 z-20 flex size-10 cursor-pointer items-center justify-center rounded-full bg-ink/10 text-ink ring-1 ring-ink/15 backdrop-blur transition-colors hover:bg-ink/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:top-5 sm:right-5 motion-reduce:transition-none">
                     <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
-                <acun:carousel :label="$label ?? __('Images')" zoom counter :pagination="false" :loop="$loop" :thumbs="$thumbsMode ? 'horizontal' : null" thumb-width="3.5rem" data-carousel-lightbox class="flex min-h-0 flex-1 flex-col bg-transparent! px-3 pt-16 pb-4 sm:px-20 sm:pt-8 sm:pb-6 [&>[data-slot=carousel-viewport]]:min-h-0 [&>[data-slot=carousel-viewport]]:flex-1 [&_[data-slot=carousel-track]]:h-full [&_[data-slot=carousel-track]>*]:h-full [&_.swiper-zoom-target]:h-full [&_.swiper-zoom-target]:w-auto [&_.swiper-zoom-target]:max-w-full [&_.swiper-zoom-target]:rounded-sm [&_img]:object-contain [&>[data-slot=carousel-thumbs]]:mx-auto [&>[data-slot=carousel-thumbs]]:mt-4 [&>[data-slot=carousel-thumbs]]:w-fit [&>[data-slot=carousel-thumbs]]:max-w-full max-md:[&>[data-slot=carousel-thumbs]]:hidden">
+                <acun:carousel :label="$label ?? __('Images')" zoom counter :pagination="false" :loop="$loop" :thumbs="$thumbsMode ? 'horizontal' : null" thumb-width="3.5rem" data-carousel-lightbox class="flex min-h-0 flex-1 flex-col bg-transparent! px-3 pt-16 pb-4 sm:px-20 sm:pt-8 sm:pb-6 [&>[data-slot=carousel-viewport]]:min-h-0 [&>[data-slot=carousel-viewport]]:flex-1 [&_[data-slot=carousel-track]]:h-full [&_[data-slot=carousel-track]>*]:h-full [&_.swiper-zoom-target]:h-full [&_.swiper-zoom-target]:w-auto [&_.swiper-zoom-target]:max-w-full [&_.swiper-zoom-target]:rounded-sm [&_.swiper-zoom-target:has(>img)]:bg-none! [&_img]:object-contain [&>[data-slot=carousel-thumbs]]:mx-auto [&>[data-slot=carousel-thumbs]]:mt-4 [&>[data-slot=carousel-thumbs]]:w-fit [&>[data-slot=carousel-thumbs]]:max-w-full max-md:[&>[data-slot=carousel-thumbs]]:hidden">
                     @if ($thumbsMode)
                         <acun:slot:thumbnails><!-- the thumbnails are copied in when it opens --></acun:slot:thumbnails>
                     @endif

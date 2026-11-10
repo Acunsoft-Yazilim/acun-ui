@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.8.0 (2026-11-10)
+
+- `acun:carousel`: a photo with a large copy (`<img data-zoom-src="…">`, the slide showing a smaller one) gives the magnifier (`hover-zoom`) and the full-screen view that copy.
+- `acun:carousel fullscreen`: a photo in a frame with a background picture (a store's product photo on its coloured tile, `image_fit` cover) no longer shows that colour round it in the full-screen view, where the photo is shown whole.
+- `acun:spinner decorative`: only a picture (`aria-hidden`, no `role="status"` and no "Loading" text) for a spinner inside a button that says what is going on itself; before, its text joined the button's name ("Loading Adding…") and the page got another live region. `color="current"` takes the text colour around it.
+- `acun:checkbox` and `acun:radio` keep the box with the first line of a label that wraps (a long category name in a narrow filter column), instead of between its lines.
+- `acun:carousel hover-zoom` works on a single photo without thumbnails: the frame (dark ground, corners, clipping) is the viewport's when the carousel magnifies, so the pane beside it is no longer cut by the root (only the lens showed). Acun Pro's product gallery of a product with one photo had the same problem.
+- `acun:carousel.item :interval`: a slide may stay longer than the others when the carousel changes by itself (a video slide 10 s, the others 7 s); moving it by hand gives the new slide its whole time. `arrows="sm"`: the side arrows from 640px only, so on a phone they don't cover a slide's heading (a swipe moves it).
+- `acun:textarea`, `select`, `chip-group`, `segmented` and `font-select` take `:old="false"`: never the value a failed validation sent back (`old()`), only `value`, so several forms with fields of the same name on a page (an address list, each address with its own form) no longer fill each other (`Field::old()` takes a third argument). `acun:input` never reads `old()` itself: its `value` is printed as given.
+
 ## 2.7.0 (2026-11-10)
 
 - The form fields (`acun:input`, `select`, `textarea`, `input-group`, `color-input`) no longer widen a grid or flex column they stand in: their root is `min-w-0`, so a long value or option shrinks to the column (a column of an automatic grid track grew to its content before and the page ran sideways on a phone).

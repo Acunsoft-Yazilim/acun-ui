@@ -5,6 +5,9 @@
     'name' => null,
     // The chosen value(s) (without wire:model / x-model).
     'value' => null,
+    // false: never the value a failed validation sent back (old()), only value: one of several forms on a page with
+    // fields of the same name (an address list, each with its own form) keeps its own.
+    'old' => true,
     // More than one chip at a time (checkboxes) instead of one (radios).
     'multiple' => false,
     // The group's name for screen readers.
@@ -24,7 +27,7 @@
 @php
     $fieldName = \Acun\Ui\Support\Field::name($name, $attributes) ?? \Acun\Ui\Support\Field::id('chips', $attributes, null, $options);
     $binding = $attributes->whereStartsWith(['wire:model', 'x-model']);
-    $chosen = \Acun\Ui\Support\Field::bound($attributes) ? [] : array_map('strval', (array) \Acun\Ui\Support\Field::old($name, $value));
+    $chosen = \Acun\Ui\Support\Field::bound($attributes) ? [] : array_map('strval', (array) \Acun\Ui\Support\Field::old($name, $value, $old));
     $inputName = $multiple && ! str_ends_with($fieldName, '[]') && $binding->isEmpty() ? $fieldName.'[]' : $fieldName;
 @endphp
 

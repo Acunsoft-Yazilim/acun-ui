@@ -5,6 +5,9 @@
     'rows' => 4,
     // The text, when there is no slot (a <textarea> has no value attribute). A classic form gets old() back.
     'value' => null,
+    // false: never the value a failed validation sent back (old()), only value: one of several forms on a page with
+    // fields of the same name (an address list, each with its own form) keeps its own.
+    'old' => true,
     'variant' => 'default',
     // Classes for the <textarea> itself; class (with style, x-show, wire:key) places the whole field.
     'inputClass' => null,
@@ -17,7 +20,7 @@
     $error = \Acun\Ui\Support\Field::error($fieldName, $errors ?? null);
     $areaId = \Acun\Ui\Support\Field::id('textarea', $attributes, $fieldName, $label);
     // The slot, else the value (old() after a failed validation); wire:model / x-model fill it themselves.
-    $content = $slot->isNotEmpty() ? $slot : (\Acun\Ui\Support\Field::bound($attributes) ? '' : \Acun\Ui\Support\Field::old($fieldName, $value));
+    $content = $slot->isNotEmpty() ? $slot : (\Acun\Ui\Support\Field::bound($attributes) ? '' : \Acun\Ui\Support\Field::old($fieldName, $value, $old));
     // The error or hint below the field describes it for screen readers.
     $messageId = $areaId.'-message';
     $describedBy = trim($attributes->get('aria-describedby').' '.($error || $hint ? $messageId : '')) ?: null;

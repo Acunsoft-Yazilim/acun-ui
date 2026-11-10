@@ -1,6 +1,6 @@
 {
   "name": "@acunsoft/acun-ui",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "private": true,
   "description": "Acun UI: the design tokens, Tailwind CSS v4 sources, compiled stylesheet and browser runtime of the Composer package acunsoft/acun-ui (Laravel + Livewire). Not on npm: the application installs it from its Composer copy, \"file:vendor/acunsoft/acun-ui\".",
   "homepage": "https://docs.acunui.com",

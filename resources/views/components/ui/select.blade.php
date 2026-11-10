@@ -9,6 +9,9 @@
     'nullable' => false,
     // The selected option(s) of a classic form (a <select> has no value attribute); old() wins after a failed validation.
     'value' => null,
+    // false: never the value a failed validation sent back (old()), only value: one of several forms on a page with
+    // fields of the same name (an address list, each with its own form) keeps its own.
+    'old' => true,
     'variant' => 'default',
     // true: re-apply the wire:model value when the box is added by a Livewire update (see the
     // x-init below). null follows config('acun-ui.select_sync').
@@ -27,7 +30,7 @@
     $selectId = \Acun\Ui\Support\Field::id('select', $attributes, $fieldName, $label, $placeholder);
     // Bound (wire:model / x-model): the model picks the option. Otherwise the value prop, or old().
     $bound = \Acun\Ui\Support\Field::bound($attributes);
-    $current = $bound ? null : \Acun\Ui\Support\Field::old($fieldName, $value);
+    $current = $bound ? null : \Acun\Ui\Support\Field::old($fieldName, $value, $old);
     $chosen = array_map('strval', array_filter((array) $current, fn ($item) => $item !== null && $item !== ''));
     $floating = $variant === 'floating';
     // The error or hint below the field describes it for screen readers.

@@ -25,7 +25,7 @@
     // sits on a ring offset: a halo in a dark theme).
 @endphp
 
-<label for="{{ $radioId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex items-center gap-2 text-sm text-body select-none has-disabled:cursor-not-allowed has-disabled:text-faint') }}>
+<label for="{{ $radioId }}" {{ \Acun\Ui\Support\Field::layoutAttributes($attributes)->class('inline-flex items-start gap-2 text-sm text-body select-none has-disabled:cursor-not-allowed has-disabled:text-faint') }}>
     <input
         data-acun-control
         id="{{ $radioId }}"
@@ -36,7 +36,7 @@
         @checked($checked)
         @if ($error) aria-invalid="true" @endif
         {{ \Acun\Ui\Support\Field::controlAttributes($attributes)->except(['id', 'label', 'checked', 'value'])->merge([
-            'class' => \Acun\Ui\Support\Field::controlClass('size-4 border-control text-primary not-checked:bg-field checked:bg-[radial-gradient(circle_closest-side,var(--ac-on-primary)_33%,transparent_42%)] focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-focus aria-invalid:border-danger-line disabled:cursor-not-allowed disabled:opacity-40', $inputClass),
+            'class' => \Acun\Ui\Support\Field::controlClass('mt-0.5 size-4 flex-none border-control text-primary not-checked:bg-field checked:bg-[radial-gradient(circle_closest-side,var(--ac-on-primary)_33%,transparent_42%)] focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-focus aria-invalid:border-danger-line disabled:cursor-not-allowed disabled:opacity-40', $inputClass),
         ]) }}
     />
     {{ $label ?? $slot }}

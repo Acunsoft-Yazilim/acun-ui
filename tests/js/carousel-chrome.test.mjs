@@ -35,10 +35,25 @@ const markup = renderBlade({
         ${Array.from({ length: 3 }, (_, i) => `<acun:carousel.item><img class="swiper-zoom-target" style="display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover" alt="Ceket ${i + 1}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800'%3E%3Crect width='600' height='800' fill='%23${['c44', '4c4', '44c'][i]}'/%3E%3C/svg%3E"></acun:carousel.item>`).join('')}
         <acun:slot:thumbnails>${Array.from({ length: 3 }, (_, i) => `<acun:carousel.thumb label="Ceket ${i + 1}"><div style="aspect-ratio: 3 / 4; background: #999"></div></acun:carousel.thumb>`).join('')}</acun:slot:thumbnails>
     </acun:carousel>`,
+    // One photo, no thumbnails (a product with a single picture): the frame is the viewport's, the pane is not cut.
+    magnifyOne: `<acun:carousel id="tek" hover-zoom fullscreen :pagination="false" :thumbs="null" label="Kupa" style="width: 360px; margin-top: 2rem">
+        <acun:carousel.item><img class="swiper-zoom-target" style="display: block; width: 100%; aspect-ratio: 1; object-fit: cover" data-zoom-src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200'%3E%3Crect width='1200' height='1200' fill='%23c84'/%3E%3C/svg%3E" alt="Kupa" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='600' height='600' fill='%23c84'/%3E%3C/svg%3E"></acun:carousel.item>
+    </acun:carousel>`,
+    // A cropped photo in a frame with a background picture (a store's product photo on its tile): full screen shows
+    // the photo whole, so the tile must not show round it.
+    framed: `<acun:carousel id="cerceve" fullscreen :pagination="false" :thumbs="null" label="Tezgah" style="width: 360px; margin-top: 2rem">
+        <acun:carousel.item><div class="swiper-zoom-target" style="position: relative; aspect-ratio: 1; background-color: rgb(255, 255, 255); background-image: linear-gradient(#a0f, #a0f)"><img class="absolute inset-0 size-full object-cover" data-zoom-src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='800'%3E%3Crect width='1600' height='800' fill='%23444'/%3E%3C/svg%3E" alt="Tezgah" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400'%3E%3Crect width='800' height='400' fill='%23888'/%3E%3C/svg%3E"></div></acun:carousel.item>
+    </acun:carousel>`,
     // The thumbnails beside the slides on a wide screen, under them below.
     side: `<acun:carousel id="yan" thumbs="vertical-wide" thumb-width="4rem" :pagination="false" :arrows="false" label="Ürün" style="width: 480px; margin-top: 2rem">
         ${Array.from({ length: 6 }, (_, i) => `<acun:carousel.item><div role="img" aria-label="Görsel ${i + 1}" style="height: 320px; background: #888"></div></acun:carousel.item>`).join('')}
         <acun:slot:thumbnails>${Array.from({ length: 6 }, (_, i) => `<acun:carousel.thumb label="Görsel ${i + 1}"><div style="aspect-ratio: 1; background: #999"></div></acun:carousel.thumb>`).join('')}</acun:slot:thumbnails>
+    </acun:carousel>`,
+    // A slide with its own time (a video slide longer): the first stays 2 s, the others the carousel's 0.4 s.
+    timed: `<acun:carousel id="sureli" :interval="400" label="Vitrin" style="width: 480px">
+        <acun:carousel.item :interval="2000"><div style="height: 8rem">Video</div></acun:carousel.item>
+        <acun:carousel.item><div style="height: 8rem">İki</div></acun:carousel.item>
+        <acun:carousel.item><div style="height: 8rem">Üç</div></acun:carousel.item>
     </acun:carousel>`,
     controls: `<div style="width: 480px; margin-top: 2rem; display: flex; align-items: end; justify-content: space-between"><h2 style="margin: 0">Çok satanlar</h2><acun:carousel.controls for="uzak" counter /></div>
     <acun:carousel id="uzak" :arrows="false" :per-view="2" :loop="false" :pagination="false" label="Çok satanlar" style="width: 480px">
@@ -284,6 +299,64 @@ test('arrows in a section heading (acun:carousel.controls) and above the strip (
         await browser.evaluate(`document.querySelector('#ust [data-slot="carousel-prev"]').blur()`);
         await browser.evaluate(`document.querySelector('${controls} [data-slot="carousel-prev"]').focus({ focusVisible: true })`);
         assert.notEqual(await browser.evaluate(`getComputedStyle(document.activeElement).outlineStyle`), 'none', 'A visible focus ring.');
+        assert.deepEqual(browser.problems, []);
+    } finally {
+        await browser.close();
+        remove();
+    }
+});
+
+test('a slide may stay longer than the others (its own interval)', { skip }, async () => {
+    const { url, remove } = page(markup.timed);
+    const browser = await openPage(url);
+    try {
+        await browser.waitFor(`${state('sureli')}.ready`);
+        await wait(1000);
+        assert.equal((await browser.evaluate(state('sureli'))).index, 0, 'The first slide keeps its own 2 s…');
+        await browser.waitFor(`${state('sureli')}.index === 1`, { timeout: 3000, message: 'the first slide\'s time to run out' });
+        const started = Date.now();
+        await browser.waitFor(`${state('sureli')}.index === 2`, { timeout: 3000, message: 'the second slide\'s (the carousel\'s) time' });
+        assert.ok(Date.now() - started < 1500, '… the next one the carousel\'s 0.4 s.');
+    } finally {
+        await browser.close();
+        remove();
+    }
+});
+
+test('the magnifier works on a single photo without thumbnails (its pane is not cut)', { skip }, async () => {
+    const { url, remove } = page(markup.magnifyOne);
+    const browser = await openPage(url, { width: 1280, height: 900 });
+    try {
+        await browser.waitFor(`document.getElementById('tek').hasAttribute('data-ready') && document.querySelector('#tek img').naturalWidth > 0`, { message: 'Swiper to start' });
+        assert.equal(await browser.evaluate(`getComputedStyle(document.getElementById('tek')).overflow`), 'visible', 'The root does not cut what opens beside it…');
+        assert.equal(await browser.evaluate(`getComputedStyle(document.querySelector('#tek [data-slot=carousel-viewport]')).overflow`), 'hidden', '… the viewport keeps the frame.');
+        await browser.evaluate(`(() => { const view = document.querySelector('#tek [data-slot="carousel-viewport"]'); const box = view.getBoundingClientRect(); view.dispatchEvent(new PointerEvent('pointermove', { clientX: box.left + box.width / 2, clientY: box.top + box.height / 2, pointerType: 'mouse', bubbles: true })); return true; })()`);
+        await browser.waitFor(`!document.querySelector('#tek [data-slot=carousel-magnifier]').hidden`, { timeout: 3000, message: 'the pane to open' });
+        assert.deepEqual(await browser.evaluate(`(() => {
+            const pane = document.querySelector('#tek [data-slot=carousel-magnifier]');
+            const cutBy = [];
+            for (let node = pane.parentElement; node && node !== document.body; node = node.parentElement) if (getComputedStyle(node).overflow !== 'visible') cutBy.push(node.id || node.dataset.slot || node.tagName);
+            return { visible: pane.checkVisibility(), width: Math.round(pane.getBoundingClientRect().width), cutBy };
+        })()`), { visible: true, width: 360, cutBy: [] }, 'The pane shows beside the photo, nothing round it cuts it.');
+        assert.match(await browser.evaluate(`document.querySelector('#tek [data-slot=carousel-magnifier]').style.backgroundImage`), /width='1200'/, 'The pane shows the large copy (data-zoom-src).');
+    } finally {
+        await browser.close();
+        remove();
+    }
+});
+
+test('full screen shows a cropped photo whole, without the background picture of its frame round it', { skip }, async () => {
+    const { url, remove } = page(markup.framed);
+    const browser = await openPage(url, { width: 1280, height: 900 });
+    try {
+        await browser.waitFor(`document.getElementById('cerceve').hasAttribute('data-ready')`, { message: 'Swiper to start' });
+        const frame = (where) => `getComputedStyle(document.querySelector('${where} .swiper-zoom-target'))`;
+        assert.equal(await browser.evaluate(`${frame('#cerceve [data-slot=carousel-track]')}.backgroundImage`), 'linear-gradient(rgb(170, 0, 255), rgb(170, 0, 255))', 'On the page the tile stays (the photo covers it).');
+        await browser.click('#cerceve [data-slot="carousel-fullscreen"]');
+        const inner = `document.querySelector('#cerceve [data-carousel-lightbox]')`;
+        await browser.waitFor(`${inner}.hasAttribute('data-ready')`, { message: 'the full-screen view' });
+        assert.deepEqual(await browser.evaluate(`({ picture: ${frame('#cerceve [data-carousel-lightbox]')}.backgroundImage, fit: getComputedStyle(${inner}.querySelector('img')).objectFit })`), { picture: 'none', fit: 'contain' }, 'Whole, nothing coloured round it.');
+        assert.match(await browser.evaluate(`${inner}.querySelector('img').getAttribute('src')`), /width='1600'/, 'Its large copy (data-zoom-src).');
         assert.deepEqual(browser.problems, []);
     } finally {
         await browser.close();
