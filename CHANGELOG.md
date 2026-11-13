@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.12.0 (2026-11-13)
+
+- No change of its own; released with Acun Pro 2.12.0 (the price card layout).
+
 ## 2.11.0 (2026-11-13)
 
 - No change of its own; released with Acun Pro 2.11.0 (product cards, colours, the cart's icon).
