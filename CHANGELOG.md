@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0 (2026-11-13)
+
+- No change of its own; released with Acun Pro 3.0.0 (a storefront free of content: ADR-013).
+
 ## 2.12.0 (2026-11-13)
 
 - No change of its own; released with Acun Pro 2.12.0 (the price card layout).
