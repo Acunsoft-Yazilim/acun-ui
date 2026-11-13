@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.1 (2026-11-14)
+
+- No change of its own; released with Acun Pro 3.0.1 (the product card on a phone).
+
 ## 3.0.0 (2026-11-13)
 
 - No change of its own; released with Acun Pro 3.0.0 (a storefront free of content: ADR-013).
