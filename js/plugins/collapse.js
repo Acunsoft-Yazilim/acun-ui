@@ -35,9 +35,9 @@ let counter = 0;
 function createCollapse(root) {
     const trigger = ownPart(root, ATTRIBUTE, 'collapse-trigger');
     const content = ownPart(root, ATTRIBUTE, 'collapse-content');
-    if (content && !content.id) content.id = `acun-collapse-${++counter}`;
+    if (content) plugins.giveId(content, () => `acun-collapse-${++counter}`);
     if (trigger && content) trigger.setAttribute('aria-controls', content.id);
-    if (trigger) plugins.own(trigger, 'aria-expanded');
+    if (trigger) plugins.own(trigger, 'aria-expanded', 'aria-controls');
     if (content) plugins.own(content, 'hidden', 'data-open');
 
     let cancel = () => {};

@@ -20,10 +20,13 @@ function page() {
     fs.writeFileSync(file, `<!doctype html><html lang="tr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head><body style="margin: 0">
-<header style="position: fixed; top: 0; inset-inline: 0; height: 64px; display: flex; justify-content: flex-end; align-items: center; padding-inline: 24px">
+<header style="position: fixed; top: 0; inset-inline: 0; z-index: 10; height: 64px; background: #fff; display: flex; justify-content: flex-end; align-items: center; padding-inline: 24px">
     <a id="cart" href="#cart" style="display: inline-flex; width: 40px; height: 40px">Sepet</a>
 </header>
 <a id="hidden-cart" href="#cart" style="position: fixed; top: -200px; width: 40px; height: 40px">Sepet</a>
+<img id="scrolled" src="${picture}" alt="" width="200" height="160" style="position: fixed; top: -400px; inset-inline-start: 24px">
+<img id="under" src="${picture}" alt="" width="200" height="40" style="position: fixed; top: 8px; inset-inline-start: 24px">
+<button id="add" style="position: fixed; top: 500px; inset-inline-start: 24px; width: 90px; height: 40px">Ekle</button>
 <main style="padding: 120px 24px">
     <img id="photo" src="${picture}" alt="Aura kulaklık" width="200" height="160" style="border-radius: 12px">
     <div data-top-layer id="layer" style="position: fixed; inset-inline-start: 300px; top: 120px"><img id="in-dialog" src="${picture}" alt="" width="120" height="96"></div>
@@ -102,6 +105,40 @@ test('several adds in a row fly side by side and each arrives; the bounce starts
     }
 });
 
+test('a picture off screen (a card scrolled up) flies as a thumbnail from the button pressed', { skip }, async () => {
+    const { url, remove } = page();
+    const browser = await openPage(url);
+    try {
+        await browser.waitFor('window.AcunUI?.initialized === true');
+        await browser.evaluate(watch);
+        const start = await browser.evaluate(`(() => {
+            let box = null;
+            new MutationObserver((records) => { for (const record of records) for (const copy of record.addedNodes) if (!box && copy.nodeType === 1 && copy.hasAttribute('data-acun-fly-to-cart')) box = { left: parseFloat(copy.style.left), top: parseFloat(copy.style.top), width: parseFloat(copy.style.width), height: parseFloat(copy.style.height), tag: copy.tagName }; }).observe(document.body, { childList: true });
+            return AcunUI.flyToCart('#scrolled', '#cart', { origin: document.getElementById('add'), duration: 300 }).then((arrived) => ({ ...box, arrived }));
+        })()`);
+        assert.equal(start.arrived, true, 'It flies.');
+        assert.equal(start.tag, 'IMG', 'The picture\'s copy.');
+        assert.deepEqual([start.width, start.height], [48, 48], 'A thumbnail (the button\'s height, 48 at the least).');
+        assert.deepEqual([start.left, start.top], [24 + 45 - 24, 500 + 20 - 24], 'Centred on the button.');
+        assert.equal(await browser.evaluate('window.flights.arrived'), 1);
+        assert.equal(await browser.evaluate(`document.querySelectorAll('[data-acun-fly-to-cart]').length`), 0, 'Removed.');
+
+        // Under the header (the picture's centre behind a fixed bar): from the button too; without an origin, from the picture as before.
+        const under = await browser.evaluate(`(() => {
+            const boxes = [];
+            const observer = new MutationObserver((records) => { for (const record of records) for (const copy of record.addedNodes) if (copy.nodeType === 1 && copy.hasAttribute('data-acun-fly-to-cart')) boxes.push(parseFloat(copy.style.top)); });
+            observer.observe(document.body, { childList: true });
+            return AcunUI.flyToCart('#under', '#cart', { origin: '#add', duration: 200 })
+                .then(() => AcunUI.flyToCart('#under', '#cart', { duration: 200 }))
+                .then(() => { observer.disconnect(); return boxes; });
+        })()`);
+        assert.deepEqual(under, [500 + 20 - 24, 8], 'From the button; without an origin, from the picture.');
+    } finally {
+        await browser.close();
+        remove();
+    }
+});
+
 test('nothing moves under reduced motion, off screen or without the elements', { skip }, async () => {
     const { url, remove } = page();
     const browser = await openPage(url);
@@ -111,6 +148,8 @@ test('nothing moves under reduced motion, off screen or without the elements', {
 
         assert.equal(await browser.evaluate(`AcunUI.flyToCart('#photo', '#hidden-cart')`), false, 'The cart is not on screen.');
         assert.equal(await browser.evaluate(`AcunUI.flyToCart('#yok', '#cart')`), false, 'No source.');
+        assert.equal(await browser.evaluate(`AcunUI.flyToCart('#scrolled', '#cart')`), false, 'The picture is not on screen and no origin.');
+        assert.equal(await browser.evaluate(`AcunUI.flyToCart('#scrolled', '#cart', { origin: '#hidden-cart' })`), false, 'Nor its origin.');
         assert.equal(await browser.evaluate(`AcunUI.flyToCart('#photo', null)`), false, 'No cart.');
 
         await browser.emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);

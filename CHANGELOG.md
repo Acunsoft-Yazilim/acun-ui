@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.2 (2026-11-16)
+
+- **Fix:** an `acun:dropdown` (or `acun:popover`) in a Livewire component no longer stops opening after the component's first update. The runtime gives the menu an id when the server draws none; the morph pairs elements by id, so it put the server's copy (hidden) in place of the menu the plugin drives. Ids the runtime gives (dropdown, popover and its title, tooltip, tabs, accordion, collapsible card) and the ARIA links to them now stay through morphs; `AcunUI.plugins.giveId(element, make)` does the same for a plugin of your own.
+- `AcunUI.flyToCart(source, target, { origin })`: when the picture is off screen, or its centre is off screen or under a fixed or sticky header (a card scrolled up), a thumbnail of it flies from `origin` (the button pressed) instead of nothing showing.
+
 ## 3.0.1 (2026-11-14)
 
 - No change of its own; released with Acun Pro 3.0.1 (the product card on a phone).

@@ -54,12 +54,13 @@ function createAccordion(root) {
     items().forEach((item) => {
         const trigger = part(item, 'accordion-trigger');
         const content = part(item, 'accordion-content');
-        if (content && !content.id) content.id = `${base}-${keyOf(item.dataset.name ?? '')}`;
+        if (content) plugins.giveId(content, () => `${base}-${keyOf(item.dataset.name ?? '')}`);
         if (trigger && content) {
-            if (!trigger.id) trigger.id = `${content.id}-heading`;
+            plugins.giveId(trigger, () => `${content.id}-heading`);
             trigger.setAttribute('aria-controls', content.id);
             content.setAttribute('aria-labelledby', trigger.id);
-            plugins.own(trigger, 'aria-expanded');
+            plugins.own(trigger, 'aria-expanded', 'aria-controls');
+            plugins.own(content, 'aria-labelledby');
         }
         if (content) plugins.own(content, 'hidden', 'data-open');
     });

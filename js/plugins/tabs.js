@@ -53,11 +53,13 @@ function createTabs(root) {
     /** @param {HTMLElement} tab @param {HTMLElement | undefined} panel */
     const link = (tab, panel) => {
         const key = keyOf(tab.dataset.value ?? '');
-        if (!tab.id) tab.id = `${base}-tab-${key}`;
-        if (panel && !panel.id) panel.id = `${base}-panel-${key}`;
+        plugins.giveId(tab, () => `${base}-tab-${key}`);
         if (panel) {
+            plugins.giveId(panel, () => `${base}-panel-${key}`);
             tab.setAttribute('aria-controls', panel.id);
             panel.setAttribute('aria-labelledby', tab.id);
+            plugins.own(tab, 'aria-controls');
+            plugins.own(panel, 'aria-labelledby');
         }
     };
     const panelOf = (/** @type {string} */ value) => panels().find((panel) => panel.dataset.value === value);

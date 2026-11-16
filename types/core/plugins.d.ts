@@ -69,6 +69,10 @@ export type Plugins = {
      */
     keepOwned: (from: Element, to: Element) => void;
     /**
+     * an id for element when it has none, kept through morphs
+     */
+    giveId: (element: Element, make: () => string) => string;
+    /**
      * sets aria-expanded on the triggers of name
      */
     expand: (name: string | null, expanded: boolean) => void;

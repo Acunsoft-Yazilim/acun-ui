@@ -48,11 +48,13 @@ export function createPopup(root, { kind, attribute }) {
     const control = /** @type {HTMLElement | null} */ (trigger?.querySelector('button, a[href]') ?? null);
     const preferred = content?.dataset.side === 'top' ? 'top' : 'bottom';
 
-    if (content && !content.id) content.id = nextId(kind);
+    // The id stays through Livewire morphs (plugins.giveId): a new id each time would make the morph put the
+    // server's copy of the content in its place, and the panel would no longer open.
+    if (content) plugins.giveId(content, () => nextId(kind));
     if (control && content) {
         control.setAttribute('aria-controls', content.id);
         if (!control.hasAttribute('aria-expanded')) control.setAttribute('aria-expanded', 'false');
-        plugins.own(control, 'aria-expanded');
+        plugins.own(control, 'aria-expanded', 'aria-controls');
     }
     if (content) plugins.own(content, 'hidden', 'data-open', 'data-side');
     plugins.own(root, 'data-open');

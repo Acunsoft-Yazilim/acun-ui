@@ -10,7 +10,9 @@
 // it); it follows a short arc (Web Animations, no library) and is
 // removed at the end, also when the animation is cancelled. Several adds in a row fly side by side; the cart's bounce
 // starts again with each arrival. Nothing moves under prefers-reduced-motion (the promise then resolves false at
-// once), when the source or the target is not on screen, or without element.animate. The target gets
+// once), when the target is not on screen, or the source is not and no origin on screen is given
+// (options.origin: the button pressed; the copy starts from it as a thumbnail also when the source's centre is off
+// screen or under a fixed or sticky header), or without element.animate. The target gets
 // acun:fly-to-cart:arrived (bubbling) when a copy reaches it.
 
 /**
@@ -18,6 +20,9 @@
  * @property {number} [duration] The flight in milliseconds (default 700).
  * @property {number} [size] The copy's size on arrival in pixels (default 28).
  * @property {boolean} [bounce] The cart's little bounce on arrival (default true).
+ * @property {Element | string | null} [origin] Where the flight starts when the picture is not on screen or its centre
+ *     is off screen or under a fixed or sticky header (a card scrolled up: the button pressed): a small thumbnail of the
+ *     picture rises from its centre.
  */
 
 /** @type {WeakMap<Element, Animation>} */
@@ -28,6 +33,27 @@ const elementOf = (value) => (typeof value === 'string' ? document.querySelector
 
 /** On screen: a box with a size that overlaps the viewport. @param {DOMRect} rect */
 const visible = (rect) => rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth;
+
+/**
+ * Seen: the box's centre on screen and not under a fixed or sticky bar (a header) that does not hold it. Its own
+ * overlays (a card's buttons over the picture) do not hide it.
+ *
+ * @param {Element} element
+ * @param {DOMRect} rect
+ */
+function seen(element, rect) {
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    if (x < 0 || y < 0 || x > window.innerWidth || y > window.innerHeight) return false;
+    const hit = document.elementFromPoint?.(x, y);
+    if (!hit || element.contains(hit) || hit.contains(element)) return true;
+    for (let node = /** @type {Element | null} */ (hit); node && node !== document.body; node = node.parentElement) {
+        if (node.contains(element)) return true;
+        const position = getComputedStyle(node).position;
+        if (position === 'fixed' || position === 'sticky') return false;
+    }
+    return true;
+}
 
 /** The flying copy: the picture's image, else the source itself (a drawing), inert and out of the accessibility tree. @param {Element} source */
 function copyOf(source) {
@@ -62,9 +88,20 @@ export async function flyToCart(source, target, options = {}) {
     if (!from || !to || typeof window === 'undefined' || typeof from.animate !== 'function') return false;
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false;
 
-    const start = from.getBoundingClientRect();
     const end = to.getBoundingClientRect();
-    if (!visible(start) || !visible(end)) return false;
+    if (!visible(end)) return false;
+    const picture = from.getBoundingClientRect();
+    /** @type {{ left: number, top: number, width: number, height: number }} */
+    let start = picture;
+    const originElement = elementOf(options.origin);
+    if (!visible(picture) || (originElement && !seen(from, picture))) {
+        // The picture is off screen or under the header (a card scrolled up): a thumbnail of it starts from the origin
+        // (the button pressed).
+        const origin = originElement?.getBoundingClientRect();
+        if (!origin || !visible(origin)) return false;
+        const side = Math.min(96, Math.max(48, origin.height));
+        start = { left: origin.left + origin.width / 2 - side / 2, top: origin.top + origin.height / 2 - side / 2, width: side, height: side };
+    }
 
     const duration = Math.max(200, options.duration ?? 700);
     const size = Math.max(12, options.size ?? 28);

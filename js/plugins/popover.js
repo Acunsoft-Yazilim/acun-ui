@@ -16,6 +16,7 @@
 // acun:popover:closed ({ reason }).
 
 import { createPopup } from '../behavior/popup.js';
+import { plugins } from '../core/plugins.js';
 
 /** @import { PluginDefinition } from '../core/plugins.js' */
 
@@ -44,8 +45,11 @@ function createPopover(root) {
 
     const title = /** @type {HTMLElement | null} */ (content?.querySelector('[data-slot="popover-title"]') ?? null);
     if (content && title) {
-        if (!title.id) title.id = `${content.id}-title`;
-        if (!content.hasAttribute('aria-labelledby')) content.setAttribute('aria-labelledby', title.id);
+        plugins.giveId(title, () => `${content.id}-title`);
+        if (!content.hasAttribute('aria-labelledby')) {
+            content.setAttribute('aria-labelledby', title.id);
+            plugins.own(content, 'aria-labelledby');
+        }
     }
 
     return {

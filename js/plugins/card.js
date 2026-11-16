@@ -28,9 +28,9 @@ function createCard(root) {
     const toggle = ownPart(root, ATTRIBUTE, 'card-toggle');
     const body = ownPart(root, ATTRIBUTE, 'card-body');
     if (body && toggle) {
-        if (!body.id) body.id = `acun-card-${++counter}`;
+        plugins.giveId(body, () => `acun-card-${++counter}`);
         toggle.setAttribute('aria-controls', body.id);
-        plugins.own(toggle, 'aria-expanded');
+        plugins.own(toggle, 'aria-expanded', 'aria-controls');
         plugins.own(body, 'hidden', 'data-open');
     }
     plugins.own(root, 'hidden');

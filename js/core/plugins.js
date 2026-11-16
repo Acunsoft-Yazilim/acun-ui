@@ -78,6 +78,7 @@ import { isVisible } from './dom.js';
  * @property {string} selector  the selector of every defined plugin's elements
  * @property {(element: Element, ...names: string[]) => void} own  marks attributes a plugin manages on element
  * @property {(from: Element, to: Element) => void} keepOwned  copies the managed attributes onto a morph's new markup
+ * @property {(element: Element, make: () => string) => string} giveId  an id for element when it has none, kept through morphs
  * @property {(name: string | null, expanded: boolean) => void} expand  sets aria-expanded on the triggers of name
  */
 
@@ -566,14 +567,39 @@ export const plugins = {
      * @param {Element} to
      */
     keepOwned(from, to) {
-        const names = owned.get(from);
-        if (!names || !isElement(to)) return;
+        if (!isElement(to)) return;
 
-        for (const name of names) {
+        for (const name of owned.get(from) ?? []) {
             const value = from.getAttribute(name);
             if (value === null) to.removeAttribute(name);
             else to.setAttribute(name, value);
         }
+
+        // A child whose id the browser gave (plugins.own(child, 'id')) keeps it in the new markup, where the
+        // server drew none: the morph pairs children by id, and would put a new node (the server's copy,
+        // hidden, without the plugin's listeners) in place of one with an id it does not see.
+        const next = to.children;
+        [...from.children].forEach((child, index) => {
+            const match = next[index];
+            if (!child.id || !owned.get(child)?.has('id') || !match || match.id) return;
+            if (match.tagName === child.tagName && match.getAttribute('data-slot') === child.getAttribute('data-slot')) match.id = child.id;
+        });
+    },
+
+    /**
+     * Gives element an id when it has none (make() makes it) and keeps it through morphs; returns the id.
+     *
+     * @param {Element} element
+     * @param {() => string} make
+     * @returns {string}
+     */
+    giveId(element, make) {
+        if (!element.id) {
+            element.id = make();
+            plugins.own(element, 'id');
+        }
+
+        return element.id;
     },
 
     /**

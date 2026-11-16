@@ -11,6 +11,12 @@ export type FlyToCartOptions = {
      * The cart's little bounce on arrival (default true).
      */
     bounce?: boolean;
+    /**
+     * Where the flight starts when the picture is not on screen or its centre
+     * is off screen or under a fixed or sticky header (a card scrolled up: the button pressed): a small thumbnail of the
+     * picture rises from its centre.
+     */
+    origin?: Element | string | null;
 };
 /**
  * Flies a copy of source to target. Resolves true once the copy has arrived (and been removed), false when nothing

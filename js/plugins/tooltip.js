@@ -57,7 +57,7 @@ function createTooltip(root) {
     const control = /** @type {HTMLElement | null} */ (root.querySelector('a[href], button, input, select, textarea') ?? root.querySelector('[tabindex]'));
     const above = content?.dataset.position !== 'bottom';
 
-    if (content && !content.id) content.id = `acun-tooltip-${++counter}`;
+    if (content) plugins.giveId(content, () => `acun-tooltip-${++counter}`);
     if (content && control && control !== content) {
         control.setAttribute('aria-describedby', content.id);
         plugins.own(control, 'aria-describedby');
